@@ -11,7 +11,35 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 WP-Sweep allows you to clean up unused, orphaned and duplicated data in your WordPress.
 
 == Description ==
-This plugin cleans up revisions, auto drafts, unapproved comments, spam comments, trashed comments, orphan post meta, orphan comment meta, orphan user meta, orphan term relationships, unused terms, duplicated post meta, duplicated comment meta, duplicated user meta and transient options.
+This plugin cleans up:
+* Revisions
+* Auto drafts
+* Unapproved comments
+* Spam comments
+* Trashed comments
+* Orphaned post meta
+* Orphaned comment meta
+* Orphaned user meta
+* Orphan term relationships
+* Unused terms
+* Duplicated post meta
+* Duplicated comment meta
+* Duplicated user meta
+* Transient options
+
+This plugin uses proper WordPress delete functions as much as possible instead of running direct delete MySQL queries.
+
+Following delete functions are used:
+* wp_delete_post_revision()
+* wp_delete_post()
+* wp_delete_comment()
+* delete_post_meta()
+* delete_comment_meta()
+* delete_user_meta()
+* wp_remove_object_terms()
+* wp_delete_term()
+* delete_transient()
+* delete_site_transient()
 
 = Build Status =
 [![Build Status](https://travis-ci.org/lesterchan/wp-sweep.svg?branch=master)](https://travis-ci.org/lesterchan/wp-sweep)
