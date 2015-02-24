@@ -33,7 +33,7 @@ Text Domain: wp-sweep
 define( 'WP_SWEEP_VERSION', '1.0.0' );
 
 /**
- * Class WP_Sweep
+ * Class WPSweep
  */
 class WPSweep {
 	/**
@@ -62,6 +62,7 @@ class WPSweep {
 	/**
 	 * Initializes the plugin object and returns its instance
 	 *
+	 * @access public
 	 * @return object the plugin object instance
 	 */
 	public static function get_instance() {
@@ -80,7 +81,7 @@ class WPSweep {
 	public function init() {}
 
 	/**
-	 * Adds all the plugin's hooks
+	 * Adds all the plugin hooks
 	 *
 	 * @access public
 	 * @return void
@@ -103,11 +104,11 @@ class WPSweep {
 	}
 
 	/**
-	 * Count the number of items to sweep for each type
+	 * Count the number of items belonging to each sweep type
 	 *
 	 * @access public
 	 * @param string Sweep type
-	 * @return integer Number of items
+	 * @return integer Number of items belonging to each sweep type
 	 */
 	public function count( $type ) {
 		global $wpdb;
@@ -172,11 +173,11 @@ class WPSweep {
 	}
 
 	/**
-	 * Does the sweeping
+	 * Does the sweeping/cleaning up
 	 *
 	 * @access public
 	 * @param string Sweep type
-	 * @return string Success message
+	 * @return string Processed message
 	 */
 	public function sweep( $type ) {
 		global $wpdb;
@@ -394,6 +395,7 @@ class WPSweep {
 			$this->plugin_deactivated();
 		}
 	}
+
 	/**
 	 * Perform plugin deactivation tasks
 	 *
@@ -403,4 +405,8 @@ class WPSweep {
 	private function plugin_deactivated() {}
 }
 
+/**
+ * Init WP-Sweep
+ *
+ */
 WPSweep::get_instance();

@@ -26,6 +26,4 @@ if ( is_multisite() ) {
  * @access public
  * @return void
  */
-function plugin_uninstalled() {
-	global $wpdb;
-}
+function plugin_uninstalled() {}
