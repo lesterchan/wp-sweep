@@ -104,6 +104,54 @@ class WPSweep {
 	}
 
 	/**
+	 * Count the number of items belonging to each table
+	 *
+	 * @access public
+	 * @param string Table name
+	 * @return integer Number of items belonging to each table
+	 */
+	public function table_count( $name ) {
+		global $wpdb;
+
+		$count = 0;
+
+		switch( $name ) {
+			case 'posts':
+				$count = $wpdb->get_var( "SELECT COUNT(*) FROM $wpdb->posts" );
+				break;
+			case 'postmeta':
+				$count = $wpdb->get_var( "SELECT COUNT(*) FROM $wpdb->postmeta" );
+				break;
+			case 'comments':
+				$count = $wpdb->get_var( "SELECT COUNT(*) FROM $wpdb->comments" );
+				break;
+			case 'commentmeta':
+				$count = $wpdb->get_var( "SELECT COUNT(*) FROM $wpdb->commentmeta" );
+				break;
+			case 'users':
+				$count = $wpdb->get_var( "SELECT COUNT(*) FROM $wpdb->users" );
+				break;
+			case 'usermeta':
+				$count = $wpdb->get_var( "SELECT COUNT(*) FROM $wpdb->usermeta" );
+				break;
+			case 'term_relationships':
+				$count = $wpdb->get_var( "SELECT COUNT(*) FROM $wpdb->term_relationships" );
+				break;
+			case 'term_taxonomy':
+				$count = $wpdb->get_var( "SELECT COUNT(*) FROM $wpdb->term_taxonomy" );
+				break;
+			case 'terms':
+				$count = $wpdb->get_var( "SELECT COUNT(*) FROM $wpdb->terms" );
+				break;
+			case 'options':
+				$count = $wpdb->get_var( "SELECT COUNT(*) FROM $wpdb->options" );
+				break;
+		}
+
+		return $count;
+	}
+
+	/**
 	 * Count the number of items belonging to each sweep type
 	 *
 	 * @access public

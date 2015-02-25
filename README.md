@@ -64,7 +64,8 @@ I spent most of my free time creating, updating, maintaining and supporting thes
 3. You can access `WP-Sweep` via `WP-Admin -> Sweep`
 
 ## Screenshots
-1. WP-Sweep Administrator Page
+1. WP-Sweep Administrator Page (Before Sweeping)
+2. WP-Sweep Administrator Page (Swept)
 
 ## Frequently Asked Questions
 Coming soon ...
