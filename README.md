@@ -1,7 +1,7 @@
 # WP-Sweep
 Contributors: GamerZ  
 Donate link: http://lesterchan.net/site/donation/  
-Tags: sweep, clean, cleanup, clean up, optimize, orphan, unused, duplicated, posts, post meta, comments, comment meta, users, user meta, terms, term relationships, revisions, auto drafts, transient
+Tags: sweep, clean, cleanup, clean up, optimize, orphan, unused, duplicated, posts, post meta, comments, comment meta, users, user meta, terms, term relationships, revisions, auto drafts, transient  
 Requires at least: 4.1  
 Tested up to: 4.1  
 Stable tag: trunk  
