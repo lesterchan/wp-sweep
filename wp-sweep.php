@@ -3,7 +3,7 @@
 Plugin Name: WP-Sweep
 Plugin URI: http://lesterchan.net/portfolio/programming/php/
 Description: WP-Sweep allows you to clean up unused, orphaned and duplicated data in your WordPress. It cleans up revisions, auto drafts, unapproved comments, spam comments, trashed comments, orphan post meta, orphan comment meta, orphan user meta, orphan term relationships, unused terms, duplicated post meta, duplicated comment meta, duplicated user meta and transient options.
-Version: 1.0.0
+Version: 1.0.1
 Author: Lester 'GaMerZ' Chan
 Author URI: http://lesterchan.net
 Text Domain: wp-sweep
@@ -30,7 +30,7 @@ Text Domain: wp-sweep
 /**
  * WP-Sweep version
  */
-define( 'WP_SWEEP_VERSION', '1.0.0' );
+define( 'WP_SWEEP_VERSION', '1.0.1' );
 
 /**
  * Class WPSweep
@@ -169,6 +169,9 @@ class WPSweep {
 			case 'auto_drafts':
 				$count = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(ID) FROM $wpdb->posts WHERE post_status = %s", 'auto-draft' ) );
 				break;
+			case 'deleted_posts':
+				$count = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(ID) FROM $wpdb->posts WHERE post_status = %s", 'trash' ) );
+				break;
 			case 'unapproved_comments':
 				$count = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(comment_ID) FROM $wpdb->comments WHERE comment_approved = %s", '0' ) );
 				break;
@@ -246,17 +249,27 @@ class WPSweep {
 				$query = $wpdb->get_col( $wpdb->prepare( "SELECT ID FROM $wpdb->posts WHERE post_status = %s", 'auto-draft' ) );
 				if( $query ) {
 					foreach ( $query as $id ) {
-						wp_delete_post( $id );
+						wp_delete_post( $id, true );
 					}
 
 					$message = sprintf( __( '%d Auto Drafts Processed', 'wp-sweep' ), number_format_i18n( sizeof( $query ) ) );
+				}
+				break;
+			case 'deleted_posts':
+				$query = $wpdb->get_col( $wpdb->prepare( "SELECT ID FROM $wpdb->posts WHERE post_status = %s", 'trash' ) );
+				if( $query ) {
+					foreach ( $query as $id ) {
+						wp_delete_post( $id, true );
+					}
+
+					$message = sprintf( __( '%d Deleted Posts Processed', 'wp-sweep' ), number_format_i18n( sizeof( $query ) ) );
 				}
 				break;
 			case 'unapproved_comments':
 				$query = $wpdb->get_col( $wpdb->prepare( "SELECT comment_ID FROM $wpdb->comments WHERE comment_approved = %s", '0' ) );
 				if( $query ) {
 					foreach ( $query as $id ) {
-						wp_delete_comment( $id );
+						wp_delete_comment( $id, true );
 					}
 
 					$message = sprintf( __( '%d Unapproved Comments Processed', 'wp-sweep' ), number_format_i18n( sizeof( $query ) ) );
@@ -266,7 +279,7 @@ class WPSweep {
 				$query = $wpdb->get_col( $wpdb->prepare( "SELECT comment_ID FROM $wpdb->comments WHERE comment_approved = %s", 'spam' ) );
 				if( $query ) {
 					foreach ( $query as $id ) {
-						wp_delete_comment( $id );
+						wp_delete_comment( $id, true );
 					}
 
 					$message = sprintf( __( '%d Spam Comments Processed', 'wp-sweep' ), number_format_i18n( sizeof( $query ) ) );
@@ -276,7 +289,7 @@ class WPSweep {
 				$query = $wpdb->get_col( $wpdb->prepare( "SELECT comment_ID FROM $wpdb->comments WHERE (comment_approved = %s OR comment_approved = %s)", 'trash', 'post-trashed' ) );
 				if( $query ) {
 					foreach ( $query as $id ) {
-						wp_delete_comment( $id );
+						wp_delete_comment( $id, true );
 					}
 
 					$message = sprintf( __( '%d Trash Comments Processed', 'wp-sweep' ), number_format_i18n( sizeof( $query ) ) );
@@ -300,7 +313,12 @@ class WPSweep {
 				$query = $wpdb->get_results( "SELECT post_id, meta_key FROM $wpdb->postmeta WHERE post_id NOT IN (SELECT ID FROM $wpdb->posts)" );
 				if( $query ) {
 					foreach ( $query as $meta ) {
-						delete_post_meta( $meta->post_id, $meta->meta_key );
+						$post_id = intval( $meta->post_id );
+						if( $post_id === 0 ) {
+							$wpdb->query( $wpdb->prepare( "DELETE FROM $wpdb->postmeta WHERE post_id = %d AND meta_key = %s", $post_id, $meta->meta_key ) );
+						} else {
+							delete_post_meta( $post_id, $meta->meta_key );
+						}
 					}
 
 					$message = sprintf( __( '%d Orphaned Post Meta Processed', 'wp-sweep' ), number_format_i18n( sizeof( $query ) ) );
@@ -310,7 +328,12 @@ class WPSweep {
 				$query = $wpdb->get_results( "SELECT comment_id, meta_key FROM $wpdb->commentmeta WHERE comment_id NOT IN (SELECT comment_ID FROM $wpdb->comments)" );
 				if( $query ) {
 					foreach ( $query as $meta ) {
-						delete_comment_meta( $meta->comment_id, $meta->meta_key );
+						$comment_id = intval( $meta->comment_id );
+						if( $comment_id === 0 ) {
+							$wpdb->query( $wpdb->prepare( "DELETE FROM $wpdb->commentmeta WHERE comment_id = %d AND meta_key = %s", $comment_id, $meta->meta_key ) );
+						} else {
+							delete_comment_meta( $comment_id, $meta->meta_key );
+						}
 					}
 
 					$message = sprintf( __( '%d Orphaned Comment Meta Processed', 'wp-sweep' ), number_format_i18n( sizeof( $query ) ) );
@@ -320,7 +343,12 @@ class WPSweep {
 				$query = $wpdb->get_results( "SELECT user_id, meta_key FROM $wpdb->usermeta WHERE user_id NOT IN (SELECT ID FROM $wpdb->users)" );
 				if( $query ) {
 					foreach ( $query as $meta ) {
-						delete_user_meta( $meta->user_id, $meta->meta_key );
+						$user_id = intval( $meta->user_id );
+						if( $user_id === 0 ) {
+							$wpdb->query( $wpdb->prepare( "DELETE FROM $wpdb->usermeta WHERE user_id = %d AND meta_key = %s", $user_id, $meta->meta_key ) );
+						} else {
+							delete_user_meta( $user_id, $meta->meta_key );
+						}
 					}
 
 					$message = sprintf( __( '%d Orphaned User Meta Processed', 'wp-sweep' ), number_format_i18n( sizeof( $query ) ) );

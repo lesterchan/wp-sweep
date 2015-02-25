@@ -15,9 +15,10 @@ This plugin cleans up:
 
 * Revisions
 * Auto drafts
+* Deleted comments
 * Unapproved comments
-* Spam comments
-* Trashed comments
+* Spammed comments
+* Deleted comments
 * Orphaned post meta
 * Orphaned comment meta
 * Orphaned user meta
@@ -56,6 +57,12 @@ Following delete functions are used:
 I spent most of my free time creating, updating, maintaining and supporting these plugins, if you really love my plugins and could spare me a couple of bucks, I will really appreciate it. If not feel free to use it without any obligations.
 
 ## Changelog
+
+### 1.0.1
+* NEW: Moved plugin location to WP-Admin -> Tools -> Sweep
+* NEW: Add Deleted Post Sweep
+* FIXED: Use forced_delete for wp_delete_post() and wp_delete_comment();
+* FIXED: If orphaned meta has an object id of 0, use SQL query to delete 
 
 ### 1.0.0
 * Initial release

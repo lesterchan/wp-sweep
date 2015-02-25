@@ -28,6 +28,7 @@ $total_options = WPSweep::get_instance()->table_count( 'options' );
 ### Count
 $revisions                  = WPSweep::get_instance()->count( 'revisions' );
 $auto_drafts                = WPSweep::get_instance()->count( 'auto_drafts' );
+$deleted_posts              = WPSweep::get_instance()->count( 'deleted_posts' );
 $orphan_postmeta            = WPSweep::get_instance()->count( 'orphan_postmeta' );
 $duplicated_postmeta        = WPSweep::get_instance()->count( 'duplicated_postmeta' );
 
@@ -105,6 +106,24 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 			</tr>
 			<tr>
 				<td>
+					<strong><?php _e( 'Deleted Posts', 'wp-sweep' ); ?></strong>
+				</td>
+				<td>
+					<?php echo number_format_i18n( $deleted_posts ); ?>
+				</td>
+				<td>
+					<?php echo round( ( $deleted_posts/$total_posts ) * 100, 2 ); ?>%
+				</td>
+				<td>
+					<?php if( ! empty( $deleted_posts ) ): ?>
+						<a href="<?php echo wp_nonce_url( $current_page . '&sweep=deleted_posts', 'wp_sweep_deleted_posts' ); ?>" class="button button-primary"><?php _e( 'Sweep', 'wp-sweep' ); ?></a>
+					<?php else: ?>
+						<?php _e( 'N/A', 'wp-sweep' ); ?>
+					<?php endif; ?>
+				</td>
+			</tr>
+			<tr class="alternate">
+				<td>
 					<strong><?php _e( 'Orphaned Post Meta', 'wp-sweep' ); ?></strong>
 				</td>
 				<td>
@@ -121,7 +140,7 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 					<?php endif; ?>
 				</td>
 			</tr>
-			<tr class="alternate">
+			<tr>
 				<td>
 					<strong><?php _e( 'Duplicated Post Meta', 'wp-sweep' ); ?></strong>
 				</td>
@@ -174,7 +193,7 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 			</tr>
 			<tr class="alternate">
 				<td>
-					<strong><?php _e( 'Spam Comments', 'wp-sweep' ); ?></strong>
+					<strong><?php _e( 'Spammed Comments', 'wp-sweep' ); ?></strong>
 				</td>
 				<td>
 					<?php echo number_format_i18n( $spam_comments ); ?>
@@ -192,7 +211,7 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 			</tr>
 			<tr>
 				<td>
-					<strong><?php _e( 'Delete Comments', 'wp-sweep' ); ?></strong>
+					<strong><?php _e( 'Deleted Comments', 'wp-sweep' ); ?></strong>
 				</td>
 				<td>
 					<?php echo number_format_i18n( $deleted_comments ); ?>
