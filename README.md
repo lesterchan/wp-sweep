@@ -63,7 +63,7 @@ I spent most of my free time creating, updating, maintaining and supporting thes
 ## Installation
 1. Upload `wp-sweep` folder to the `/wp-content/plugins/` directory
 2. Activate the `WP-Sweep` plugin through the 'Plugins' menu in WordPress
-3. You can access `WP-Sweep` via `WP-Admin -> Sweep`
+3. You can access `WP-Sweep` via `WP-Admin -> Tools -> Sweep`
 
 ## Screenshots
 1. WP-Sweep Administrator Page (Before Sweeping)

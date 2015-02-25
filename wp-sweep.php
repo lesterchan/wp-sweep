@@ -99,8 +99,7 @@ class WPSweep {
 	 * @return void
 	 */
 	public function admin_menu() {
-		add_menu_page( __( 'Sweep', 'wp-sweep' ), __( 'Sweep', 'wp-sweep' ), 'activate_plugins', 'wp-sweep/admin.php', '', 'dashicons-editor-removeformatting' );
-		add_submenu_page( 'wp-sweep/admin.php', __( 'Sweep', 'wp-sweep' ), __( 'Sweep', 'wp-sweep' ), 'activate_plugins', 'wp-sweep/admin.php' );
+		add_management_page( __( 'Sweep', 'wp-sweep' ), __( 'Sweep', 'wp-sweep' ), 'activate_plugins', 'wp-sweep/admin.php' );
 	}
 
 	/**
