@@ -12,6 +12,7 @@ WP-Sweep allows you to clean up unused, orphaned and duplicated data in your Wor
 
 ## Description
 This plugin cleans up: 
+
 * Revisions
 * Auto drafts
 * Unapproved comments
@@ -30,6 +31,7 @@ This plugin cleans up:
 This plugin uses proper WordPress delete functions as much as possible instead of running direct delete MySQL queries.
 
 Following delete functions are used:
+
 * wp_delete_post_revision()
 * wp_delete_post()
 * wp_delete_comment()
