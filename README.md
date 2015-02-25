@@ -57,6 +57,8 @@ Following delete functions are used:
 I spent most of my free time creating, updating, maintaining and supporting these plugins, if you really love my plugins and could spare me a couple of bucks, I will really appreciate it. If not feel free to use it without any obligations.
 
 ## Changelog
+### 1.0.2
+* FIXED: number_format_i18n() issues after sweeping
 
 ### 1.0.1
 * NEW: Moved plugin location to WP-Admin -> Tools -> Sweep
