@@ -58,6 +58,7 @@ I spent most of my free time creating, updating, maintaining and supporting thes
 
 ## Changelog
 ### 1.0.2
+* FIXED: Use term_id for wp_remove_object_terms()
 * FIXED: number_format_i18n() issues after sweeping
 
 ### 1.0.1

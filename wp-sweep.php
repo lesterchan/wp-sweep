@@ -239,7 +239,7 @@ class WPSweep {
 				$query = $wpdb->get_col( $wpdb->prepare( "SELECT ID FROM $wpdb->posts WHERE post_type = %s", 'revision' ) );
 				if( $query ) {
 					foreach ( $query as $id ) {
-						wp_delete_post_revision( $id );
+						wp_delete_post_revision( intval( $id ) );
 					}
 
 					$message = sprintf( __( '%s Revisions Processed', 'wp-sweep' ), number_format_i18n( sizeof( $query ) ) );
@@ -249,7 +249,7 @@ class WPSweep {
 				$query = $wpdb->get_col( $wpdb->prepare( "SELECT ID FROM $wpdb->posts WHERE post_status = %s", 'auto-draft' ) );
 				if( $query ) {
 					foreach ( $query as $id ) {
-						wp_delete_post( $id, true );
+						wp_delete_post( intval( $id ), true );
 					}
 
 					$message = sprintf( __( '%s Auto Drafts Processed', 'wp-sweep' ), number_format_i18n( sizeof( $query ) ) );
@@ -269,7 +269,7 @@ class WPSweep {
 				$query = $wpdb->get_col( $wpdb->prepare( "SELECT comment_ID FROM $wpdb->comments WHERE comment_approved = %s", '0' ) );
 				if( $query ) {
 					foreach ( $query as $id ) {
-						wp_delete_comment( $id, true );
+						wp_delete_comment( intval( $id ), true );
 					}
 
 					$message = sprintf( __( '%s Unapproved Comments Processed', 'wp-sweep' ), number_format_i18n( sizeof( $query ) ) );
@@ -279,7 +279,7 @@ class WPSweep {
 				$query = $wpdb->get_col( $wpdb->prepare( "SELECT comment_ID FROM $wpdb->comments WHERE comment_approved = %s", 'spam' ) );
 				if( $query ) {
 					foreach ( $query as $id ) {
-						wp_delete_comment( $id, true );
+						wp_delete_comment( intval( $id ), true );
 					}
 
 					$message = sprintf( __( '%s Spam Comments Processed', 'wp-sweep' ), number_format_i18n( sizeof( $query ) ) );
@@ -289,7 +289,7 @@ class WPSweep {
 				$query = $wpdb->get_col( $wpdb->prepare( "SELECT comment_ID FROM $wpdb->comments WHERE (comment_approved = %s OR comment_approved = %s)", 'trash', 'post-trashed' ) );
 				if( $query ) {
 					foreach ( $query as $id ) {
-						wp_delete_comment( $id, true );
+						wp_delete_comment( intval( $id ), true );
 					}
 
 					$message = sprintf( __( '%s Trash Comments Processed', 'wp-sweep' ), number_format_i18n( sizeof( $query ) ) );
@@ -355,10 +355,10 @@ class WPSweep {
 				}
 				break;
 			case 'orphan_term_relationships':
-				$query = $wpdb->get_results( "SELECT tr.object_id, tr.term_taxonomy_id, tt.taxonomy FROM $wpdb->term_relationships AS tr INNER JOIN $wpdb->term_taxonomy AS tt ON tr.term_taxonomy_id = tt.term_taxonomy_id WHERE tt.taxonomy != 'link_category' AND tr.object_id NOT IN (SELECT ID FROM $wpdb->posts)" );
+				$query = $wpdb->get_results( "SELECT tr.object_id, tt.term_id, tt.taxonomy FROM $wpdb->term_relationships AS tr INNER JOIN $wpdb->term_taxonomy AS tt ON tr.term_taxonomy_id = tt.term_taxonomy_id WHERE tt.taxonomy != 'link_category' AND tr.object_id NOT IN (SELECT ID FROM $wpdb->posts)" );
 				if( $query ) {
 					foreach ( $query as $tax ) {
-						wp_remove_object_terms( $tax->object_id, $tax->term_taxonomy_id, $tax->taxonomy );
+						wp_remove_object_terms( intval( $tax->object_id ), intval( $tax->term_id ), $tax->taxonomy );
 					}
 
 					$message = sprintf( __( '%s Orphaned Term Relationships Processed', 'wp-sweep' ), number_format_i18n( sizeof( $query ) ) );
@@ -368,7 +368,7 @@ class WPSweep {
 				$query = $wpdb->get_results( $wpdb->prepare( "SELECT t.term_id, tt.taxonomy FROM $wpdb->terms AS t INNER JOIN $wpdb->term_taxonomy AS tt ON t.term_id = tt.term_id WHERE tt.count = %d", 0 ) );
 				if( $query ) {
 					foreach ( $query as $tax ) {
-						wp_delete_term( $tax->term_id, $tax->taxonomy );
+						wp_delete_term( intval( $tax->term_id ), $tax->taxonomy );
 					}
 
 					$message = sprintf( __( '%s Unused Terms Processed', 'wp-sweep' ), number_format_i18n( sizeof( $query ) ) );
