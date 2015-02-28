@@ -181,7 +181,11 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 					<?php echo number_format_i18n( $unapproved_comments ); ?>
 				</td>
 				<td>
-					<?php echo round( ( $unapproved_comments/$total_comments ) * 100, 2 ); ?>%
+					<?php if( $total_comments > 0 ): ?>
+						<?php echo round( ( $unapproved_comments/$total_comments ) * 100, 2 ); ?>%
+					<?php else: ?>
+						0%
+					<?php endif; ?>
 				</td>
 				<td>
 					<?php if( ! empty( $unapproved_comments ) ): ?>
@@ -199,7 +203,11 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 					<?php echo number_format_i18n( $spam_comments ); ?>
 				</td>
 				<td>
-					<?php echo round( ( $spam_comments/$total_comments ) * 100, 2 ); ?>%
+					<?php if( $total_comments > 0 ): ?>
+						<?php echo round( ( $spam_comments/$total_comments ) * 100, 2 ); ?>%
+					<?php else: ?>
+						0%
+					<?php endif; ?>
 				</td>
 				<td>
 					<?php if( ! empty( $spam_comments ) ): ?>
@@ -217,7 +225,11 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 					<?php echo number_format_i18n( $deleted_comments ); ?>
 				</td>
 				<td>
-					<?php echo round( ( $deleted_comments/$total_comments ) * 100, 2 ); ?>%
+					<?php if( $total_comments > 0 ): ?>
+						<?php echo round( ( $deleted_comments/$total_comments ) * 100, 2 ); ?>%
+					<?php else: ?>
+						0%
+					<?php endif; ?>
 				</td>
 				<td>
 					<?php if( ! empty( $deleted_comments ) ): ?>
@@ -235,7 +247,11 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 					<?php echo number_format_i18n( $orphan_commentmeta ); ?>
 				</td>
 				<td>
-					<?php echo round( ( $orphan_commentmeta/$total_commentmeta ) * 100, 2 ); ?>%
+					<?php if( $total_commentmeta > 0 ): ?>
+						<?php echo round( ( $orphan_commentmeta/$total_commentmeta ) * 100, 2 ); ?>%
+					<?php else: ?>
+						0%
+					<?php endif; ?>
 				</td>
 				<td>
 					<?php if( ! empty( $orphan_commentmeta ) ): ?>
@@ -253,7 +269,11 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 					<?php echo number_format_i18n( $duplicated_commentmeta ); ?>
 				</td>
 				<td>
-					<?php echo round( ( $duplicated_commentmeta/$total_commentmeta ) * 100, 2 ); ?>%
+					<?php if( $total_commentmeta > 0 ): ?>
+						<?php echo round( ( $duplicated_commentmeta/$total_commentmeta ) * 100, 2 ); ?>%
+					<?php else: ?>
+						0%
+					<?php endif; ?>
 				</td>
 				<td>
 					<?php if( ! empty( $duplicated_commentmeta ) ): ?>
