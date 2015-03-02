@@ -22,7 +22,8 @@
 		 */
 		$(window).on('beforeunload', function (e) {
 			if (body.hasClass('sweep-active')) {
-				return wpSweep.closeWarning;
+				(e || window.event).returnValue = wpSweep.closeWarning; // Gecko and Trident
+				return wpSweep.closeWarning; // Gecko and WebKit
 			}
 		});
 
