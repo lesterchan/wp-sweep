@@ -109,7 +109,7 @@ class WPSweep {
 		}
 
 		wp_enqueue_script( 'wp-sweep', trailingslashit( plugin_dir_url( __FILE__ ) ) . 'wp-sweep.js', array( 'jquery' ), WP_SWEEP_VERSION, true );
-		wp_localize_script( 'wp-sweep', 'wpSweep', array( 'closeWarning' => __( 'Sweeping is in progress. Are you sure to leave?', 'wp-sweep' ) ) );
+		wp_localize_script( 'wp-sweep', 'wpSweep', array( 'closeWarning' => __( 'Sweeping is in progress. If you leave now the process won\'t be completed.', 'wp-sweep' ) ) );
 
 		return true;
 
