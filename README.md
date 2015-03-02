@@ -58,6 +58,7 @@ I spent most of my free time creating, updating, maintaining and supporting thes
 
 ## Changelog
 ### 1.0.3
+* NEW: AJAX Sweeping
 * NEW: View details of sweep
 * NEW: Optimize DB sweep
 * NEW: User hint and confirmation. Props @SiamKreative

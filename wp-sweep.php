@@ -93,6 +93,7 @@ class WPSweep {
 		add_action( 'admin_menu', array( $this, 'admin_menu' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts') );
 		add_action( 'wp_ajax_sweep_details', array( $this, 'ajax_sweep_details' ) );
+		add_action( 'wp_ajax_sweep', array( $this, 'ajax_sweep' ) );
 	}
 
 	/**
@@ -115,8 +116,11 @@ class WPSweep {
 		}
 
 		wp_localize_script( 'wp-sweep', 'wp_sweep', array(
-			'close_warning' => __( 'Sweeping is in progress. If you leave now the process won\'t be completed.', 'wp-sweep' ),
-			'ajax_url' => admin_url( 'admin-ajax.php' )
+			'text_close_warning'    => __( 'Sweeping is in progress. If you leave now the process won\'t be completed.', 'wp-sweep' ),
+			'text_sweep'            => __( 'Sweep', 'wp-sweep' ),
+			'text_sweeping'         => __( 'Sweeping ...', 'wp-sweep' ),
+			'text_na'               => __( 'N/A', 'wp-sweep' ),
+			'ajax_url'              => admin_url( 'admin-ajax.php' )
 		) );
 	}
 
@@ -138,17 +142,68 @@ class WPSweep {
 	 * @return void
 	 */
 	public function ajax_sweep_details() {
-		if( ! empty( $_GET['action'] ) && $_GET['action'] === 'sweep_details' && ! empty( $_GET['sweep_details'] ) ) {
+		if( ! empty( $_GET['action'] ) && $_GET['action'] === 'sweep_details' && ! empty( $_GET['sweep_name'] ) && ! empty( $_GET['sweep_type'] ) ) {
 			// Verify Referer
-			if ( ! check_admin_referer( 'wp_sweep_details_' . $_GET['sweep_details'] ) ) {
+			if ( ! check_admin_referer( 'wp_sweep_details_' . $_GET['sweep_name'] ) ) {
 				wp_send_json_error( array(
-					'success' => false,
-					'data'    => __( 'Failed to verify referrer.', 'wp-sweep' )
+					'error'    => __( 'Failed to verify referrer.', 'wp-sweep' )
 				) );
 			} else {
+				wp_send_json_success( $this->details( $_GET['sweep_name'] ) );
+			}
+		}
+	}
+
+	/**
+	 * Sweep via AJAX
+	 *
+	 * @access public
+	 * @return void
+	 */
+	public function ajax_sweep() {
+		if( ! empty( $_GET['action'] ) && $_GET['action'] === 'sweep' && ! empty( $_GET['sweep_name'] ) && ! empty( $_GET['sweep_type'] ) ) {
+			// Verify Referer
+			if ( ! check_admin_referer( 'wp_sweep_' . $_GET['sweep_name'] ) ) {
+				wp_send_json_error( array(
+					'error'    => __( 'Failed to verify referrer.', 'wp-sweep' )
+				) );
+			} else {
+				$sweep = $this->sweep( $_GET['sweep_name'] );
+				$count = $this->count( $_GET['sweep_name'] );
+				$total_count = $this->total_count( $_GET['sweep_type'] );
+				$total_stats = array();
+				switch( $_GET['sweep_type'] ) {
+					case 'posts':
+					case 'postmeta':
+						$total_stats = array( 'posts' => $this->total_count( 'posts' ), 'postmeta' => $this->total_count( 'postmeta') );
+						break;
+					case 'comments':
+					case 'commentmeta':
+						$total_stats = array( 'comments' => $this->total_count( 'comments' ), 'commentmeta' => $this->total_count( 'commentmeta') );
+						break;
+					case 'users':
+					case 'usermeta':
+						$total_stats = array( 'users' => $this->total_count( 'users' ), 'usermeta' => $this->total_count( 'usermeta') );
+						break;
+					case 'term_relationships':
+					case 'term_taxonomy':
+					case 'terms':
+						$total_stats = array( 'term_relationships' => $this->total_count( 'term_relationships' ), 'term_taxonomy' => $this->total_count( 'term_taxonomy'), 'terms' => $this->total_count( 'terms') );
+						break;
+					case 'options':
+						$total_stats = array( 'options' => $this->total_count( 'options' ) );
+						break;
+					case 'tables':
+						$total_stats = array( 'tables' => $this->total_count( 'tables' ) );
+						break;
+				}
+
 				wp_send_json_success( array(
-					'success' => true,
-					'data'    => $this->details( $_GET['sweep_details'] )
+					'sweep' => $sweep,
+					'count' => $count,
+					'total' => $total_count,
+					'percentage' => $this->format_percentage( $count, $total_count ),
+					'stats' => $total_stats
 				) );
 			}
 		}
@@ -212,12 +267,12 @@ class WPSweep {
 	 * @param string Sweep name
 	 * @return integer Number of items belonging to each sweep
 	 */
-	public function count( $type ) {
+	public function count( $name ) {
 		global $wpdb;
 
 		$count = 0;
 
-		switch( $type ) {
+		switch( $name ) {
 			case 'revisions':
 				$count = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(ID) FROM $wpdb->posts WHERE post_type = %s", 'revision' ) );
 				break;
@@ -271,6 +326,9 @@ class WPSweep {
 				if( is_array( $query ) ) {
 					$count = array_sum( array_map( 'intval', $query ) );
 				}
+				break;
+			case 'optimize_database':
+				$count = sizeof( $wpdb->get_col( 'SHOW TABLES' ) );
 				break;
 		}
 
