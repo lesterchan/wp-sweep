@@ -76,7 +76,7 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 					<?php echo number_format_i18n( $revisions ); ?>
 				</td>
 				<td>
-					<?php echo round( ( $revisions/$total_posts ) * 100, 2 ); ?>%
+					<?php echo WPSweep::get_instance()->format_percentage( $revisions, $total_posts ); ?>
 				</td>
 				<td>
 					<?php if( ! empty( $revisions ) ): ?>
@@ -94,7 +94,7 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 					<?php echo number_format_i18n( $auto_drafts ); ?>
 				</td>
 				<td>
-					<?php echo round( ( $auto_drafts/$total_posts ) * 100, 2 ); ?>%
+					<?php echo WPSweep::get_instance()->format_percentage( $auto_drafts, $total_posts ); ?>
 				</td>
 				<td>
 					<?php if( ! empty( $auto_drafts ) ): ?>
@@ -112,7 +112,7 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 					<?php echo number_format_i18n( $deleted_posts ); ?>
 				</td>
 				<td>
-					<?php echo round( ( $deleted_posts/$total_posts ) * 100, 2 ); ?>%
+					<?php echo WPSweep::get_instance()->format_percentage( $deleted_posts, $total_posts ); ?>
 				</td>
 				<td>
 					<?php if( ! empty( $deleted_posts ) ): ?>
@@ -130,7 +130,7 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 					<?php echo number_format_i18n( $orphan_postmeta ); ?>
 				</td>
 				<td>
-					<?php echo round( ( $orphan_postmeta/$total_postmeta ) * 100, 2 ); ?>%
+					<?php echo WPSweep::get_instance()->format_percentage( $orphan_postmeta, $total_postmeta ); ?>
 				</td>
 				<td>
 					<?php if( ! empty( $orphan_postmeta ) ): ?>
@@ -148,7 +148,7 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 					<?php echo number_format_i18n( $duplicated_postmeta ); ?>
 				</td>
 				<td>
-					<?php echo round( ( $duplicated_postmeta/$total_postmeta ) * 100, 2 ); ?>%
+					<?php echo WPSweep::get_instance()->format_percentage( $duplicated_postmeta, $total_postmeta ); ?>
 				</td>
 				<td>
 					<?php if( ! empty( $duplicated_postmeta ) ): ?>
@@ -181,7 +181,7 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 					<?php echo number_format_i18n( $unapproved_comments ); ?>
 				</td>
 				<td>
-					<?php echo round( ( $unapproved_comments/$total_comments ) * 100, 2 ); ?>%
+					<?php echo WPSweep::get_instance()->format_percentage( $unapproved_comments, $total_comments ); ?>
 				</td>
 				<td>
 					<?php if( ! empty( $unapproved_comments ) ): ?>
@@ -199,7 +199,7 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 					<?php echo number_format_i18n( $spam_comments ); ?>
 				</td>
 				<td>
-					<?php echo round( ( $spam_comments/$total_comments ) * 100, 2 ); ?>%
+					<?php echo WPSweep::get_instance()->format_percentage( $spam_comments, $total_comments ); ?>
 				</td>
 				<td>
 					<?php if( ! empty( $spam_comments ) ): ?>
@@ -217,7 +217,7 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 					<?php echo number_format_i18n( $deleted_comments ); ?>
 				</td>
 				<td>
-					<?php echo round( ( $deleted_comments/$total_comments ) * 100, 2 ); ?>%
+					<?php echo WPSweep::get_instance()->format_percentage( $deleted_comments, $total_comments ); ?>
 				</td>
 				<td>
 					<?php if( ! empty( $deleted_comments ) ): ?>
@@ -235,7 +235,7 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 					<?php echo number_format_i18n( $orphan_commentmeta ); ?>
 				</td>
 				<td>
-					<?php echo round( ( $orphan_commentmeta/$total_commentmeta ) * 100, 2 ); ?>%
+					<?php echo WPSweep::get_instance()->format_percentage( $orphan_commentmeta, $total_commentmeta ); ?>
 				</td>
 				<td>
 					<?php if( ! empty( $orphan_commentmeta ) ): ?>
@@ -253,7 +253,7 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 					<?php echo number_format_i18n( $duplicated_commentmeta ); ?>
 				</td>
 				<td>
-					<?php echo round( ( $duplicated_commentmeta/$total_commentmeta ) * 100, 2 ); ?>%
+					<?php echo WPSweep::get_instance()->format_percentage( $duplicated_commentmeta, $total_commentmeta ); ?>
 				</td>
 				<td>
 					<?php if( ! empty( $duplicated_commentmeta ) ): ?>
@@ -286,7 +286,7 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 					<?php echo number_format_i18n( $orphan_usermeta ); ?>
 				</td>
 				<td>
-					<?php echo round( ( $orphan_usermeta/$total_usermeta ) * 100, 2 ); ?>%
+					<?php echo WPSweep::get_instance()->format_percentage( $orphan_usermeta, $total_usermeta ); ?>
 				</td>
 				<td>
 					<?php if( ! empty( $orphan_usermeta ) ): ?>
@@ -304,7 +304,7 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 					<?php echo number_format_i18n( $duplicated_usermeta ); ?>
 				</td>
 				<td>
-					<?php echo round( ( $duplicated_usermeta/$total_usermeta ) * 100, 2 ); ?>%
+					<?php echo WPSweep::get_instance()->format_percentage( $duplicated_usermeta, $total_usermeta ); ?>
 				</td>
 				<td>
 					<?php if( ! empty( $duplicated_usermeta ) ): ?>
@@ -337,7 +337,7 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 					<?php echo number_format_i18n( $orphan_term_relationships ); ?>
 				</td>
 				<td>
-					<?php echo round( ( $orphan_term_relationships/$total_term_relationships ) * 100, 2 ); ?>%
+					<?php echo WPSweep::get_instance()->format_percentage( $orphan_term_relationships, $total_term_relationships ); ?>
 				</td>
 				<td>
 					<?php if( ! empty( $orphan_term_relationships ) ): ?>
@@ -356,7 +356,7 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 					<?php echo number_format_i18n( $unused_terms ); ?>
 				</td>
 				<td>
-					<?php echo round( ( $unused_terms/$total_terms ) * 100, 2 ); ?>%
+					<?php echo WPSweep::get_instance()->format_percentage( $unused_terms, $total_terms ); ?>
 				</td>
 				<td>
 					<?php if( ! empty( $unused_terms ) ): ?>
@@ -389,7 +389,7 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 					<?php echo number_format_i18n( $transient_options ); ?>
 				</td>
 				<td>
-					<?php echo round( ( $transient_options/$total_options ) * 100, 2 ); ?>%
+					<?php echo WPSweep::get_instance()->format_percentage( $transient_options, $total_options ); ?>
 				</td>
 				<td>
 					<?php if( ! empty( $transient_options ) ): ?>

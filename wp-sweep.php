@@ -416,6 +416,19 @@ class WPSweep {
 	}
 
 	/**
+	 * Format number to percentage, taking care of division by 0.
+	 * Props @barisunver https://github.com/barisunver
+	 *
+	 * @access public
+	 * @param integer Current count of items
+	 * @param integer Total count of items
+	 * @return string Number in percentage
+	 */
+	function format_percentage( $current, $total ) {
+		return ( $total > 0 ? round( ( $current / $total ) * 100, 2 ) : 0 ) . '%';
+	}
+
+	/**
 	 * What to do when the plugin is being deactivated
 	 *
 	 * @access public
