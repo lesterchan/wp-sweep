@@ -80,7 +80,7 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 				</td>
 				<td>
 					<?php if( ! empty( $revisions ) ): ?>
-						<a href="<?php echo wp_nonce_url( $current_page . '&sweep=revisions', 'wp_sweep_revisions' ); ?>" class="button button-primary"><?php _e( 'Sweep', 'wp-sweep' ); ?></a>
+						<a href="<?php echo wp_nonce_url( $current_page . '&sweep=revisions', 'wp_sweep_revisions' ); ?>" class="button button-primary" data-sweeping="<?php _e( 'Sweeping...', 'wp-sweep' ); ?>"><?php _e( 'Sweep', 'wp-sweep' ); ?></a>
 					<?php else: ?>
 						<?php _e( 'N/A', 'wp-sweep' ); ?>
 					<?php endif; ?>
@@ -98,7 +98,7 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 				</td>
 				<td>
 					<?php if( ! empty( $auto_drafts ) ): ?>
-						<a href="<?php echo wp_nonce_url( $current_page . '&sweep=auto_drafts', 'wp_sweep_auto_drafts' ); ?>" class="button button-primary"><?php _e( 'Sweep', 'wp-sweep' ); ?></a>
+						<a href="<?php echo wp_nonce_url( $current_page . '&sweep=auto_drafts', 'wp_sweep_auto_drafts' ); ?>" class="button button-primary" data-sweeping="<?php _e( 'Sweeping...', 'wp-sweep' ); ?>"><?php _e( 'Sweep', 'wp-sweep' ); ?></a>
 					<?php else: ?>
 						<?php _e( 'N/A', 'wp-sweep' ); ?>
 					<?php endif; ?>
@@ -116,7 +116,7 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 				</td>
 				<td>
 					<?php if( ! empty( $deleted_posts ) ): ?>
-						<a href="<?php echo wp_nonce_url( $current_page . '&sweep=deleted_posts', 'wp_sweep_deleted_posts' ); ?>" class="button button-primary"><?php _e( 'Sweep', 'wp-sweep' ); ?></a>
+						<a href="<?php echo wp_nonce_url( $current_page . '&sweep=deleted_posts', 'wp_sweep_deleted_posts' ); ?>" class="button button-primary" data-sweeping="<?php _e( 'Sweeping...', 'wp-sweep' ); ?>"><?php _e( 'Sweep', 'wp-sweep' ); ?></a>
 					<?php else: ?>
 						<?php _e( 'N/A', 'wp-sweep' ); ?>
 					<?php endif; ?>
@@ -134,7 +134,7 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 				</td>
 				<td>
 					<?php if( ! empty( $orphan_postmeta ) ): ?>
-						<a href="<?php echo wp_nonce_url( $current_page . '&sweep=orphan_postmeta', 'wp_sweep_orphan_postmeta' ); ?>" class="button button-primary"><?php _e( 'Sweep', 'wp-sweep' ); ?></a>
+						<a href="<?php echo wp_nonce_url( $current_page . '&sweep=orphan_postmeta', 'wp_sweep_orphan_postmeta' ); ?>" class="button button-primary" data-sweeping="<?php _e( 'Sweeping...', 'wp-sweep' ); ?>"><?php _e( 'Sweep', 'wp-sweep' ); ?></a>
 					<?php else: ?>
 						<?php _e( 'N/A', 'wp-sweep' ); ?>
 					<?php endif; ?>
@@ -152,7 +152,7 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 				</td>
 				<td>
 					<?php if( ! empty( $duplicated_postmeta ) ): ?>
-						<a href="<?php echo wp_nonce_url( $current_page . '&sweep=duplicated_postmeta', 'wp_sweep_duplicated_postmeta' ); ?>" class="button button-primary"><?php _e( 'Sweep', 'wp-sweep' ); ?></a>
+						<a href="<?php echo wp_nonce_url( $current_page . '&sweep=duplicated_postmeta', 'wp_sweep_duplicated_postmeta' ); ?>" class="button button-primary" data-sweeping="<?php _e( 'Sweeping...', 'wp-sweep' ); ?>"><?php _e( 'Sweep', 'wp-sweep' ); ?></a>
 					<?php else: ?>
 						<?php _e( 'N/A', 'wp-sweep' ); ?>
 					<?php endif; ?>
@@ -185,7 +185,7 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 				</td>
 				<td>
 					<?php if( ! empty( $unapproved_comments ) ): ?>
-						<a href="<?php echo wp_nonce_url( $current_page . '&sweep=unapproved_comments', 'wp_sweep_unapproved_comments' ); ?>" class="button button-primary"><?php _e( 'Sweep', 'wp-sweep' ); ?></a>
+						<a href="<?php echo wp_nonce_url( $current_page . '&sweep=unapproved_comments', 'wp_sweep_unapproved_comments' ); ?>" class="button button-primary" data-sweeping="<?php _e( 'Sweeping...', 'wp-sweep' ); ?>"><?php _e( 'Sweep', 'wp-sweep' ); ?></a>
 					<?php else: ?>
 						<?php _e( 'N/A', 'wp-sweep' ); ?>
 					<?php endif; ?>
@@ -203,7 +203,7 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 				</td>
 				<td>
 					<?php if( ! empty( $spam_comments ) ): ?>
-						<a href="<?php echo wp_nonce_url( $current_page . '&sweep=spam_comments', 'wp_sweep_spam_comments' ); ?>" class="button button-primary"><?php _e( 'Sweep', 'wp-sweep' ); ?></a>
+						<a href="<?php echo wp_nonce_url( $current_page . '&sweep=spam_comments', 'wp_sweep_spam_comments' ); ?>" class="button button-primary" data-sweeping="<?php _e( 'Sweeping...', 'wp-sweep' ); ?>"><?php _e( 'Sweep', 'wp-sweep' ); ?></a>
 					<?php else: ?>
 						<?php _e( 'N/A', 'wp-sweep' ); ?>
 					<?php endif; ?>
@@ -221,7 +221,7 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 				</td>
 				<td>
 					<?php if( ! empty( $deleted_comments ) ): ?>
-						<a href="<?php echo wp_nonce_url( $current_page . '&sweep=deleted_comments', 'wp_sweep_deleted_comments' ); ?>" class="button button-primary"><?php _e( 'Sweep', 'wp-sweep' ); ?></a>
+						<a href="<?php echo wp_nonce_url( $current_page . '&sweep=deleted_comments', 'wp_sweep_deleted_comments' ); ?>" class="button button-primary" data-sweeping="<?php _e( 'Sweeping...', 'wp-sweep' ); ?>"><?php _e( 'Sweep', 'wp-sweep' ); ?></a>
 					<?php else: ?>
 						<?php _e( 'N/A', 'wp-sweep' ); ?>
 					<?php endif; ?>
@@ -239,7 +239,7 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 				</td>
 				<td>
 					<?php if( ! empty( $orphan_commentmeta ) ): ?>
-						<a href="<?php echo wp_nonce_url( $current_page . '&sweep=orphan_commentmeta', 'wp_sweep_orphan_commentmeta' ); ?>" class="button button-primary"><?php _e( 'Sweep', 'wp-sweep' ); ?></a>
+						<a href="<?php echo wp_nonce_url( $current_page . '&sweep=orphan_commentmeta', 'wp_sweep_orphan_commentmeta' ); ?>" class="button button-primary" data-sweeping="<?php _e( 'Sweeping...', 'wp-sweep' ); ?>"><?php _e( 'Sweep', 'wp-sweep' ); ?></a>
 					<?php else: ?>
 						<?php _e( 'N/A', 'wp-sweep' ); ?>
 					<?php endif; ?>
@@ -257,7 +257,7 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 				</td>
 				<td>
 					<?php if( ! empty( $duplicated_commentmeta ) ): ?>
-						<a href="<?php echo wp_nonce_url( $current_page . '&sweep=duplicated_commentmeta', 'wp_sweep_duplicated_commentmeta' ); ?>" class="button button-primary"><?php _e( 'Sweep', 'wp-sweep' ); ?></a>
+						<a href="<?php echo wp_nonce_url( $current_page . '&sweep=duplicated_commentmeta', 'wp_sweep_duplicated_commentmeta' ); ?>" class="button button-primary" data-sweeping="<?php _e( 'Sweeping...', 'wp-sweep' ); ?>"><?php _e( 'Sweep', 'wp-sweep' ); ?></a>
 					<?php else: ?>
 						<?php _e( 'N/A', 'wp-sweep' ); ?>
 					<?php endif; ?>
@@ -290,7 +290,7 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 				</td>
 				<td>
 					<?php if( ! empty( $orphan_usermeta ) ): ?>
-						<a href="<?php echo wp_nonce_url( $current_page . '&sweep=orphan_usermeta', 'wp_sweep_orphan_usermeta' ); ?>" class="button button-primary"><?php _e( 'Sweep', 'wp-sweep' ); ?></a>
+						<a href="<?php echo wp_nonce_url( $current_page . '&sweep=orphan_usermeta', 'wp_sweep_orphan_usermeta' ); ?>" class="button button-primary" data-sweeping="<?php _e( 'Sweeping...', 'wp-sweep' ); ?>"><?php _e( 'Sweep', 'wp-sweep' ); ?></a>
 					<?php else: ?>
 						<?php _e( 'N/A', 'wp-sweep' ); ?>
 					<?php endif; ?>
@@ -308,7 +308,7 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 				</td>
 				<td>
 					<?php if( ! empty( $duplicated_usermeta ) ): ?>
-						<a href="<?php echo wp_nonce_url( $current_page . '&sweep=duplicated_usermeta', 'wp_sweep_duplicated_usermeta' ); ?>" class="button button-primary"><?php _e( 'Sweep', 'wp-sweep' ); ?></a>
+						<a href="<?php echo wp_nonce_url( $current_page . '&sweep=duplicated_usermeta', 'wp_sweep_duplicated_usermeta' ); ?>" class="button button-primary" data-sweeping="<?php _e( 'Sweeping...', 'wp-sweep' ); ?>"><?php _e( 'Sweep', 'wp-sweep' ); ?></a>
 					<?php else: ?>
 						<?php _e( 'N/A', 'wp-sweep' ); ?>
 					<?php endif; ?>
@@ -341,7 +341,7 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 				</td>
 				<td>
 					<?php if( ! empty( $orphan_term_relationships ) ): ?>
-						<a href="<?php echo wp_nonce_url( $current_page . '&sweep=orphan_term_relationships', 'wp_sweep_orphan_term_relationships' ); ?>" class="button button-primary"><?php _e( 'Sweep', 'wp-sweep' ); ?></a>
+						<a href="<?php echo wp_nonce_url( $current_page . '&sweep=orphan_term_relationships', 'wp_sweep_orphan_term_relationships' ); ?>" class="button button-primary" data-sweeping="<?php _e( 'Sweeping...', 'wp-sweep' ); ?>"><?php _e( 'Sweep', 'wp-sweep' ); ?></a>
 					<?php else: ?>
 						<?php _e( 'N/A', 'wp-sweep' ); ?>
 					<?php endif; ?>
@@ -360,7 +360,7 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 				</td>
 				<td>
 					<?php if( ! empty( $unused_terms ) ): ?>
-						<a href="<?php echo wp_nonce_url( $current_page . '&sweep=unused_terms', 'wp_sweep_unused_terms' ); ?>" class="button button-primary"><?php _e( 'Sweep', 'wp-sweep' ); ?></a>
+						<a href="<?php echo wp_nonce_url( $current_page . '&sweep=unused_terms', 'wp_sweep_unused_terms' ); ?>" class="button button-primary" data-sweeping="<?php _e( 'Sweeping...', 'wp-sweep' ); ?>"><?php _e( 'Sweep', 'wp-sweep' ); ?></a>
 					<?php else: ?>
 						<?php _e( 'N/A', 'wp-sweep' ); ?>
 					<?php endif; ?>
@@ -393,7 +393,7 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 				</td>
 				<td>
 					<?php if( ! empty( $transient_options ) ): ?>
-						<a href="<?php echo wp_nonce_url( $current_page . '&sweep=transient_options', 'wp_sweep_transient_options' ); ?>" class="button button-primary"><?php _e( 'Sweep', 'wp-sweep' ); ?></a>
+						<a href="<?php echo wp_nonce_url( $current_page . '&sweep=transient_options', 'wp_sweep_transient_options' ); ?>" class="button button-primary" data-sweeping="<?php _e( 'Sweeping...', 'wp-sweep' ); ?>"><?php _e( 'Sweep', 'wp-sweep' ); ?></a>
 					<?php else: ?>
 						<?php _e( 'N/A', 'wp-sweep' ); ?>
 					<?php endif; ?>
