@@ -3,7 +3,7 @@
 Plugin Name: WP-Sweep
 Plugin URI: http://lesterchan.net/portfolio/programming/php/
 Description: WP-Sweep allows you to clean up unused, orphaned and duplicated data in your WordPress. It cleans up revisions, auto drafts, unapproved comments, spam comments, trashed comments, orphan post meta, orphan comment meta, orphan user meta, orphan term relationships, unused terms, duplicated post meta, duplicated comment meta, duplicated user meta and transient options.
-Version: 1.0.2
+Version: 1.0.3
 Author: Lester 'GaMerZ' Chan
 Author URI: http://lesterchan.net
 Text Domain: wp-sweep
@@ -30,7 +30,7 @@ Text Domain: wp-sweep
 /**
  * WP-Sweep version
  */
-define( 'WP_SWEEP_VERSION', '1.0.2' );
+define( 'WP_SWEEP_VERSION', '1.0.3' );
 
 /**
  * Class WPSweep
@@ -39,6 +39,7 @@ class WPSweep {
 	/**
 	 * Variables
 	 */
+	public $limit_details = 500;
 	private static $instance;
 
 	/**
@@ -90,29 +91,33 @@ class WPSweep {
 		// Actions
 		add_action( 'init', array( $this, 'init' ) );
 		add_action( 'admin_menu', array( $this, 'admin_menu' ) );
-		add_action( 'admin_print_scripts', array( $this, 'load_scripts' ) );
+		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts') );
+		add_action( 'wp_ajax_sweep_details', array( $this, 'ajax_sweep_details' ) );
 	}
 
 	/**
-	 * Load the plugin script.
+	 * Enqueue JS/CSS files used for admin
 	 *
-	 * @since  1.0.3
+	 * @since 1.0.3
 	 * @access public
-	 * @return bool    Whether or not the script was enqueued
+	 * @params string Hook's name
+	 * @return void
 	 */
-	public function load_scripts() {
-
-		$page = filter_input( INPUT_GET, 'page', FILTER_SANITIZE_STRING );
-
-		if ( 'wp-sweep/admin.php' !== $page ) {
-			return false;
+	public function admin_enqueue_scripts( $hook ) {
+		if( 'wp-sweep/admin.php' !== $hook ) {
+			return;
 		}
 
-		wp_enqueue_script( 'wp-sweep', trailingslashit( plugin_dir_url( __FILE__ ) ) . 'wp-sweep.js', array( 'jquery' ), WP_SWEEP_VERSION, true );
-		wp_localize_script( 'wp-sweep', 'wpSweep', array( 'closeWarning' => __( 'Sweeping is in progress. If you leave now the process won\'t be completed.', 'wp-sweep' ) ) );
+		if( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			wp_enqueue_script( 'wp-sweep', plugins_url( 'wp-sweep/js/wp-sweep.js' ), array( 'jquery' ) , WP_SWEEP_VERSION, true );
+		} else {
+			wp_enqueue_script( 'wp-sweep', plugins_url( 'wp-sweep/js/wp-sweep.min.js' ), array( 'jquery' ) , WP_SWEEP_VERSION, true );
+		}
 
-		return true;
-
+		wp_localize_script( 'wp-sweep', 'wp_sweep', array(
+			'close_warning' => __( 'Sweeping is in progress. If you leave now the process won\'t be completed.', 'wp-sweep' ),
+			'ajax_url' => admin_url( 'admin-ajax.php' )
+		) );
 	}
 
 	/**
@@ -125,14 +130,38 @@ class WPSweep {
 		add_management_page( __( 'Sweep', 'wp-sweep' ), __( 'Sweep', 'wp-sweep' ), 'activate_plugins', 'wp-sweep/admin.php' );
 	}
 
+
 	/**
-	 * Count the number of items belonging to each table
+	 * Sweep Details loaded via AJAX
 	 *
 	 * @access public
-	 * @param string Table name
-	 * @return integer Number of items belonging to each table
+	 * @return void
 	 */
-	public function table_count( $name ) {
+	public function ajax_sweep_details() {
+		if( ! empty( $_GET['action'] ) && $_GET['action'] === 'sweep_details' && ! empty( $_GET['sweep_details'] ) ) {
+			// Verify Referer
+			if ( ! check_admin_referer( 'wp_sweep_details_' . $_GET['sweep_details'] ) ) {
+				wp_send_json_error( array(
+					'success' => false,
+					'data'    => __( 'Failed to verify referrer.', 'wp-sweep' )
+				) );
+			} else {
+				wp_send_json_success( array(
+					'success' => true,
+					'data'    => $this->details( $_GET['sweep_details'] )
+				) );
+			}
+		}
+	}
+
+	/**
+	 * Count the number of total items belonging to each sweep
+	 *
+	 * @access public
+	 * @param string Item name
+	 * @return integer Number of items belonging to each sweep
+	 */
+	public function total_count( $name ) {
 		global $wpdb;
 
 		$count = 0;
@@ -168,17 +197,20 @@ class WPSweep {
 			case 'options':
 				$count = $wpdb->get_var( "SELECT COUNT(*) FROM $wpdb->options" );
 				break;
+			case 'tables':
+				$count = sizeof( $wpdb->get_col( 'SHOW TABLES' ) );
+				break;
 		}
 
 		return $count;
 	}
 
 	/**
-	 * Count the number of items belonging to each sweep type
+	 * Count the number of items belonging to each sweep
 	 *
 	 * @access public
-	 * @param string Sweep type
-	 * @return integer Number of items belonging to each sweep type
+	 * @param string Sweep name
+	 * @return integer Number of items belonging to each sweep
 	 */
 	public function count( $type ) {
 		global $wpdb;
@@ -243,6 +275,91 @@ class WPSweep {
 		}
 
 		return $count;
+	}
+
+	/**
+	 * Return more details about a sweep
+	 *
+	 * @since 1.0.3
+	 * @access public
+	 * @param string Sweep name
+	 * @return integer Number of items belonging to each sweep
+	 */
+	public function details( $type ) {
+		global $wpdb;
+
+		$details = array();
+
+		switch( $type ) {
+			case 'revisions':
+				$details = $wpdb->get_col( $wpdb->prepare( "SELECT post_title FROM $wpdb->posts WHERE post_type = %s LIMIT %d", 'revision', $this->limit_details ) );
+				break;
+			case 'auto_drafts':
+				$details = $wpdb->get_col( $wpdb->prepare( "SELECT post_title FROM $wpdb->posts WHERE post_status = %s LIMIT %d", 'auto-draft', $this->limit_details ) );
+				break;
+			case 'deleted_posts':
+				$details = $wpdb->get_col( $wpdb->prepare( "SELECT post_title FROM $wpdb->posts WHERE post_status = %s LIMIT %d", 'trash', $this->limit_details ) );
+				break;
+			case 'unapproved_comments':
+				$details = $wpdb->get_col( $wpdb->prepare( "SELECT comment_author FROM $wpdb->comments WHERE comment_approved = %s LIMIT %d", '0', $this->limit_details ) );
+				break;
+			case 'spam_comments':
+				$details = $wpdb->get_col( $wpdb->prepare( "SELECT comment_author FROM $wpdb->comments WHERE comment_approved = %s LIMIT %d", 'spam', $this->limit_details ) );
+				break;
+			case 'deleted_comments':
+				$details = $wpdb->get_col( $wpdb->prepare( "SELECT comment_author FROM $wpdb->comments WHERE (comment_approved = %s OR comment_approved = %s) LIMIT %d", 'trash', 'post-trashed', $this->limit_details ) );
+				break;
+			case 'transient_options':
+				$details = $wpdb->get_col( $wpdb->prepare( "SELECT option_name FROM $wpdb->options WHERE option_name LIKE(%s) LIMIT %d", '%_transient_%', $this->limit_details ) );
+				break;
+			case 'orphan_postmeta':
+				$details = $wpdb->get_col( $wpdb->prepare( "SELECT meta_key FROM $wpdb->postmeta WHERE post_id NOT IN (SELECT ID FROM $wpdb->posts) LIMIT %d", $this->limit_details ) );
+				break;
+			case 'orphan_commentmeta':
+				$details = $wpdb->get_col( $wpdb->prepare( "SELECT meta_key FROM $wpdb->commentmeta WHERE comment_id NOT IN (SELECT comment_ID FROM $wpdb->comments) LIMIT %d", $this->limit_details ) );
+				break;
+			case 'orphan_usermeta':
+				$details = $wpdb->get_col( $wpdb->prepare( "SELECT meta_key FROM $wpdb->usermeta WHERE user_id NOT IN (SELECT ID FROM $wpdb->users) LIMIT %d", $this->limit_details ) );
+				break;
+			case 'orphan_term_relationships':
+				$details = $wpdb->get_col( $wpdb->prepare( "SELECT tt.taxonomy FROM $wpdb->term_relationships AS tr INNER JOIN $wpdb->term_taxonomy AS tt ON tr.term_taxonomy_id = tt.term_taxonomy_id WHERE tt.taxonomy != 'link_category' AND tr.object_id NOT IN (SELECT ID FROM $wpdb->posts) LIMIT %d", $this->limit_details ) );
+				break;
+			case 'unused_terms':
+				$details = $wpdb->get_col( $wpdb->prepare( "SELECT t.name FROM $wpdb->terms AS t INNER JOIN $wpdb->term_taxonomy AS tt ON t.term_id = tt.term_id WHERE tt.count = %d LIMIT %d", 0, $this->limit_details ) );
+				break;
+			case 'duplicated_postmeta':
+				$query = $wpdb->get_results( $wpdb->prepare( "SELECT COUNT(meta_id) AS count, meta_key FROM $wpdb->postmeta GROUP BY post_id, meta_key, meta_value HAVING count > %d LIMIT %d", 1, $this->limit_details ) );
+				$details = array();
+				if( $query ) {
+					foreach( $query as $meta ) {
+						$details[] = $meta->meta_key;
+					}
+				}
+				break;
+			case 'duplicated_commentmeta':
+				$query = $wpdb->get_results( $wpdb->prepare( "SELECT COUNT(meta_id) AS count, meta_key FROM $wpdb->commentmeta GROUP BY comment_id, meta_key, meta_value HAVING count > %d LIMIT %d", 1, $this->limit_details ) );
+				$details = array();
+				if( $query ) {
+					foreach( $query as $meta ) {
+						$details[] = $meta->meta_key;
+					}
+				}
+				break;
+			case 'duplicated_usermeta':
+				$query = $wpdb->get_results( $wpdb->prepare( "SELECT COUNT(umeta_id) AS count, meta_key FROM $wpdb->usermeta GROUP BY user_id, meta_key, meta_value HAVING count > %d LIMIT %d", 1, $this->limit_details ) );
+				$details = array();
+				if( $query ) {
+					foreach( $query as $meta ) {
+						$details[] = $meta->meta_key;
+					}
+				}
+				break;
+			case 'optimize_database':
+				$details = $wpdb->get_col( 'SHOW TABLES' );
+				break;
+		}
+
+		return $details;
 	}
 
 	/**
@@ -433,6 +550,14 @@ class WPSweep {
 					$message = sprintf( __( '%s Duplicated User Meta Processed', 'wp-sweep' ), number_format_i18n( sizeof( $query ) ) );
 				}
 				break;
+			case 'optimize_database':
+				$query = $wpdb->get_col( 'SHOW TABLES' );
+				if( $query ) {
+					$tables = implode( ',', $query );
+					$wpdb->query( "OPTIMIZE TABLE $tables" );
+					$message = sprintf( __( '%s Tables Processed', 'wp-sweep' ), number_format_i18n( sizeof( $query ) ) );
+				}
+				break;
 		}
 
 		return $message;
@@ -442,6 +567,7 @@ class WPSweep {
 	 * Format number to percentage, taking care of division by 0.
 	 * Props @barisunver https://github.com/barisunver
 	 *
+	 * @since 1.0.3
 	 * @access public
 	 * @param integer Current count of items
 	 * @param integer Total count of items

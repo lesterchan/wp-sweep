@@ -57,6 +57,12 @@ Following delete functions are used:
 I spent most of my free time creating, updating, maintaining and supporting these plugins, if you really love my plugins and could spare me a couple of bucks, I will really appreciate it. If not feel free to use it without any obligations.
 
 ## Changelog
+### 1.0.3
+* NEW: View details of sweep
+* NEW: Optimize DB sweep
+* NEW: User hint and confirmation. Props @SiamKreative
+* FIXED: Division by zero. Pros @barisunver
+
 ### 1.0.2
 * FIXED: Use term_id for wp_remove_object_terms()
 * FIXED: number_format_i18n() issues after sweeping
