@@ -90,6 +90,29 @@ class WPSweep {
 		// Actions
 		add_action( 'init', array( $this, 'init' ) );
 		add_action( 'admin_menu', array( $this, 'admin_menu' ) );
+		add_action( 'admin_print_scripts', array( $this, 'load_scripts' ) );
+	}
+
+	/**
+	 * Load the plugin script.
+	 *
+	 * @since  1.0.3
+	 * @access public
+	 * @return bool    Whether or not the script was enqueued
+	 */
+	public function load_scripts() {
+
+		$page = filter_input( INPUT_GET, 'page', FILTER_SANITIZE_STRING );
+
+		if ( 'wp-sweep/admin.php' !== $page ) {
+			return false;
+		}
+
+		wp_enqueue_script( 'wp-sweep', trailingslashit( plugin_dir_url( __FILE__ ) ) . 'wp-sweep.js', array( 'jquery' ), WP_SWEEP_VERSION, true );
+		wp_localize_script( 'wp-sweep', 'wpSweep', array( 'closeWarning' => __( 'Sweeping is in progress. If you leave now the process won\'t be completed.', 'wp-sweep' ) ) );
+
+		return true;
+
 	}
 
 	/**
