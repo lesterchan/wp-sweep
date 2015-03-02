@@ -46,6 +46,14 @@ $unused_terms               = WPSweep::get_instance()->count( 'unused_terms' );
 
 $transient_options          = WPSweep::get_instance()->count( 'transient_options' );
 ?>
+<style type="text/css">
+.table-sweep thead th {
+	width: 12%;
+}
+.table-sweep thead th.col-sweep-details {
+	width: 64%;
+}
+</style>
 <div class="wrap">
 	<h2><?php _e( 'WP-Sweep', 'wp-sweep' ); ?></h2>
 	<?php if( ! empty( $message ) ): ?>
@@ -58,13 +66,13 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 	</div>
 	<h3><?php _e( 'Post Sweep', 'wp-sweep' ); ?></h3>
 	<p><?php printf( __( 'There are a total of <strong class="attention">%s Posts</strong> and <strong class="attention">%s Post Meta</strong>.', 'wp-sweep' ), number_format_i18n( $total_posts ), number_format_i18n( $total_postmeta ) ); ?></p>
-	<table class="widefat">
+	<table class="widefat table-sweep">
 		<thead>
 			<tr>
-				<th style="width: 64%;"><?php _e( 'Details', 'wp-sweep' ); ?></th>
-				<th style="width: 12%;"><?php _e( 'Count', 'wp-sweep' ); ?></th>
-				<th style="width: 12%;"><?php _e( '% Of', 'wp-sweep' ); ?></th>
-				<th style="width: 12%;"><?php _e( 'Action', 'wp-sweep' ); ?></th>
+				<th class="col-sweep-details"><?php _e( 'Details', 'wp-sweep' ); ?></th>
+				<th class="col-sweep-count"><?php _e( 'Count', 'wp-sweep' ); ?></th>
+				<th class="col-sweep-percent"><?php _e( '% Of', 'wp-sweep' ); ?></th>
+				<th class="col-sweep-action"><?php _e( 'Action', 'wp-sweep' ); ?></th>
 			</tr>
 		</thead>
 		<tbody>
@@ -163,13 +171,13 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 	<p>&nbsp;</p>
 	<h3><?php _e( 'Comment Sweep', 'wp-sweep' ); ?></h3>
 	<p><?php printf( __( 'There are a total of <strong class="attention">%s Comments</strong> and <strong class="attention">%s Comment Meta</strong>.', 'wp-sweep' ), number_format_i18n( $total_comments ), number_format_i18n( $total_commentmeta ) ); ?></p>
-	<table class="widefat">
+	<table class="widefat table-sweep">
 		<thead>
 			<tr>
-				<th style="width: 64%;"><?php _e( 'Details', 'wp-sweep' ); ?></th>
-				<th style="width: 12%;"><?php _e( 'Count', 'wp-sweep' ); ?></th>
-				<th style="width: 12%;"><?php _e( '% Of', 'wp-sweep' ); ?></th>
-				<th style="width: 12%;"><?php _e( 'Action', 'wp-sweep' ); ?></th>
+				<th class="col-sweep-details"><?php _e( 'Details', 'wp-sweep' ); ?></th>
+				<th class="col-sweep-count"><?php _e( 'Count', 'wp-sweep' ); ?></th>
+				<th class="col-sweep-percent"><?php _e( '% Of', 'wp-sweep' ); ?></th>
+				<th class="col-sweep-action"><?php _e( 'Action', 'wp-sweep' ); ?></th>
 			</tr>
 		</thead>
 		<tbody>
@@ -268,13 +276,13 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 	<p>&nbsp;</p>
 	<h3><?php _e( 'User Sweep', 'wp-sweep' ); ?></h3>
 	<p><?php printf( __( 'There are a total of <strong class="attention">%s Users</strong> and <strong class="attention">%s User Meta</strong>.', 'wp-sweep' ), number_format_i18n( $total_users ), number_format_i18n( $total_usermeta ) ); ?></p>
-	<table class="widefat">
+	<table class="widefat table-sweep">
 		<thead>
 			<tr>
-				<th style="width: 64%;"><?php _e( 'Details', 'wp-sweep' ); ?></th>
-				<th style="width: 12%;"><?php _e( 'Count', 'wp-sweep' ); ?></th>
-				<th style="width: 12%;"><?php _e( '% Of', 'wp-sweep' ); ?></th>
-				<th style="width: 12%;"><?php _e( 'Action', 'wp-sweep' ); ?></th>
+				<th class="col-sweep-details"><?php _e( 'Details', 'wp-sweep' ); ?></th>
+				<th class="col-sweep-count"><?php _e( 'Count', 'wp-sweep' ); ?></th>
+				<th class="col-sweep-percent"><?php _e( '% Of', 'wp-sweep' ); ?></th>
+				<th class="col-sweep-action"><?php _e( 'Action', 'wp-sweep' ); ?></th>
 			</tr>
 		</thead>
 		<tbody>
@@ -319,13 +327,13 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 	<p>&nbsp;</p>
 	<h3><?php _e( 'Term Sweep', 'wp-sweep' ); ?></h3>
 	<p><?php printf( __( 'There are a total of <strong class="attention">%s Terms</strong>, <strong class="attention">%s Term Taxonomy</strong> and <strong class="attention">%s Term Relationships</strong>.', 'wp-sweep' ), number_format_i18n( $total_terms ), number_format_i18n( $total_term_taxonomy ), number_format_i18n( $total_term_relationships ) ); ?></p>
-	<table class="widefat">
+	<table class="widefat table-sweep">
 		<thead>
 			<tr>
-				<th style="width: 64%;"><?php _e( 'Details', 'wp-sweep' ); ?></th>
-				<th style="width: 12%;"><?php _e( 'Count', 'wp-sweep' ); ?></th>
-				<th style="width: 12%;"><?php _e( '% Of', 'wp-sweep' ); ?></th>
-				<th style="width: 12%;"><?php _e( 'Action', 'wp-sweep' ); ?></th>
+				<th class="col-sweep-details"><?php _e( 'Details', 'wp-sweep' ); ?></th>
+				<th class="col-sweep-count"><?php _e( 'Count', 'wp-sweep' ); ?></th>
+				<th class="col-sweep-percent"><?php _e( '% Of', 'wp-sweep' ); ?></th>
+				<th class="col-sweep-action"><?php _e( 'Action', 'wp-sweep' ); ?></th>
 			</tr>
 		</thead>
 		<tbody>
@@ -371,13 +379,13 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 	<p>&nbsp;</p>
 	<h3><?php _e( 'Option Sweep', 'wp-sweep' ); ?></h3>
 	<p><?php printf( __( 'There are a total of <strong class="attention">%s Options</strong>.', 'wp-sweep' ), number_format_i18n( $total_options ) ); ?></p>
-	<table class="widefat">
+	<table class="widefat table-sweep">
 		<thead>
 			<tr>
-				<th style="width: 64%;"><?php _e( 'Details', 'wp-sweep' ); ?></th>
-				<th style="width: 12%;"><?php _e( 'Count', 'wp-sweep' ); ?></th>
-				<th style="width: 12%;"><?php _e( '% Of', 'wp-sweep' ); ?></th>
-				<th style="width: 12%;"><?php _e( 'Action', 'wp-sweep' ); ?></th>
+				<th class="col-sweep-details"><?php _e( 'Details', 'wp-sweep' ); ?></th>
+				<th class="col-sweep-count"><?php _e( 'Count', 'wp-sweep' ); ?></th>
+				<th class="col-sweep-percent"><?php _e( '% Of', 'wp-sweep' ); ?></th>
+				<th class="col-sweep-action"><?php _e( 'Action', 'wp-sweep' ); ?></th>
 			</tr>
 		</thead>
 		<tbody>
