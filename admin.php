@@ -380,7 +380,7 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 				</td>
 				<td>
 					<?php if( ! empty( $orphan_term_relationships ) ): ?>
-						<button data-action="sweep" data-sweep_name="orphan_term_relationships" data-sweep_type="term_relationships" data-nonce="<?php echo wp_create_nonce( 'wp_sweep_orphan_term_relationships' ); ?>" class="button button-primary btn-sweep"><?php _e( 'Details', 'wp-sweep' ); ?></button>
+						<button data-action="sweep" data-sweep_name="orphan_term_relationships" data-sweep_type="term_relationships" data-nonce="<?php echo wp_create_nonce( 'wp_sweep_orphan_term_relationships' ); ?>" class="button button-primary btn-sweep"><?php _e( 'Sweep', 'wp-sweep' ); ?></button>
 						<button data-action="sweep_details" data-sweep_name="orphan_term_relationships" data-sweep_type="term_relationships" data-nonce="<?php echo wp_create_nonce( 'wp_sweep_details_orphan_term_relationships' ); ?>" class="button btn-sweep-details"><?php _e( 'Details', 'wp-sweep' ); ?></button>
 					<?php else: ?>
 						<?php _e( 'N/A', 'wp-sweep' ); ?>
@@ -401,7 +401,7 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 				</td>
 				<td>
 					<?php if( ! empty( $unused_terms ) ): ?>
-						<button data-action="sweep" data-sweep_name="unused_terms" data-sweep_type="terms" data-nonce="<?php echo wp_create_nonce( 'wp_sweep_unused_terms' ); ?>" class="button button-primary btn-sweep"><?php _e( 'Details', 'wp-sweep' ); ?></button>
+						<button data-action="sweep" data-sweep_name="unused_terms" data-sweep_type="terms" data-nonce="<?php echo wp_create_nonce( 'wp_sweep_unused_terms' ); ?>" class="button button-primary btn-sweep"><?php _e( 'Sweep', 'wp-sweep' ); ?></button>
 						<button data-action="sweep_details" data-sweep_name="unused_terms" data-sweep_type="terms" data-nonce="<?php echo wp_create_nonce( 'wp_sweep_details_unused_terms' ); ?>" class="button btn-sweep-details"><?php _e( 'Details', 'wp-sweep' ); ?></button>
 					<?php else: ?>
 						<?php _e( 'N/A', 'wp-sweep' ); ?>
