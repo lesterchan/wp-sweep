@@ -2,7 +2,7 @@
 /*
 Plugin Name: WP-Sweep
 Plugin URI: http://lesterchan.net/portfolio/programming/php/
-Description: WP-Sweep allows you to clean up unused, orphaned and duplicated data in your WordPress. It cleans up revisions, auto drafts, unapproved comments, spam comments, trashed comments, orphan post meta, orphan comment meta, orphan user meta, orphan term relationships, unused terms, duplicated post meta, duplicated comment meta, duplicated user meta and transient options.
+Description: WP-Sweep allows you to clean up unused, orphaned and duplicated data in your WordPress. It cleans up revisions, auto drafts, unapproved comments, spam comments, trashed comments, orphan post meta, orphan comment meta, orphan user meta, orphan term relationships, unused terms, duplicated post meta, duplicated comment meta, duplicated user meta and transient options. It also optimizes your database tables.
 Version: 1.0.3
 Author: Lester 'GaMerZ' Chan
 Author URI: http://lesterchan.net
@@ -29,24 +29,43 @@ Text Domain: wp-sweep
 
 /**
  * WP-Sweep version
+ *
+ * @since 1.0.0
  */
 define( 'WP_SWEEP_VERSION', '1.0.3' );
 
 /**
- * Class WPSweep
+ * WP-Sweep class
+ *
+ * @since 1.0.0
  */
 class WPSweep {
 	/**
-	 * Variables
+	 * Limit the number of items to show for sweep details
+	 *
+	 * @since 1.0.3
+	 *
+	 * @access public
+	 * @var int
 	 */
 	public $limit_details = 500;
+
+	/**
+	 * Static instance
+	 *
+	 * @since 1.0.0
+	 *
+	 * @access private
+	 * @var instance
+	 */
 	private static $instance;
 
 	/**
 	 * Constructor method
 	 *
+	 * @since 1.0.0
+	 *
 	 * @access public
-	 * @return void
 	 */
 	public function __construct() {
 		// Add Plugin Hooks
@@ -63,8 +82,10 @@ class WPSweep {
 	/**
 	 * Initializes the plugin object and returns its instance
 	 *
+	 * @since 1.0.0
+	 *
 	 * @access public
-	 * @return object the plugin object instance
+	 * @return object The plugin object instance
 	 */
 	public static function get_instance() {
 		if ( ! isset( self::$instance ) ) {
@@ -76,6 +97,8 @@ class WPSweep {
 	/**
 	 * Init this plugin
 	 *
+	 * @since 1.0.0
+	 *
 	 * @access public
 	 * @return void
 	 */
@@ -83,6 +106,8 @@ class WPSweep {
 
 	/**
 	 * Adds all the plugin hooks
+	 *
+	 * @since 1.0.0
 	 *
 	 * @access public
 	 * @return void
@@ -100,8 +125,9 @@ class WPSweep {
 	 * Enqueue JS/CSS files used for admin
 	 *
 	 * @since 1.0.3
+	 * 
 	 * @access public
-	 * @params string Hook's name
+	 * @param string $hook
 	 * @return void
 	 */
 	public function admin_enqueue_scripts( $hook ) {
@@ -127,6 +153,8 @@ class WPSweep {
 	/**
 	 * Admin menu
 	 *
+	 * @since 1.0.3
+	 * 
 	 * @access public
 	 * @return void
 	 */
@@ -137,6 +165,8 @@ class WPSweep {
 
 	/**
 	 * Sweep Details loaded via AJAX
+	 *
+	 * @since 1.0.3
 	 *
 	 * @access public
 	 * @return void
@@ -156,6 +186,8 @@ class WPSweep {
 
 	/**
 	 * Sweep via AJAX
+	 *
+	 * @since 1.0.3
 	 *
 	 * @access public
 	 * @return void
@@ -212,9 +244,11 @@ class WPSweep {
 	/**
 	 * Count the number of total items belonging to each sweep
 	 *
+	 * @since 1.0.0
+	 *
 	 * @access public
-	 * @param string Item name
-	 * @return integer Number of items belonging to each sweep
+	 * @param string $name
+	 * @return int Number of items belonging to each sweep
 	 */
 	public function total_count( $name ) {
 		global $wpdb;
@@ -263,9 +297,11 @@ class WPSweep {
 	/**
 	 * Count the number of items belonging to each sweep
 	 *
+	 * @since 1.0.0
+	 *
 	 * @access public
-	 * @param string Sweep name
-	 * @return integer Number of items belonging to each sweep
+	 * @param string $name
+	 * @return int Number of items belonging to each sweep
 	 */
 	public function count( $name ) {
 		global $wpdb;
@@ -339,16 +375,17 @@ class WPSweep {
 	 * Return more details about a sweep
 	 *
 	 * @since 1.0.3
+	 *
 	 * @access public
-	 * @param string Sweep name
-	 * @return integer Number of items belonging to each sweep
+	 * @param string $name
+	 * @return int Number of items belonging to each sweep
 	 */
-	public function details( $type ) {
+	public function details( $name ) {
 		global $wpdb;
 
 		$details = array();
 
-		switch( $type ) {
+		switch( $name ) {
 			case 'revisions':
 				$details = $wpdb->get_col( $wpdb->prepare( "SELECT post_title FROM $wpdb->posts WHERE post_type = %s LIMIT %d", 'revision', $this->limit_details ) );
 				break;
@@ -423,16 +460,18 @@ class WPSweep {
 	/**
 	 * Does the sweeping/cleaning up
 	 *
+	 * @since 1.0.0
+	 *
 	 * @access public
-	 * @param string Sweep type
+	 * @param string $name
 	 * @return string Processed message
 	 */
-	public function sweep( $type ) {
+	public function sweep( $name ) {
 		global $wpdb;
 
 		$message = '';
 
-		switch( $type ) {
+		switch( $name ) {
 			case 'revisions':
 				$query = $wpdb->get_col( $wpdb->prepare( "SELECT ID FROM $wpdb->posts WHERE post_type = %s", 'revision' ) );
 				if( $query ) {
@@ -625,10 +664,11 @@ class WPSweep {
 	 * Format number to percentage, taking care of division by 0.
 	 * Props @barisunver https://github.com/barisunver
 	 *
-	 * @since 1.0.3
+	 * @since 1.0.2
+	 *
 	 * @access public
-	 * @param integer Current count of items
-	 * @param integer Total count of items
+	 * @param int $current
+	 * @param int $total
 	 * @return string Number in percentage
 	 */
 	function format_percentage( $current, $total ) {
@@ -638,8 +678,10 @@ class WPSweep {
 	/**
 	 * What to do when the plugin is being deactivated
 	 *
+	 * @since 1.0.0
+	 *
 	 * @access public
-	 * @param boolean Is the plugin being network activated?
+	 * @param boolean $network_wide
 	 * @return void
 	 */
 	public function plugin_activation( $network_wide ) {
@@ -662,6 +704,8 @@ class WPSweep {
 	/**
 	 * Perform plugin activation tasks
 	 *
+	 * @since 1.0.0
+	 *
 	 * @access private
 	 * @return void
 	 */
@@ -670,8 +714,10 @@ class WPSweep {
 	/**
 	 * What to do when the plugin is being activated
 	 *
+	 * @since 1.0.0
+	 *
 	 * @access public
-	 * @param boolean Is the plugin being network activated?
+	 * @param boolean $network_wide
 	 * @return void
 	 */
 	public function plugin_deactivation( $network_wide ) {
@@ -694,6 +740,8 @@ class WPSweep {
 	/**
 	 * Perform plugin deactivation tasks
 	 *
+	 * @since 1.0.0
+	 *
 	 * @access private
 	 * @return void
 	 */
@@ -702,6 +750,5 @@ class WPSweep {
 
 /**
  * Init WP-Sweep
- *
  */
 WPSweep::get_instance();
