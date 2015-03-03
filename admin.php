@@ -52,10 +52,10 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 		width: 12%;
 	}
 	.table-sweep thead th.col-sweep-details {
-		width: 60%;
+		width: 56%;
 	}
 	.table-sweep thead th.col-sweep-action {
-		width: 16%;
+		width: 20%;
 	}
 </style>
 <div class="wrap">
@@ -482,4 +482,12 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 			</tr>
 		</tbody>
 	</table>
+	<p>&nbsp;</p>
+	<h3><?php _e( 'Sweep All', 'wp-sweep' ); ?></h3>
+	<p><?php _e( 'Note that some unused terms might belong to draft posts that have not been published yet. Only sweep all when you do not have any draft posts.', 'wp-sweep' ); ?></p>
+	<div class="sweep-all">
+		<p style="text-align: center;">
+			<button class="button button-primary btn-sweep-all"><?php _e( 'Sweep All', 'wp-sweep' ); ?></button>
+		</p>
+	</div>
 </div>
