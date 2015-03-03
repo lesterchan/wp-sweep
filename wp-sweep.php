@@ -120,8 +120,7 @@ class WPSweep {
 			'text_sweep'            => __( 'Sweep', 'wp-sweep' ),
 			'text_sweep_all'        => __( 'Sweep All', 'wp-sweep' ),
 			'text_sweeping'         => __( 'Sweeping ...', 'wp-sweep' ),
-			'text_na'               => __( 'N/A', 'wp-sweep' ),
-			'ajax_url'              => admin_url( 'admin-ajax.php' )
+			'text_na'               => __( 'N/A', 'wp-sweep' )
 		) );
 	}
 
