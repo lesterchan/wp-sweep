@@ -343,12 +343,7 @@ class WPSweep {
 				$count = $wpdb->get_var( "SELECT COUNT(object_id) FROM $wpdb->term_relationships AS tr INNER JOIN $wpdb->term_taxonomy AS tt ON tr.term_taxonomy_id = tt.term_taxonomy_id WHERE tt.taxonomy != 'link_category' AND tr.object_id NOT IN (SELECT ID FROM $wpdb->posts)" );
 				break;
 			case 'unused_terms':
-				$default_term_ids = $this->get_default_taxonomy_termids();
-				if( empty( $default_term_ids ) ) {
-					$count = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(t.term_id) FROM $wpdb->terms AS t INNER JOIN $wpdb->term_taxonomy AS tt ON t.term_id = tt.term_id WHERE tt.count = %d", 0 ) );
-				} else {
-					$count = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(t.term_id) FROM $wpdb->terms AS t INNER JOIN $wpdb->term_taxonomy AS tt ON t.term_id = tt.term_id WHERE tt.count = %d AND t.term_id NOT IN(" . implode( ',', $default_term_ids ) . ")", 0 ) );
-				}
+				$count = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(t.term_id) FROM $wpdb->terms AS t INNER JOIN $wpdb->term_taxonomy AS tt ON t.term_id = tt.term_id WHERE tt.count = %d AND t.term_id NOT IN (" . implode( ',', $this->get_excluded_termids() ) . ")", 0 ) );
 				break;
 			case 'duplicated_postmeta':
 				$query = $wpdb->get_col( $wpdb->prepare( "SELECT COUNT(meta_id) AS count FROM $wpdb->postmeta GROUP BY post_id, meta_key, meta_value HAVING count > %d", 1 ) );
@@ -425,12 +420,7 @@ class WPSweep {
 				$details = $wpdb->get_col( $wpdb->prepare( "SELECT tt.taxonomy FROM $wpdb->term_relationships AS tr INNER JOIN $wpdb->term_taxonomy AS tt ON tr.term_taxonomy_id = tt.term_taxonomy_id WHERE tt.taxonomy != 'link_category' AND tr.object_id NOT IN (SELECT ID FROM $wpdb->posts) LIMIT %d", $this->limit_details ) );
 				break;
 			case 'unused_terms':
-				$default_term_ids = $this->get_default_taxonomy_termids();
-				if( empty( $default_term_ids ) ) {
-					$details = $wpdb->get_col( $wpdb->prepare( "SELECT t.name FROM $wpdb->terms AS t INNER JOIN $wpdb->term_taxonomy AS tt ON t.term_id = tt.term_id WHERE tt.count = %d LIMIT %d", 0, $this->limit_details ) );
-				} else {
-					$details = $wpdb->get_col( $wpdb->prepare( "SELECT t.name FROM $wpdb->terms AS t INNER JOIN $wpdb->term_taxonomy AS tt ON t.term_id = tt.term_id WHERE tt.count = %d AND t.term_id NOT IN(" . implode( ',', $default_term_ids ) . ") LIMIT %d", 0, $this->limit_details ) );
-				}
+				$details = $wpdb->get_col( $wpdb->prepare( "SELECT t.name FROM $wpdb->terms AS t INNER JOIN $wpdb->term_taxonomy AS tt ON t.term_id = tt.term_id WHERE tt.count = %d AND t.term_id NOT IN (" . implode( ',', $this->get_excluded_termids() ) . ") LIMIT %d", 0, $this->limit_details ) );
 				break;
 			case 'duplicated_postmeta':
 				$query = $wpdb->get_results( $wpdb->prepare( "SELECT COUNT(meta_id) AS count, meta_key FROM $wpdb->postmeta GROUP BY post_id, meta_key, meta_value HAVING count > %d LIMIT %d", 1, $this->limit_details ) );
@@ -612,12 +602,7 @@ class WPSweep {
 				}
 				break;
 			case 'unused_terms':
-				$default_term_ids = $this->get_default_taxonomy_termids();
-				if( empty( $default_term_ids ) ) {
-					$query = $wpdb->get_results( $wpdb->prepare( "SELECT tt.term_taxonomy_id, t.term_id, tt.taxonomy FROM $wpdb->terms AS t INNER JOIN $wpdb->term_taxonomy AS tt ON t.term_id = tt.term_id WHERE tt.count = %d", 0 ) );
-				} else {
-					$query = $wpdb->get_results( $wpdb->prepare( "SELECT tt.term_taxonomy_id, t.term_id, tt.taxonomy FROM $wpdb->terms AS t INNER JOIN $wpdb->term_taxonomy AS tt ON t.term_id = tt.term_id WHERE tt.count = %d AND t.term_id NOT IN(" . implode( ',', $default_term_ids ) . ")", 0 ) );
-				}
+				$query = $wpdb->get_results( $wpdb->prepare( "SELECT tt.term_taxonomy_id, t.term_id, tt.taxonomy FROM $wpdb->terms AS t INNER JOIN $wpdb->term_taxonomy AS tt ON t.term_id = tt.term_id WHERE tt.count = %d AND t.term_id NOT IN (" . implode( ',', $this->get_excluded_termids() ) . ")", 0 ) );
 				if( $query ) {
 					$check_wp_terms = false;
 					foreach ( $query as $tax ) {
@@ -701,6 +686,26 @@ class WPSweep {
 	}
 
 	/*
+	 * Get excluded term IDs
+	 *
+	 * @since 1.0.3
+	 *
+	 * @access private
+	 * @return array Excluded term IDs
+	 */
+	private function get_excluded_termids() {
+		$default_term_ids = $this->get_default_taxonomy_termids();
+		if( ! is_array( $default_term_ids ) ) {
+			$default_term_ids = array();
+		}
+		$parent_term_ids = $this->get_parent_termids();
+		if( ! is_array( $parent_term_ids ) ) {
+			$parent_term_ids = array();
+		}
+		return array_merge( $default_term_ids, $parent_term_ids );
+	}
+
+	/*
 	 * Get all default taxonomy term IDs
 	 *
 	 * @since 1.0.3
@@ -723,6 +728,19 @@ class WPSweep {
 			}
 		}
 		return $default_term_ids;
+	}
+
+	/*
+	 * Get terms that has a parent term
+	 *
+	 * @since 1.0.3
+	 * 
+	 * @access private
+	 * @return array Parent term IDs
+	 */
+	private function get_parent_termids() {
+		global $wpdb;
+		return $wpdb->get_col( $wpdb->prepare( "SELECT tt.parent FROM $wpdb->terms AS t INNER JOIN $wpdb->term_taxonomy AS tt ON t.term_id = tt.term_id WHERE tt.parent > %d", 0 ) );
 	}
 
 	/**
