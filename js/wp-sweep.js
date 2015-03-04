@@ -28,6 +28,8 @@
                         });
                         // Message
                         $row.parents('.table-sweep').prev('.sweep-message').html('<div class="updated"><p>' + data.data.sweep + '</p></div>');
+                        // Hide Sweep Details
+                        $('.sweep-details', $row).html('').hide();
                         // Remove Active
                         $body.removeClass('sweep-active');
                         // Remove Disabled
