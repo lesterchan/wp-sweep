@@ -734,7 +734,7 @@ class WPSweep {
 	 * Get terms that has a parent term
 	 *
 	 * @since 1.0.3
-	 * 
+	 *
 	 * @access private
 	 * @return array Parent term IDs
 	 */
