@@ -7,6 +7,7 @@ Version: 1.0.4
 Author: Lester 'GaMerZ' Chan
 Author URI: http://lesterchan.net
 Text Domain: wp-sweep
+Domain Path: /languages
 */
 
 /*
