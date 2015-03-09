@@ -291,6 +291,8 @@ class WPSweep {
 				break;
 		}
 
+		$count = apply_filters( 'wp_sweep_total_count', $name, $count );
+
 		return $count;
 	}
 
@@ -370,6 +372,8 @@ class WPSweep {
 				$count = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(meta_id) FROM $wpdb->postmeta WHERE meta_key LIKE(%s)", '%_oembed_%' ) );
 				break;
 		}
+
+		$count = apply_filters( 'wp_sweep_count', $name, $count );
 
 		return $count;
 	}
@@ -459,6 +463,8 @@ class WPSweep {
 				$details = $wpdb->get_col( $wpdb->prepare( "SELECT meta_key FROM $wpdb->postmeta WHERE meta_key LIKE(%s) LIMIT %d", '%_oembed_%', $this->limit_details ) );
 				break;
 		}
+
+		$details = apply_filters( 'wp_sweep_details', $name, $details );
 
 		return $details;
 	}
@@ -687,6 +693,8 @@ class WPSweep {
 				}
 				break;
 		}
+
+		$message = apply_filters( 'wp_sweep_sweep', $name, $message );
 
 		return $message;
 	}
