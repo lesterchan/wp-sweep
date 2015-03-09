@@ -3,7 +3,7 @@
 Plugin Name: WP-Sweep
 Plugin URI: http://lesterchan.net/portfolio/programming/php/
 Description: WP-Sweep allows you to clean up unused, orphaned and duplicated data in your WordPress. It cleans up revisions, auto drafts, unapproved comments, spam comments, trashed comments, orphan post meta, orphan comment meta, orphan user meta, orphan term relationships, unused terms, duplicated post meta, duplicated comment meta, duplicated user meta and transient options. It also optimizes your database tables.
-Version: 1.0.3
+Version: 1.0.4
 Author: Lester 'GaMerZ' Chan
 Author URI: http://lesterchan.net
 Text Domain: wp-sweep
@@ -32,7 +32,7 @@ Text Domain: wp-sweep
  *
  * @since 1.0.0
  */
-define( 'WP_SWEEP_VERSION', '1.0.3' );
+define( 'WP_SWEEP_VERSION', '1.0.4' );
 
 /**
  * WP-Sweep class
@@ -366,6 +366,9 @@ class WPSweep {
 			case 'optimize_database':
 				$count = sizeof( $wpdb->get_col( 'SHOW TABLES' ) );
 				break;
+			case 'oembed_postmeta':
+				$count = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(meta_id) FROM $wpdb->postmeta WHERE meta_key LIKE(%s)", '%_oembed_%' ) );
+				break;
 		}
 
 		return $count;
@@ -451,6 +454,9 @@ class WPSweep {
 				break;
 			case 'optimize_database':
 				$details = $wpdb->get_col( 'SHOW TABLES' );
+				break;
+			case 'oembed_postmeta':
+				$details = $wpdb->get_col( $wpdb->prepare( "SELECT meta_key FROM $wpdb->postmeta WHERE meta_key LIKE(%s) LIMIT %d", '%_oembed_%', $this->limit_details ) );
 				break;
 		}
 
@@ -663,6 +669,21 @@ class WPSweep {
 					$tables = implode( ',', $query );
 					$wpdb->query( "OPTIMIZE TABLE $tables" );
 					$message = sprintf( __( '%s Tables Processed', 'wp-sweep' ), number_format_i18n( sizeof( $query ) ) );
+				}
+				break;
+			case 'oembed_postmeta':
+				$query = $wpdb->get_results( $wpdb->prepare( "SELECT post_id, meta_key FROM $wpdb->postmeta WHERE meta_key LIKE(%s)", '%_oembed_%' ) );
+				if( $query ) {
+					foreach ( $query as $meta ) {
+						$post_id = intval( $meta->post_id );
+						if( $post_id === 0 ) {
+							$wpdb->query( $wpdb->prepare( "DELETE FROM $wpdb->postmeta WHERE post_id = %d AND meta_key = %s", $post_id, $meta->meta_key ) );
+						} else {
+							delete_post_meta( $post_id, $meta->meta_key );
+						}
+					}
+
+					$message = sprintf( __( '%s oEmbed Caches In Post Meta Processed', 'wp-sweep' ), number_format_i18n( sizeof( $query ) ) );
 				}
 				break;
 		}

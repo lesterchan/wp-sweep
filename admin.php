@@ -32,6 +32,7 @@ $auto_drafts                = WPSweep::get_instance()->count( 'auto_drafts' );
 $deleted_posts              = WPSweep::get_instance()->count( 'deleted_posts' );
 $orphan_postmeta            = WPSweep::get_instance()->count( 'orphan_postmeta' );
 $duplicated_postmeta        = WPSweep::get_instance()->count( 'duplicated_postmeta' );
+$oembed_postmeta            = WPSweep::get_instance()->count( 'oembed_postmeta' );
 
 $unapproved_comments        = WPSweep::get_instance()->count( 'unapproved_comments' );
 $spam_comments              = WPSweep::get_instance()->count( 'spam_comments' );
@@ -174,6 +175,26 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 					<?php if( ! empty( $duplicated_postmeta ) ): ?>
 						<button data-action="sweep" data-sweep_name="duplicated_postmeta" data-sweep_type="postmeta" data-nonce="<?php echo wp_create_nonce( 'wp_sweep_duplicated_postmeta' ); ?>" class="button button-primary btn-sweep"><?php _e( 'Sweep', 'wp-sweep' ); ?></button>
 						<button data-action="sweep_details" data-sweep_name="duplicated_postmeta" data-sweep_type="postmeta" data-nonce="<?php echo wp_create_nonce( 'wp_sweep_details_duplicated_postmeta' ); ?>" class="button btn-sweep-details"><?php _e( 'Details', 'wp-sweep' ); ?></button>
+					<?php else: ?>
+						<?php _e( 'N/A', 'wp-sweep' ); ?>
+					<?php endif; ?>
+				</td>
+			</tr>
+			<tr class="alternate">
+				<td>
+					<strong><?php _e( 'oEmbed Caches In Post Meta', 'wp-sweep' ); ?></strong>
+					<p class="sweep-details" style="display: none;"></p>
+				</td>
+				<td>
+					<span class="sweep-count"><?php echo number_format_i18n( $oembed_postmeta ); ?></span>
+				</td>
+				<td>
+					<span class="sweep-percentage"><?php echo WPSweep::get_instance()->format_percentage( $oembed_postmeta, $total_postmeta ); ?></span>
+				</td>
+				<td>
+					<?php if( ! empty( $oembed_postmeta ) ): ?>
+						<button data-action="sweep" data-sweep_name="oembed_postmeta" data-sweep_type="postmeta" data-nonce="<?php echo wp_create_nonce( 'wp_sweep_oembed_postmeta' ); ?>" class="button button-primary btn-sweep"><?php _e( 'Sweep', 'wp-sweep' ); ?></button>
+						<button data-action="sweep_details" data-sweep_name="oembed_postmeta" data-sweep_type="postmeta" data-nonce="<?php echo wp_create_nonce( 'wp_sweep_details_oembed_postmeta' ); ?>" class="button btn-sweep-details"><?php _e( 'Details', 'wp-sweep' ); ?></button>
 					<?php else: ?>
 						<?php _e( 'N/A', 'wp-sweep' ); ?>
 					<?php endif; ?>
