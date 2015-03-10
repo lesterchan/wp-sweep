@@ -61,6 +61,7 @@ I spent most of my free time creating, updating, maintaining and supporting thes
 ## Changelog
 ### 1.0.4
 * NEW: oEmbed caches in post meta Sweep
+* NEW: Add POT file for translators
 
 ### 1.0.3
 * NEW: AJAX Sweep All
