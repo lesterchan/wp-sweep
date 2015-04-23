@@ -2,9 +2,9 @@
 # This file is distributed under the same license as the WP-Sweep package.
 msgid ""
 msgstr ""
-"Project-Id-Version: WP-Sweep 1.0.3\n"
+"Project-Id-Version: WP-Sweep 1.0.5\n"
 "Report-Msgid-Bugs-To: http://wordpress.org/support/plugin/wp-sweep\n"
-"POT-Creation-Date: 2015-03-09 17:21:04+00:00\n"
+"POT-Creation-Date: 2015-04-23 07:55:55+00:00\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -12,96 +12,100 @@ msgstr ""
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 
-#. #-#-#-#-#  plugin.pot (WP-Sweep 1.0.3)  #-#-#-#-#
+#. #-#-#-#-#  plugin.pot (WP-Sweep 1.0.5)  #-#-#-#-#
 #. Plugin Name of the plugin/theme
-#: admin.php:62
+#: admin.php:63
 msgid "WP-Sweep"
 msgstr ""
 
-#: admin.php:64
+#: admin.php:65
 msgid ""
 "Before you do any sweep, please <a href=\"%s\" target=\"%s\">backup your "
 "database</a> first because any sweep done is irreversible."
 msgstr ""
 
-#: admin.php:67
+#: admin.php:68
 msgid ""
 "For performance reasons, only %s items will be shown if you click Details"
 msgstr ""
 
-#: admin.php:69
+#: admin.php:70
 msgid "Post Sweep"
 msgstr ""
 
-#: admin.php:70
+#: admin.php:71
 msgid ""
 "There are a total of <strong class=\"attention\"><span class=\"sweep-count-"
 "type-posts\">%s</span> Posts</strong> and <strong class=\"attention\"><span "
 "class=\"sweep-count-type-postmeta\">%s</span> Post Meta</strong>."
 msgstr ""
 
-#: admin.php:75 admin.php:96 admin.php:116 admin.php:136 admin.php:156
-#: admin.php:176 admin.php:191 admin.php:212 admin.php:232 admin.php:252
-#: admin.php:272 admin.php:292 admin.php:307 admin.php:328 admin.php:348
-#: admin.php:363 admin.php:384 admin.php:405 admin.php:420 admin.php:441
-#: admin.php:456 admin.php:477
+#: admin.php:76 admin.php:97 admin.php:117 admin.php:137 admin.php:157
+#: admin.php:177 admin.php:197 admin.php:213 admin.php:234 admin.php:254
+#: admin.php:274 admin.php:294 admin.php:314 admin.php:330 admin.php:351
+#: admin.php:371 admin.php:387 admin.php:408 admin.php:429 admin.php:445
+#: admin.php:466 admin.php:482 admin.php:503
 msgid "Details"
 msgstr ""
 
-#: admin.php:76 admin.php:192 admin.php:308 admin.php:364 admin.php:421
-#: admin.php:457
+#: admin.php:77 admin.php:214 admin.php:331 admin.php:388 admin.php:446
+#: admin.php:483
 msgid "Count"
 msgstr ""
 
-#: admin.php:77 admin.php:193 admin.php:309 admin.php:365 admin.php:422
-#: admin.php:458
+#: admin.php:78 admin.php:215 admin.php:332 admin.php:389 admin.php:447
+#: admin.php:484
 msgid "% Of"
 msgstr ""
 
-#: admin.php:78 admin.php:194 admin.php:310 admin.php:366 admin.php:423
-#: admin.php:459
+#: admin.php:79 admin.php:216 admin.php:333 admin.php:390 admin.php:448
+#: admin.php:485
 msgid "Action"
 msgstr ""
 
-#: admin.php:84
+#: admin.php:85
 msgid "Revisions"
 msgstr ""
 
-#: admin.php:95 admin.php:115 admin.php:135 admin.php:155 admin.php:175
-#: admin.php:211 admin.php:231 admin.php:251 admin.php:271 admin.php:291
-#: admin.php:327 admin.php:347 admin.php:383 admin.php:404 admin.php:440
-#: admin.php:476 wp-sweep.php:146 wp-sweep.php:162
+#: admin.php:96 admin.php:116 admin.php:136 admin.php:156 admin.php:176
+#: admin.php:196 admin.php:233 admin.php:253 admin.php:273 admin.php:293
+#: admin.php:313 admin.php:350 admin.php:370 admin.php:407 admin.php:428
+#: admin.php:465 admin.php:502 wp-sweep.php:146 wp-sweep.php:162
 msgid "Sweep"
 msgstr ""
 
-#: admin.php:98 admin.php:118 admin.php:138 admin.php:158 admin.php:178
-#: admin.php:214 admin.php:234 admin.php:254 admin.php:274 admin.php:294
-#: admin.php:330 admin.php:350 admin.php:386 admin.php:407 admin.php:443
-#: admin.php:472 admin.php:479 wp-sweep.php:149
+#: admin.php:99 admin.php:119 admin.php:139 admin.php:159 admin.php:179
+#: admin.php:199 admin.php:236 admin.php:256 admin.php:276 admin.php:296
+#: admin.php:316 admin.php:353 admin.php:373 admin.php:410 admin.php:431
+#: admin.php:468 admin.php:498 admin.php:505 wp-sweep.php:149
 msgid "N/A"
 msgstr ""
 
-#: admin.php:104
+#: admin.php:105
 msgid "Auto Drafts"
 msgstr ""
 
-#: admin.php:124
+#: admin.php:125
 msgid "Deleted Posts"
 msgstr ""
 
-#: admin.php:144
+#: admin.php:145
 msgid "Orphaned Post Meta"
 msgstr ""
 
-#: admin.php:164
+#: admin.php:165
 msgid "Duplicated Post Meta"
 msgstr ""
 
 #: admin.php:185
+msgid "oEmbed Caches In Post Meta"
+msgstr ""
+
+#: admin.php:207
 msgid "Comment Sweep"
 msgstr ""
 
-#: admin.php:186
+#: admin.php:208
 msgid ""
 "There are a total of <strong class=\"attention\"><span class=\"sweep-count-"
 "type-comments\">%s</span> Comments</strong> and <strong class=\"attention"
@@ -109,50 +113,50 @@ msgid ""
 "strong>."
 msgstr ""
 
-#: admin.php:200
+#: admin.php:222
 msgid "Unapproved Comments"
 msgstr ""
 
-#: admin.php:220
+#: admin.php:242
 msgid "Spammed Comments"
 msgstr ""
 
-#: admin.php:240
+#: admin.php:262
 msgid "Deleted Comments"
 msgstr ""
 
-#: admin.php:260
+#: admin.php:282
 msgid "Orphaned Comment Meta"
 msgstr ""
 
-#: admin.php:280
+#: admin.php:302
 msgid "Duplicated Comment Meta"
 msgstr ""
 
-#: admin.php:301
+#: admin.php:324
 msgid "User Sweep"
 msgstr ""
 
-#: admin.php:302
+#: admin.php:325
 msgid ""
 "There are a total of <strong class=\"attention\"><span class=\"sweep-count-"
 "type-users\">%s</span> Users</strong> and <strong class=\"attention\"><span "
 "class=\"sweep-count-type-usermeta\">%s</span> User Meta</strong>."
 msgstr ""
 
-#: admin.php:316
+#: admin.php:339
 msgid "Orphaned User Meta"
 msgstr ""
 
-#: admin.php:336
+#: admin.php:359
 msgid "Duplicated User Meta"
 msgstr ""
 
-#: admin.php:357
+#: admin.php:381
 msgid "Term Sweep"
 msgstr ""
 
-#: admin.php:358
+#: admin.php:382
 msgid ""
 "There are a total of <strong class=\"attention \"><span class=\"sweep-count-"
 "type-terms\">%s</span> Terms</strong>, <strong class=\"attention\"><span "
@@ -161,53 +165,53 @@ msgid ""
 "term_relationships\">%s</span> Term Relationships</strong>."
 msgstr ""
 
-#: admin.php:372
+#: admin.php:396
 msgid "Orphaned Term Relationship"
 msgstr ""
 
-#: admin.php:392
+#: admin.php:416
 msgid "Unused Terms"
 msgstr ""
 
-#: admin.php:393
+#: admin.php:417
 msgid ""
 "Note that some unused terms might belong to draft posts that have not been "
 "published yet. Only sweep this when you do not have any draft posts."
 msgstr ""
 
-#: admin.php:414
+#: admin.php:439
 msgid "Option Sweep"
 msgstr ""
 
-#: admin.php:415
+#: admin.php:440
 msgid ""
 "There are a total of <strong class=\"attention\"><span class=\"sweep-count-"
 "type-options\">%s</span> Options</strong>."
 msgstr ""
 
-#: admin.php:429
+#: admin.php:454
 msgid "Transient Options"
 msgstr ""
 
-#: admin.php:450
+#: admin.php:476
 msgid "Database Sweep"
 msgstr ""
 
-#: admin.php:451
+#: admin.php:477
 msgid ""
 "There are a total of <strong class=\"attention\"><span class=\"sweep-count-"
 "type-tables\">%s</span> Tables</strong>."
 msgstr ""
 
-#: admin.php:465
+#: admin.php:491
 msgid "Optimize Tables"
 msgstr ""
 
-#: admin.php:486 admin.php:490 wp-sweep.php:147
+#: admin.php:513 admin.php:517 wp-sweep.php:147
 msgid "Sweep All"
 msgstr ""
 
-#: admin.php:487
+#: admin.php:514
 msgid ""
 "Note that some unused terms might belong to draft posts that have not been "
 "published yet. Only sweep all when you do not have any draft posts."
@@ -226,68 +230,72 @@ msgstr ""
 msgid "Failed to verify referrer."
 msgstr ""
 
-#: wp-sweep.php:482
+#: wp-sweep.php:488
 msgid "%s Revisions Processed"
 msgstr ""
 
-#: wp-sweep.php:492
+#: wp-sweep.php:498
 msgid "%s Auto Drafts Processed"
 msgstr ""
 
-#: wp-sweep.php:502
+#: wp-sweep.php:508
 msgid "%s Deleted Posts Processed"
 msgstr ""
 
-#: wp-sweep.php:512
+#: wp-sweep.php:518
 msgid "%s Unapproved Comments Processed"
 msgstr ""
 
-#: wp-sweep.php:522
+#: wp-sweep.php:528
 msgid "%s Spam Comments Processed"
 msgstr ""
 
-#: wp-sweep.php:532
+#: wp-sweep.php:538
 msgid "%s Trash Comments Processed"
 msgstr ""
 
-#: wp-sweep.php:546
+#: wp-sweep.php:552
 msgid "%s Transient Options Processed"
 msgstr ""
 
-#: wp-sweep.php:561
+#: wp-sweep.php:567
 msgid "%s Orphaned Post Meta Processed"
 msgstr ""
 
-#: wp-sweep.php:576
+#: wp-sweep.php:582
 msgid "%s Orphaned Comment Meta Processed"
 msgstr ""
 
-#: wp-sweep.php:591
+#: wp-sweep.php:597
 msgid "%s Orphaned User Meta Processed"
 msgstr ""
 
-#: wp-sweep.php:601
+#: wp-sweep.php:607
 msgid "%s Orphaned Term Relationships Processed"
 msgstr ""
 
-#: wp-sweep.php:621
+#: wp-sweep.php:627
 msgid "%s Unused Terms Processed"
 msgstr ""
 
-#: wp-sweep.php:633
+#: wp-sweep.php:639
 msgid "%s Duplicated Post Meta Processed"
 msgstr ""
 
-#: wp-sweep.php:645
+#: wp-sweep.php:651
 msgid "%s Duplicated Comment Meta Processed"
 msgstr ""
 
-#: wp-sweep.php:657
+#: wp-sweep.php:663
 msgid "%s Duplicated User Meta Processed"
 msgstr ""
 
-#: wp-sweep.php:665
+#: wp-sweep.php:671
 msgid "%s Tables Processed"
+msgstr ""
+
+#: wp-sweep.php:686
+msgid "%s oEmbed Caches In Post Meta Processed"
 msgstr ""
 
 #. Plugin URI of the plugin/theme
