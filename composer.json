@@ -1,0 +1,11 @@
+{
+  "name": "wp-sweep/plugin",
+  "description": "WP Sweep plugin for WordPress",
+  "keywords": ["wordpress", "plugin", "wp-sweep", "sweep"],
+  "homepage": "https://wordpress.org/plugins/wp-sweep/",
+  "type": "wordpress-plugin",
+  "require": {
+    "php": ">=5.3.2",
+    "composer/installers": "v1.0.6"
+  }
+}
