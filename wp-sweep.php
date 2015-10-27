@@ -3,7 +3,7 @@
 Plugin Name: WP-Sweep
 Plugin URI: http://lesterchan.net/portfolio/programming/php/
 Description: WP-Sweep allows you to clean up unused, orphaned and duplicated data in your WordPress. It cleans up revisions, auto drafts, unapproved comments, spam comments, trashed comments, orphan post meta, orphan comment meta, orphan user meta, orphan term relationships, unused terms, duplicated post meta, duplicated comment meta, duplicated user meta and transient options. It also optimizes your database tables.
-Version: 1.0.5
+Version: 1.0.6
 Author: Lester 'GaMerZ' Chan
 Author URI: http://lesterchan.net
 Text Domain: wp-sweep
@@ -32,7 +32,7 @@ License: GPL2
  *
  * @since 1.0.0
  */
-define( 'WP_SWEEP_VERSION', '1.0.4' );
+define( 'WP_SWEEP_VERSION', '1.0.6' );
 
 /**
  * WP-Sweep class
@@ -116,7 +116,7 @@ class WPSweep {
 		// Actions
 		add_action( 'init', array( $this, 'init' ) );
 		add_action( 'admin_menu', array( $this, 'admin_menu' ) );
-		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts') );
+		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ) );
 		add_action( 'wp_ajax_sweep_details', array( $this, 'ajax_sweep_details' ) );
 		add_action( 'wp_ajax_sweep', array( $this, 'ajax_sweep' ) );
 	}
@@ -207,20 +207,21 @@ class WPSweep {
 				switch( $_GET['sweep_type'] ) {
 					case 'posts':
 					case 'postmeta':
-						$total_stats = array( 'posts' => $this->total_count( 'posts' ), 'postmeta' => $this->total_count( 'postmeta') );
+						$total_stats = array( 'posts' => $this->total_count( 'posts' ), 'postmeta' => $this->total_count( 'postmeta' ) );
 						break;
 					case 'comments':
 					case 'commentmeta':
-						$total_stats = array( 'comments' => $this->total_count( 'comments' ), 'commentmeta' => $this->total_count( 'commentmeta') );
+						$total_stats = array( 'comments' => $this->total_count( 'comments' ), 'commentmeta' => $this->total_count( 'commentmeta' ) );
 						break;
 					case 'users':
 					case 'usermeta':
-						$total_stats = array( 'users' => $this->total_count( 'users' ), 'usermeta' => $this->total_count( 'usermeta') );
+						$total_stats = array( 'users' => $this->total_count( 'users' ), 'usermeta' => $this->total_count( 'usermeta' ) );
 						break;
 					case 'term_relationships':
 					case 'term_taxonomy':
 					case 'terms':
-						$total_stats = array( 'term_relationships' => $this->total_count( 'term_relationships' ), 'term_taxonomy' => $this->total_count( 'term_taxonomy'), 'terms' => $this->total_count( 'terms') );
+					case 'termmeta':
+						$total_stats = array( 'term_relationships' => $this->total_count( 'term_relationships' ), 'term_taxonomy' => $this->total_count( 'term_taxonomy' ), 'terms' => $this->total_count( 'terms' ), 'termmeta' => $this->total_count( 'termmeta' ) );
 						break;
 					case 'options':
 						$total_stats = array( 'options' => $this->total_count( 'options' ) );
@@ -283,6 +284,9 @@ class WPSweep {
 			case 'terms':
 				$count = $wpdb->get_var( "SELECT COUNT(*) FROM $wpdb->terms" );
 				break;
+			case 'termmeta':
+				$count = $wpdb->get_var( "SELECT COUNT(*) FROM $wpdb->termmeta" );
+				break;
 			case 'options':
 				$count = $wpdb->get_var( "SELECT COUNT(*) FROM $wpdb->options" );
 				break;
@@ -339,6 +343,9 @@ class WPSweep {
 			case 'orphan_usermeta':
 				$count = $wpdb->get_var( "SELECT COUNT(umeta_id) FROM $wpdb->usermeta WHERE user_id NOT IN (SELECT ID FROM $wpdb->users)" );
 				break;
+			case 'orphan_termmeta':
+				$count = $wpdb->get_var( "SELECT COUNT(meta_id) FROM $wpdb->termmeta WHERE term_id NOT IN (SELECT ID FROM $wpdb->terms)" );
+				break;
 			case 'orphan_term_relationships':
 				$count = $wpdb->get_var( "SELECT COUNT(object_id) FROM $wpdb->term_relationships AS tr INNER JOIN $wpdb->term_taxonomy AS tt ON tr.term_taxonomy_id = tt.term_taxonomy_id WHERE tt.taxonomy != 'link_category' AND tr.object_id NOT IN (SELECT ID FROM $wpdb->posts)" );
 				break;
@@ -359,6 +366,12 @@ class WPSweep {
 				break;
 			case 'duplicated_usermeta':
 				$query = $wpdb->get_col( $wpdb->prepare( "SELECT COUNT(umeta_id) AS count FROM $wpdb->usermeta GROUP BY user_id, meta_key, meta_value HAVING count > %d", 1 ) );
+				if( is_array( $query ) ) {
+					$count = array_sum( array_map( 'intval', $query ) );
+				}
+				break;
+			case 'duplicated_termmeta':
+				$query = $wpdb->get_col( $wpdb->prepare( "SELECT COUNT(meta_id) AS count FROM $wpdb->termmeta GROUP BY term_id, meta_key, meta_value HAVING count > %d", 1 ) );
 				if( is_array( $query ) ) {
 					$count = array_sum( array_map( 'intval', $query ) );
 				}
@@ -419,6 +432,9 @@ class WPSweep {
 			case 'orphan_usermeta':
 				$details = $wpdb->get_col( $wpdb->prepare( "SELECT meta_key FROM $wpdb->usermeta WHERE user_id NOT IN (SELECT ID FROM $wpdb->users) LIMIT %d", $this->limit_details ) );
 				break;
+			case 'orphan_termmeta':
+				$details = $wpdb->get_col( $wpdb->prepare( "SELECT meta_key FROM $wpdb->termmeta WHERE term_id NOT IN (SELECT ID FROM $wpdb->terms) LIMIT %d", $this->limit_details ) );
+				break;
 			case 'orphan_term_relationships':
 				$details = $wpdb->get_col( $wpdb->prepare( "SELECT tt.taxonomy FROM $wpdb->term_relationships AS tr INNER JOIN $wpdb->term_taxonomy AS tt ON tr.term_taxonomy_id = tt.term_taxonomy_id WHERE tt.taxonomy != 'link_category' AND tr.object_id NOT IN (SELECT ID FROM $wpdb->posts) LIMIT %d", $this->limit_details ) );
 				break;
@@ -445,6 +461,15 @@ class WPSweep {
 				break;
 			case 'duplicated_usermeta':
 				$query = $wpdb->get_results( $wpdb->prepare( "SELECT COUNT(umeta_id) AS count, meta_key FROM $wpdb->usermeta GROUP BY user_id, meta_key, meta_value HAVING count > %d LIMIT %d", 1, $this->limit_details ) );
+				$details = array();
+				if( $query ) {
+					foreach( $query as $meta ) {
+						$details[] = $meta->meta_key;
+					}
+				}
+				break;
+			case 'duplicated_termmeta':
+				$query = $wpdb->get_results( $wpdb->prepare( "SELECT COUNT(meta_id) AS count, meta_key FROM $wpdb->termmeta GROUP BY term_id, meta_key, meta_value HAVING count > %d LIMIT %d", 1, $this->limit_details ) );
 				$details = array();
 				if( $query ) {
 					foreach( $query as $meta ) {
@@ -597,6 +622,21 @@ class WPSweep {
 					$message = sprintf( __( '%s Orphaned User Meta Processed', 'wp-sweep' ), number_format_i18n( sizeof( $query ) ) );
 				}
 				break;
+			case 'orphan_termmeta':
+				$query = $wpdb->get_results( "SELECT term_id, meta_key FROM $wpdb->termmeta WHERE term_id NOT IN (SELECT ID FROM $wpdb->terms)" );
+				if( $query ) {
+					foreach ( $query as $meta ) {
+						$term_id = intval( $meta->term_id );
+						if( $term_id === 0 ) {
+							$wpdb->query( $wpdb->prepare( "DELETE FROM $wpdb->termmeta WHERE term_id = %d AND meta_key = %s", $term_id, $meta->meta_key ) );
+						} else {
+							delete_term_meta( $term_id, $meta->meta_key );
+						}
+					}
+
+					$message = sprintf( __( '%s Orphaned Term Meta Processed', 'wp-sweep' ), number_format_i18n( sizeof( $query ) ) );
+				}
+				break;
 			case 'orphan_term_relationships':
 				$query = $wpdb->get_results( "SELECT tr.object_id, tt.term_id, tt.taxonomy FROM $wpdb->term_relationships AS tr INNER JOIN $wpdb->term_taxonomy AS tt ON tr.term_taxonomy_id = tt.term_taxonomy_id WHERE tt.taxonomy != 'link_category' AND tr.object_id NOT IN (SELECT ID FROM $wpdb->posts)" );
 				if( $query ) {
@@ -661,6 +701,18 @@ class WPSweep {
 					}
 
 					$message = sprintf( __( '%s Duplicated User Meta Processed', 'wp-sweep' ), number_format_i18n( sizeof( $query ) ) );
+				}
+				break;
+			case 'duplicated_termmeta':
+				$query = $wpdb->get_results( $wpdb->prepare( "SELECT GROUP_CONCAT(meta_id ORDER BY meta_id DESC) AS ids, term_id, COUNT(*) AS count FROM $wpdb->termmeta GROUP BY term_id, meta_key, meta_value HAVING count > %d", 1 ) );
+				if( $query ) {
+					foreach ( $query as $meta ) {
+						$ids = array_map( 'intval', explode( ',', $meta->ids ) );
+						array_pop( $ids );
+						$wpdb->query( $wpdb->prepare( "DELETE FROM $wpdb->termmeta WHERE meta_id IN (" . implode( ',', $ids ) . ") AND term_id = %d", intval( $meta->term_id ) ) );
+					}
+
+					$message = sprintf( __( '%s Duplicated Term Meta Processed', 'wp-sweep' ), number_format_i18n( sizeof( $query ) ) );
 				}
 				break;
 			case 'optimize_database':

@@ -2,8 +2,8 @@
 Contributors: GamerZ  
 Donate link: http://lesterchan.net/site/donation/  
 Tags: sweep, clean, cleanup, clean up, optimize, orphan, unused, duplicated, posts, post meta, comments, comment meta, users, user meta, terms, term relationships, revisions, auto drafts, transient, database, tables, oembed
-Requires at least: 4.1  
-Tested up to: 4.3  
+Requires at least: 4.4  
+Tested up to: 4.4  
 Stable tag: trunk  
 License: GPLv2 or later  
 License URI: http://www.gnu.org/licenses/gpl-2.0.html  
@@ -22,11 +22,13 @@ This plugin cleans up:
 * Orphaned post meta
 * Orphaned comment meta
 * Orphaned user meta
+* Orphaned term meta
 * Orphan term relationships
 * Unused terms
 * Duplicated post meta
 * Duplicated comment meta
 * Duplicated user meta
+* Duplicated term meta
 * Transient options
 * Optimizes database tables
 * oEmbed caches in post meta
@@ -41,6 +43,7 @@ Following delete functions are used:
 * delete_post_meta()
 * delete_comment_meta()
 * delete_user_meta()
+* delete_term_meta()
 * wp_remove_object_terms()
 * wp_delete_term()
 * delete_transient()
@@ -59,6 +62,9 @@ Following delete functions are used:
 I spent most of my free time creating, updating, maintaining and supporting these plugins, if you really love my plugins and could spare me a couple of bucks, I will really appreciate it. If not feel free to use it without any obligations.
 
 ## Changelog
+### 1.0.6
+* FIXED: Works only with WordPress 4.4 because of new term meta
+
 ### 1.0.5
 * FIXED: apply_filters() wrong arguments
 

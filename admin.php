@@ -23,6 +23,7 @@ $total_usermeta             = WPSweep::get_instance()->total_count( 'usermeta' )
 $total_term_relationships   = WPSweep::get_instance()->total_count( 'term_relationships' );
 $total_term_taxonomy        = WPSweep::get_instance()->total_count( 'term_taxonomy' );
 $total_terms                = WPSweep::get_instance()->total_count( 'terms' );
+$total_termmeta             = WPSweep::get_instance()->total_count( 'termmeta' );
 $total_options              = WPSweep::get_instance()->total_count( 'options' );
 $total_tables               = WPSweep::get_instance()->total_count( 'tables' );
 
@@ -45,6 +46,8 @@ $duplicated_usermeta        = WPSweep::get_instance()->count( 'duplicated_userme
 
 $orphan_term_relationships  = WPSweep::get_instance()->count( 'orphan_term_relationships' );
 $unused_terms               = WPSweep::get_instance()->count( 'unused_terms' );
+$orphan_termmeta            = WPSweep::get_instance()->count( 'orphan_termmeta ' );
+$duplicated_termmeta        = WPSweep::get_instance()->count( 'duplicated_termmeta' );
 
 $transient_options          = WPSweep::get_instance()->count( 'transient_options' );
 ?>
@@ -379,7 +382,7 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 	<?php do_action( 'wp_sweep_admin_user_sweep' ); ?>
 	<p>&nbsp;</p>
 	<h3><?php _e( 'Term Sweep', 'wp-sweep' ); ?></h3>
-	<p><?php printf( __( 'There are a total of <strong class="attention "><span class="sweep-count-type-terms">%s</span> Terms</strong>, <strong class="attention"><span class="sweep-count-type-term_taxonomy">%s</span> Term Taxonomy</strong> and <strong class="attention"><span class="sweep-count-type-term_relationships">%s</span> Term Relationships</strong>.', 'wp-sweep' ), number_format_i18n( $total_terms ), number_format_i18n( $total_term_taxonomy ), number_format_i18n( $total_term_relationships ) ); ?></p>
+	<p><?php printf( __( 'There are a total of <strong class="attention "><span class="sweep-count-type-terms">%s</span> Terms</strong>, <strong class="attention "><span class="sweep-count-type-termmeta">%s</span> Term Meta</strong>, <strong class="attention"><span class="sweep-count-type-term_taxonomy">%s</span> Term Taxonomy</strong> and <strong class="attention"><span class="sweep-count-type-term_relationships">%s</span> Term Relationships</strong>.', 'wp-sweep' ), number_format_i18n( $total_terms ), number_format_i18n( $total_termmeta ), number_format_i18n( $total_term_taxonomy ), number_format_i18n( $total_term_relationships ) ); ?></p>
 	<div class="sweep-message"></div>
 	<table class="widefat table-sweep">
 		<thead>
@@ -391,6 +394,46 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 			</tr>
 		</thead>
 		<tbody>
+		<tr>
+			<td>
+				<strong><?php _e( 'Orphaned Term Meta', 'wp-sweep' ); ?></strong>
+				<p class="sweep-details" style="display: none;"></p>
+			</td>
+			<td>
+				<span class="sweep-count"><?php echo number_format_i18n( $orphan_termmeta ); ?></span>
+			</td>
+			<td>
+				<span class="sweep-percentage"><?php echo WPSweep::get_instance()->format_percentage( $orphan_termmeta, $total_termmeta ); ?></span>
+			</td>
+			<td>
+				<?php if( ! empty( $orphan_termmeta ) ): ?>
+					<button data-action="sweep" data-sweep_name="orphan_termmeta" data-sweep_type="termmeta" data-nonce="<?php echo wp_create_nonce( 'wp_sweep_orphan_termmeta' ); ?>" class="button button-primary btn-sweep"><?php _e( 'Sweep', 'wp-sweep' ); ?></button>
+					<button data-action="sweep_details" data-sweep_name="orphan_termmeta" data-sweep_type="termmeta" data-nonce="<?php echo wp_create_nonce( 'wp_sweep_details_orphan_termmeta' ); ?>" class="button btn-sweep-details"><?php _e( 'Details', 'wp-sweep' ); ?></button>
+				<?php else: ?>
+					<?php _e( 'N/A', 'wp-sweep' ); ?>
+				<?php endif; ?>
+			</td>
+		</tr>
+		<tr class="alternate">
+			<td>
+				<strong><?php _e( 'Duplicated Term Meta', 'wp-sweep' ); ?></strong>
+				<p class="sweep-details" style="display: none;"></p>
+			</td>
+			<td>
+				<span class="sweep-count"><?php echo number_format_i18n( $duplicated_termmeta ); ?></span>
+			</td>
+			<td>
+				<span class="sweep-percentage"><?php echo WPSweep::get_instance()->format_percentage( $duplicated_termmeta, $total_termmeta ); ?></span>
+			</td>
+			<td>
+				<?php if( ! empty( $duplicated_termmeta ) ): ?>
+					<button data-action="sweep" data-sweep_name="duplicated_termmeta" data-sweep_type="termmeta" data-nonce="<?php echo wp_create_nonce( 'wp_sweep_duplicated_termmeta' ); ?>" class="button button-primary btn-sweep"><?php _e( 'Sweep', 'wp-sweep' ); ?></button>
+					<button data-action="sweep_details" data-sweep_name="duplicated_termmeta" data-sweep_type="termmeta" data-nonce="<?php echo wp_create_nonce( 'wp_sweep_details_duplicated_termmeta' ); ?>" class="button btn-sweep-details"><?php _e( 'Details', 'wp-sweep' ); ?></button>
+				<?php else: ?>
+					<?php _e( 'N/A', 'wp-sweep' ); ?>
+				<?php endif; ?>
+			</td>
+		</tr>
 			<tr>
 				<td>
 					<strong><?php _e( 'Orphaned Term Relationship', 'wp-sweep' ); ?></strong>
