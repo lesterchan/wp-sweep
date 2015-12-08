@@ -63,6 +63,8 @@ I spent most of my free time creating, updating, maintaining and supporting thes
 
 ## Changelog
 ### 1.0.6
+* NEW: Delete 'languages' folder from the plugin
+* NEW: Use translate.wordpress.org to translate the plugin
 * FIXED: Works only with WordPress 4.4 because of new term meta
 
 ### 1.0.5
