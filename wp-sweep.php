@@ -622,7 +622,7 @@ class WPSweep {
                 }
                 break;
             case 'orphan_termmeta':
-                $query = $wpdb->get_results( "SELECT term_id, meta_key FROM $wpdb->termmeta WHERE term_id NOT IN (SELECT ID FROM $wpdb->terms)" );
+                $query = $wpdb->get_results( "SELECT term_id, meta_key FROM $wpdb->termmeta WHERE term_id NOT IN (SELECT term_id FROM $wpdb->terms)" );
                 if( $query ) {
                     foreach ( $query as $meta ) {
                         $term_id = intval( $meta->term_id );
