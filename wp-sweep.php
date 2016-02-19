@@ -124,7 +124,7 @@ class WPSweep {
      * Enqueue JS/CSS files used for admin
      *
      * @since 1.0.3
-     * 
+     *
      * @access public
      * @param string $hook
      * @return void
@@ -153,7 +153,7 @@ class WPSweep {
      * Admin menu
      *
      * @since 1.0.3
-     * 
+     *
      * @access public
      * @return void
      */
@@ -835,10 +835,9 @@ class WPSweep {
                 foreach ( $ms_sites as $ms_site ) {
                     switch_to_blog( $ms_site['blog_id'] );
                     $this->plugin_activated();
+                    restore_current_blog();
                 }
             }
-
-            restore_current_blog();
         } else {
             $this->plugin_activated();
         }
@@ -871,10 +870,9 @@ class WPSweep {
                 foreach ( $ms_sites as $ms_site ) {
                     switch_to_blog( $ms_site['blog_id'] );
                     $this->plugin_deactivated();
+                    restore_current_blog();
                 }
             }
-
-            restore_current_blog();
         } else {
             $this->plugin_deactivated();
         }
