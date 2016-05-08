@@ -64,8 +64,10 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 </style>
 <div class="wrap">
     <h2><?php _e( 'WP-Sweep', 'wp-sweep' ); ?></h2>
-    <div class="update-nag">
-        <?php printf( __( 'Before you do any sweep, please <a href="%s" target="%s">backup your database</a> first because any sweep done is irreversible.', 'wp-sweep' ), 'https://wordpress.org/plugins/wp-dbmanager/', '_blank' ); ?>
+    <div class="notice notice-warning">
+    	<p>
+        	<?php printf( __( 'Before you do any sweep, please <a href="%s" target="%s">backup your database</a> first because any sweep done is irreversible.', 'wp-sweep' ), 'https://wordpress.org/plugins/wp-dbmanager/', '_blank' ); ?>
+        </p>
     </div>
     <p>
         <?php printf( __( 'For performance reasons, only %s items will be shown if you click Details', 'wp-sweep' ), number_format_i18n( WPSweep::get_instance()->limit_details ) ); ?>
