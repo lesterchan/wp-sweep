@@ -101,7 +101,12 @@ class WPSweep {
      * @access public
      * @return void
      */
-    public function init() {}
+    public function init() {
+        // include class for WP CLI command
+        if ( defined( 'WP_CLI' ) ) {
+            require __DIR__ . '/class-command.php';
+        }
+    }
 
     /**
      * Adds all the plugin hooks
