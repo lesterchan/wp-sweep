@@ -3,7 +3,7 @@
 Plugin Name: WP-Sweep
 Plugin URI: http://lesterchan.net/portfolio/programming/php/
 Description: WP-Sweep allows you to clean up unused, orphaned and duplicated data in your WordPress. It cleans up revisions, auto drafts, unapproved comments, spam comments, trashed comments, orphan post meta, orphan comment meta, orphan user meta, orphan term relationships, unused terms, duplicated post meta, duplicated comment meta, duplicated user meta and transient options. It also optimizes your database tables.
-Version: 1.0.7
+Version: 1.0.8
 Author: Lester 'GaMerZ' Chan
 Author URI: http://lesterchan.net
 Text Domain: wp-sweep
@@ -31,7 +31,7 @@ License: GPL2
  *
  * @since 1.0.0
  */
-define( 'WP_SWEEP_VERSION', '1.0.6' );
+define( 'WP_SWEEP_VERSION', '1.0.8' );
 
 /**
  * WP-Sweep class
@@ -351,7 +351,7 @@ class WPSweep {
                 $count = $wpdb->get_var( "SELECT COUNT(meta_id) FROM $wpdb->termmeta WHERE term_id NOT IN (SELECT term_id FROM $wpdb->terms)" );
                 break;
             case 'orphan_term_relationships':
-                $count = $wpdb->get_var( "SELECT COUNT(object_id) FROM $wpdb->term_relationships AS tr INNER JOIN $wpdb->term_taxonomy AS tt ON tr.term_taxonomy_id = tt.term_taxonomy_id WHERE tt.taxonomy != 'link_category' AND tr.object_id NOT IN (SELECT ID FROM $wpdb->posts)" );
+                $count = $wpdb->get_var( "SELECT COUNT(object_id) FROM $wpdb->term_relationships AS tr INNER JOIN $wpdb->term_taxonomy AS tt ON tr.term_taxonomy_id = tt.term_taxonomy_id WHERE tt.taxonomy NOT IN ('" . implode( '\',\'', $this->get_excluded_taxonomies() ) . "') AND tr.object_id NOT IN (SELECT ID FROM $wpdb->posts)" );
                 break;
             case 'unused_terms':
                 $count = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(t.term_id) FROM $wpdb->terms AS t INNER JOIN $wpdb->term_taxonomy AS tt ON t.term_id = tt.term_id WHERE tt.count = %d AND t.term_id NOT IN (" . implode( ',', $this->get_excluded_termids() ) . ")", 0 ) );
@@ -440,7 +440,7 @@ class WPSweep {
                 $details = $wpdb->get_col( $wpdb->prepare( "SELECT meta_key FROM $wpdb->termmeta WHERE term_id NOT IN (SELECT term_id FROM $wpdb->terms) LIMIT %d", $this->limit_details ) );
                 break;
             case 'orphan_term_relationships':
-                $details = $wpdb->get_col( $wpdb->prepare( "SELECT tt.taxonomy FROM $wpdb->term_relationships AS tr INNER JOIN $wpdb->term_taxonomy AS tt ON tr.term_taxonomy_id = tt.term_taxonomy_id WHERE tt.taxonomy != 'link_category' AND tr.object_id NOT IN (SELECT ID FROM $wpdb->posts) LIMIT %d", $this->limit_details ) );
+                $details = $wpdb->get_col( $wpdb->prepare( "SELECT tt.taxonomy FROM $wpdb->term_relationships AS tr INNER JOIN $wpdb->term_taxonomy AS tt ON tr.term_taxonomy_id = tt.term_taxonomy_id WHERE tt.taxonomy NOT IN ('" . implode( '\',\'', $this->get_excluded_taxonomies() ) . "') AND tr.object_id NOT IN (SELECT ID FROM $wpdb->posts) LIMIT %d", $this->limit_details ) );
                 break;
             case 'unused_terms':
                 $details = $wpdb->get_col( $wpdb->prepare( "SELECT t.name FROM $wpdb->terms AS t INNER JOIN $wpdb->term_taxonomy AS tt ON t.term_id = tt.term_id WHERE tt.count = %d AND t.term_id NOT IN (" . implode( ',', $this->get_excluded_termids() ) . ") LIMIT %d", 0, $this->limit_details ) );
@@ -642,7 +642,7 @@ class WPSweep {
                 }
                 break;
             case 'orphan_term_relationships':
-                $query = $wpdb->get_results( "SELECT tr.object_id, tr.term_taxonomy_id, tt.term_id, tt.taxonomy FROM $wpdb->term_relationships AS tr INNER JOIN $wpdb->term_taxonomy AS tt ON tr.term_taxonomy_id = tt.term_taxonomy_id WHERE tt.taxonomy != 'link_category' AND tr.object_id NOT IN (SELECT ID FROM $wpdb->posts)" );
+                $query = $wpdb->get_results( "SELECT tr.object_id, tr.term_taxonomy_id, tt.term_id, tt.taxonomy FROM $wpdb->term_relationships AS tr INNER JOIN $wpdb->term_taxonomy AS tt ON tr.term_taxonomy_id = tt.term_taxonomy_id WHERE tt.taxonomy NOT IN ('" . implode( '\',\'', $this->get_excluded_taxonomies() ) . "') AND tr.object_id NOT IN (SELECT ID FROM $wpdb->posts)" );
                 if( $query ) {
                     foreach ( $query as $tax ) {
                         $wp_remove_object_terms = wp_remove_object_terms( intval( $tax->object_id ), intval( $tax->term_id ), $tax->taxonomy );
@@ -763,6 +763,21 @@ class WPSweep {
      */
     public function format_percentage( $current, $total ) {
         return ( $total > 0 ? round( ( $current / $total ) * 100, 2 ) : 0 ) . '%';
+    }
+
+    /*
+     * Get excluded taxonomies
+     *
+     * @since 1.0.8
+     *
+     * @access private
+     * @return array Excluded taxonomies
+     */
+    private function get_excluded_taxonomies() {
+        $excluded_taxonomies = array();
+        $excluded_taxonomies[] = 'link_category';
+
+        return apply_filters( 'wp_sweep_excluded_taxonomies', $excluded_taxonomies );
     }
 
     /*
