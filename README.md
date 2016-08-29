@@ -3,8 +3,8 @@ Contributors: GamerZ
 Donate link: http://lesterchan.net/site/donation/  
 Tags: sweep, clean, cleanup, clean up, optimize, orphan, unused, duplicated, posts, post meta, comments, comment meta, users, user meta, terms, term meta, term relationships, revisions, auto drafts, transient, database, tables, oembed
 Requires at least: 4.4  
-Tested up to: 4.6
-Stable tag: 1.0.8
+Tested up to: 4.6  
+Stable tag: 1.0.8  
 License: GPLv2 or later  
 License URI: http://www.gnu.org/licenses/gpl-2.0.html  
 
@@ -64,6 +64,7 @@ I spent most of my free time creating, updating, maintaining and supporting thes
 ## Changelog
 ### 1.0.8
 * NEW: Added wp_sweep_excluded_taxonomies filter to allow more than just link_category taxonomy
+* NEW: Support for WP-CLI `wp sweep`
 
 ### 1.0.7
 * FIXES: Use custom query to delete Orphaned Term Relationship if wp_remove_object_terms() fails
