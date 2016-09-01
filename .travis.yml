@@ -11,7 +11,7 @@ matrix:
     - php: 7.0
 
 script:
-  - find . \( -name '*.php' \) -exec php -lf {} \;
+  - find . "(" -name "*.php" ")" -exec php --syntax-check --file "{}" ";"
 
 notifications:
   email: false
