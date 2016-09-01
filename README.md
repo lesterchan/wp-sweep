@@ -7,7 +7,7 @@ Donate link: http://lesterchan.net/site/donation/
 Tags: sweep, clean, cleanup, clean up, optimize, orphan, unused, duplicated, posts, post meta, comments, comment meta, users, user meta, terms, term meta, term relationships, revisions, auto drafts, transient, database, tables, oembed
 Requires at least: 4.4  
 Tested up to: 4.6  
-Stable tag: 1.0.8  
+Stable tag: 1.0.9  
 License: GPLv2 or later  
 License URI: http://www.gnu.org/licenses/gpl-2.0.html  
 
@@ -52,9 +52,6 @@ Following delete functions are used:
 * delete_transient()
 * delete_site_transient()
 
-### Build Status
-[![Build Status](https://travis-ci.org/lesterchan/wp-sweep.svg?branch=master)](https://travis-ci.org/lesterchan/wp-sweep)
-
 ### Development
 * [https://github.com/lesterchan/wp-sweep](https://github.com/lesterchan/wp-sweep "https://github.com/lesterchan/wp-sweep")
 
@@ -65,6 +62,9 @@ Following delete functions are used:
 I spent most of my free time creating, updating, maintaining and supporting these plugins, if you really love my plugins and could spare me a couple of bucks, I will really appreciate it. If not feel free to use it without any obligations.
 
 ## Changelog
+### 1.0.9
+
+
 ### 1.0.8
 * NEW: Added wp_sweep_excluded_taxonomies filter to allow more than just link_category taxonomy
 * NEW: Support for WP-CLI `wp sweep`

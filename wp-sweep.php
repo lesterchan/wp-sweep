@@ -3,7 +3,7 @@
 Plugin Name: WP-Sweep
 Plugin URI: http://lesterchan.net/portfolio/programming/php/
 Description: WP-Sweep allows you to clean up unused, orphaned and duplicated data in your WordPress. It cleans up revisions, auto drafts, unapproved comments, spam comments, trashed comments, orphan post meta, orphan comment meta, orphan user meta, orphan term relationships, unused terms, duplicated post meta, duplicated comment meta, duplicated user meta and transient options. It also optimizes your database tables.
-Version: 1.0.8
+Version: 1.0.9
 Author: Lester 'GaMerZ' Chan
 Author URI: http://lesterchan.net
 Text Domain: wp-sweep
@@ -31,7 +31,7 @@ License: GPL2
  *
  * @since 1.0.0
  */
-define( 'WP_SWEEP_VERSION', '1.0.8' );
+define( 'WP_SWEEP_VERSION', '1.0.9' );
 
 /**
  * WP-Sweep class
@@ -774,13 +774,13 @@ class WPSweep {
 	}
 
 	/*
-     * Get excluded taxonomies
-     *
-     * @since 1.0.8
-     *
-     * @access private
-     * @return array Excluded taxonomies
-     */
+	 * Get excluded taxonomies
+	 *
+	 * @since 1.0.8
+	 *
+	 * @access private
+	 * @return array Excluded taxonomies
+	 */
 	private function get_excluded_taxonomies() {
 		$excluded_taxonomies = array();
 		$excluded_taxonomies[] = 'link_category';
@@ -789,13 +789,13 @@ class WPSweep {
 	}
 
 	/*
-     * Get excluded term IDs
-     *
-     * @since 1.0.3
-     *
-     * @access private
-     * @return array Excluded term IDs
-     */
+	 * Get excluded term IDs
+	 *
+	 * @since 1.0.3
+	 *
+	 * @access private
+	 * @return array Excluded term IDs
+	 */
 	private function get_excluded_termids() {
 		$default_term_ids = $this->get_default_taxonomy_termids();
 		if ( ! is_array( $default_term_ids ) ) {
@@ -809,13 +809,13 @@ class WPSweep {
 	}
 
 	/*
-     * Get all default taxonomy term IDs
-     *
-     * @since 1.0.3
-     *
-     * @access private
-     * @return array Default taxonomy term IDs
-     */
+	 * Get all default taxonomy term IDs
+	 *
+	 * @since 1.0.3
+	 *
+	 * @access private
+	 * @return array Default taxonomy term IDs
+	 */
 	private function get_default_taxonomy_termids() {
 		$taxonomies = get_taxonomies();
 		$default_term_ids = array();
@@ -834,13 +834,13 @@ class WPSweep {
 	}
 
 	/*
-     * Get terms that has a parent term
-     *
-     * @since 1.0.3
-     *
-     * @access private
-     * @return array Parent term IDs
-     */
+	 * Get terms that has a parent term
+	 *
+	 * @since 1.0.3
+	 *
+	 * @access private
+	 * @return array Parent term IDs
+	 */
 	private function get_parent_termids() {
 		global $wpdb;
 		return $wpdb->get_col( $wpdb->prepare( "SELECT tt.parent FROM $wpdb->terms AS t INNER JOIN $wpdb->term_taxonomy AS tt ON t.term_id = tt.term_id WHERE tt.parent > %d", 0 ) );
