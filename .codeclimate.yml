@@ -45,6 +45,8 @@ exclude_paths:
   - "**.pot"
   - "**.txt"
   - "**-min.js"
+  - "**.min.js"
   - "**-min.css"
+  - "**.min.css"
   - "**.dist"
   - "**.sh"
