@@ -388,7 +388,7 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 	<?php do_action( 'wp_sweep_admin_user_sweep' ); ?>
 	<p>&nbsp;</p>
 	<h3><?php _e( 'Term Sweep', 'wp-sweep' ); ?></h3>
-	<p><?php printf( __( 'There are a total of <strong class="attention "><span class="sweep-count-type-terms">%1$s</span> Terms</strong>, <strong class="attention "><span class="sweep-count-type-termmeta">%2$s</span> Term Meta</strong>, <strong class="attention"><span class="sweep-count-type-term_taxonomy">%1$s</span> Term Taxonomy</strong> and <strong class="attention"><span class="sweep-count-type-term_relationships">%1$s</span> Term Relationships</strong>.', 'wp-sweep' ), number_format_i18n( $total_terms ), number_format_i18n( $total_termmeta ), number_format_i18n( $total_term_taxonomy ), number_format_i18n( $total_term_relationships ) ); ?></p>
+	<p><?php printf( __( 'There are a total of <strong class="attention "><span class="sweep-count-type-terms">%1$s</span> Terms</strong>, <strong class="attention "><span class="sweep-count-type-termmeta">%2$s</span> Term Meta</strong>, <strong class="attention"><span class="sweep-count-type-term_taxonomy">%3$s</span> Term Taxonomy</strong> and <strong class="attention"><span class="sweep-count-type-term_relationships">%4$s</span> Term Relationships</strong>.', 'wp-sweep' ), number_format_i18n( $total_terms ), number_format_i18n( $total_termmeta ), number_format_i18n( $total_term_taxonomy ), number_format_i18n( $total_term_relationships ) ); ?></p>
 	<div class="sweep-message"></div>
 	<table class="widefat table-sweep">
 		<thead>
