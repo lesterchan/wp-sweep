@@ -70,14 +70,14 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 	<h2><?php _e( 'WP-Sweep', 'wp-sweep' ); ?></h2>
 	<div class="notice notice-warning">
 		<p>
-			<?php printf( __( 'Before you do any sweep, please <a href="%1$s" target="%1$s">backup your database</a> first because any sweep done is irreversible.', 'wp-sweep' ), 'https://wordpress.org/plugins/wp-dbmanager/', '_blank' ); ?>
+			<?php printf( __( 'Before you do any sweep, please <a href="%1$s" target="%2$s">backup your database</a> first because any sweep done is irreversible.', 'wp-sweep' ), 'https://wordpress.org/plugins/wp-dbmanager/', '_blank' ); ?>
 		</p>
 	</div>
 	<p>
 		<?php printf( __( 'For performance reasons, only %s items will be shown if you click Details', 'wp-sweep' ), number_format_i18n( WPSweep::get_instance()->limit_details ) ); ?>
 	</p>
 	<h3><?php _e( 'Post Sweep', 'wp-sweep' ); ?></h3>
-	<p><?php printf( __( 'There are a total of <strong class="attention"><span class="sweep-count-type-posts">%1$s</span> Posts</strong> and <strong class="attention"><span class="sweep-count-type-postmeta">%1$s</span> Post Meta</strong>.', 'wp-sweep' ), number_format_i18n( $total_posts ), number_format_i18n( $total_postmeta ) ); ?></p>
+	<p><?php printf( __( 'There are a total of <strong class="attention"><span class="sweep-count-type-posts">%1$s</span> Posts</strong> and <strong class="attention"><span class="sweep-count-type-postmeta">%2$s</span> Post Meta</strong>.', 'wp-sweep' ), number_format_i18n( $total_posts ), number_format_i18n( $total_postmeta ) ); ?></p>
 	<div class="sweep-message"></div>
 	<table class="widefat table-sweep">
 		<thead>
@@ -214,7 +214,7 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 	<?php do_action( 'wp_sweep_admin_post_sweep' ); ?>
 	<p>&nbsp;</p>
 	<h3><?php _e( 'Comment Sweep', 'wp-sweep' ); ?></h3>
-	<p><?php printf( __( 'There are a total of <strong class="attention"><span class="sweep-count-type-comments">%1$s</span> Comments</strong> and <strong class="attention"><span class="sweep-count-type-commentmeta">%1$s</span> Comment Meta</strong>.', 'wp-sweep' ), number_format_i18n( $total_comments ), number_format_i18n( $total_commentmeta ) ); ?></p>
+	<p><?php printf( __( 'There are a total of <strong class="attention"><span class="sweep-count-type-comments">%1$s</span> Comments</strong> and <strong class="attention"><span class="sweep-count-type-commentmeta">%2$s</span> Comment Meta</strong>.', 'wp-sweep' ), number_format_i18n( $total_comments ), number_format_i18n( $total_commentmeta ) ); ?></p>
 	<div class="sweep-message"></div>
 	<table class="widefat table-sweep">
 		<thead>
@@ -331,7 +331,7 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 	<?php do_action( 'wp_sweep_admin_comment_sweep' ); ?>
 	<p>&nbsp;</p>
 	<h3><?php _e( 'User Sweep', 'wp-sweep' ); ?></h3>
-	<p><?php printf( __( 'There are a total of <strong class="attention"><span class="sweep-count-type-users">%1$s</span> Users</strong> and <strong class="attention"><span class="sweep-count-type-usermeta">%1$s</span> User Meta</strong>.', 'wp-sweep' ), number_format_i18n( $total_users ), number_format_i18n( $total_usermeta ) ); ?></p>
+	<p><?php printf( __( 'There are a total of <strong class="attention"><span class="sweep-count-type-users">%1$s</span> Users</strong> and <strong class="attention"><span class="sweep-count-type-usermeta">%2$s</span> User Meta</strong>.', 'wp-sweep' ), number_format_i18n( $total_users ), number_format_i18n( $total_usermeta ) ); ?></p>
 	<div class="sweep-message"></div>
 	<table class="widefat table-sweep">
 		<thead>
@@ -388,7 +388,7 @@ $transient_options          = WPSweep::get_instance()->count( 'transient_options
 	<?php do_action( 'wp_sweep_admin_user_sweep' ); ?>
 	<p>&nbsp;</p>
 	<h3><?php _e( 'Term Sweep', 'wp-sweep' ); ?></h3>
-	<p><?php printf( __( 'There are a total of <strong class="attention "><span class="sweep-count-type-terms">%1$s</span> Terms</strong>, <strong class="attention "><span class="sweep-count-type-termmeta">%1$s</span> Term Meta</strong>, <strong class="attention"><span class="sweep-count-type-term_taxonomy">%1$s</span> Term Taxonomy</strong> and <strong class="attention"><span class="sweep-count-type-term_relationships">%1$s</span> Term Relationships</strong>.', 'wp-sweep' ), number_format_i18n( $total_terms ), number_format_i18n( $total_termmeta ), number_format_i18n( $total_term_taxonomy ), number_format_i18n( $total_term_relationships ) ); ?></p>
+	<p><?php printf( __( 'There are a total of <strong class="attention "><span class="sweep-count-type-terms">%1$s</span> Terms</strong>, <strong class="attention "><span class="sweep-count-type-termmeta">%2$s</span> Term Meta</strong>, <strong class="attention"><span class="sweep-count-type-term_taxonomy">%1$s</span> Term Taxonomy</strong> and <strong class="attention"><span class="sweep-count-type-term_relationships">%1$s</span> Term Relationships</strong>.', 'wp-sweep' ), number_format_i18n( $total_terms ), number_format_i18n( $total_termmeta ), number_format_i18n( $total_term_taxonomy ), number_format_i18n( $total_term_relationships ) ); ?></p>
 	<div class="sweep-message"></div>
 	<table class="widefat table-sweep">
 		<thead>
