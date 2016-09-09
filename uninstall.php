@@ -7,7 +7,7 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 }
 
 if ( is_multisite() ) {
-	$ms_sites = wp_get_sites();
+	$ms_sites = get_sites();
 
 	if ( 0 < sizeof( $ms_sites ) ) {
 		foreach ( $ms_sites as $ms_site ) {

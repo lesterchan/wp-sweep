@@ -857,7 +857,7 @@ class WPSweep {
 	 */
 	public function plugin_activation( $network_wide ) {
 		if ( is_multisite() && $network_wide ) {
-			$ms_sites = wp_get_sites();
+			$ms_sites = get_sites();
 
 			if ( 0 < sizeof( $ms_sites ) ) {
 				foreach ( $ms_sites as $ms_site ) {
@@ -893,7 +893,7 @@ class WPSweep {
 	 */
 	public function plugin_deactivation( $network_wide ) {
 		if ( is_multisite() && $network_wide ) {
-			$ms_sites = wp_get_sites();
+			$ms_sites = get_sites();
 
 			if ( 0 < sizeof( $ms_sites ) ) {
 				foreach ( $ms_sites as $ms_site ) {
