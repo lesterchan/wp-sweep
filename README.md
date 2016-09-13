@@ -63,7 +63,10 @@ I spent most of my free time creating, updating, maintaining and supporting thes
 
 ## Changelog
 ### 1.0.9
-
+* NEW: Support for Codeclimate
+* FIXES: Uses `get_sites()` on WordPress 4.6. This should fix deprecated notices.
+* FIXES: Fixes translation placeholder count. Props @pedro-mendonca.
+* FIXES: Use `manage_options` capability as it conflicts with Admin Menu Editor on multisite installs. Props @EusebiuOprinoiu.
 
 ### 1.0.8
 * NEW: Added wp_sweep_excluded_taxonomies filter to allow more than just link_category taxonomy
