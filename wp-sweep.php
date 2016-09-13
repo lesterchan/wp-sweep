@@ -10,7 +10,8 @@ Text Domain: wp-sweep
 License: GPL2
 */
 
-/*  Copyright 2016  Lester Chan  (email : lesterchan@gmail.com)
+/*
+	Copyright 2016  Lester Chan  (email : lesterchan@gmail.com)
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License, version 2, as
@@ -146,11 +147,11 @@ class WPSweep {
 		}
 
 		wp_localize_script( 'wp-sweep', 'wp_sweep', array(
-			'text_close_warning'	=> __( 'Sweeping is in progress. If you leave now, the process won\'t be completed.', 'wp-sweep' ),
-			'text_sweep'			=> __( 'Sweep', 'wp-sweep' ),
-			'text_sweep_all'		=> __( 'Sweep All', 'wp-sweep' ),
-			'text_sweeping'		 => __( 'Sweeping ...', 'wp-sweep' ),
-			'text_na'			   => __( 'N/A', 'wp-sweep' ),
+			'text_close_warning' => __( 'Sweeping is in progress. If you leave now, the process won\'t be completed.', 'wp-sweep' ),
+			'text_sweep' => __( 'Sweep', 'wp-sweep' ),
+			'text_sweep_all' => __( 'Sweep All', 'wp-sweep' ),
+			'text_sweeping' => __( 'Sweeping ...', 'wp-sweep' ),
+			'text_na' => __( 'N/A', 'wp-sweep' ),
 		) );
 	}
 
@@ -184,7 +185,7 @@ class WPSweep {
 			// Verify Referer
 			if ( ! check_admin_referer( 'wp_sweep_details_' . $_GET['sweep_name'] ) ) {
 				wp_send_json_error( array(
-					'error'	=> __( 'Failed to verify referrer.', 'wp-sweep' ),
+					'error' => __( 'Failed to verify referrer.', 'wp-sweep' ),
 				) );
 			} else {
 				wp_send_json_success( $this->details( $_GET['sweep_name'] ) );
@@ -209,7 +210,7 @@ class WPSweep {
 			// Verify Referer
 			if ( ! check_admin_referer( 'wp_sweep_' . $_GET['sweep_name'] ) ) {
 				wp_send_json_error( array(
-					'error'	=> __( 'Failed to verify referrer.', 'wp-sweep' ),
+					'error' => __( 'Failed to verify referrer.', 'wp-sweep' ),
 				) );
 			} else {
 				$sweep = $this->sweep( $_GET['sweep_name'] );
