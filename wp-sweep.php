@@ -12,18 +12,18 @@ License: GPL2
 
 /*  Copyright 2016  Lester Chan  (email : lesterchan@gmail.com)
 
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License, version 2, as
-    published by the Free Software Foundation.
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License, version 2, as
+	published by the Free Software Foundation.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 /**
@@ -146,11 +146,11 @@ class WPSweep {
 		}
 
 		wp_localize_script( 'wp-sweep', 'wp_sweep', array(
-			'text_close_warning'    => __( 'Sweeping is in progress. If you leave now, the process won\'t be completed.', 'wp-sweep' ),
-			'text_sweep'            => __( 'Sweep', 'wp-sweep' ),
-			'text_sweep_all'        => __( 'Sweep All', 'wp-sweep' ),
-			'text_sweeping'         => __( 'Sweeping ...', 'wp-sweep' ),
-			'text_na'               => __( 'N/A', 'wp-sweep' ),
+			'text_close_warning'	=> __( 'Sweeping is in progress. If you leave now, the process won\'t be completed.', 'wp-sweep' ),
+			'text_sweep'			=> __( 'Sweep', 'wp-sweep' ),
+			'text_sweep_all'		=> __( 'Sweep All', 'wp-sweep' ),
+			'text_sweeping'		 => __( 'Sweeping ...', 'wp-sweep' ),
+			'text_na'			   => __( 'N/A', 'wp-sweep' ),
 		) );
 	}
 
@@ -184,7 +184,7 @@ class WPSweep {
 			// Verify Referer
 			if ( ! check_admin_referer( 'wp_sweep_details_' . $_GET['sweep_name'] ) ) {
 				wp_send_json_error( array(
-					'error'    => __( 'Failed to verify referrer.', 'wp-sweep' ),
+					'error'	=> __( 'Failed to verify referrer.', 'wp-sweep' ),
 				) );
 			} else {
 				wp_send_json_success( $this->details( $_GET['sweep_name'] ) );
@@ -209,7 +209,7 @@ class WPSweep {
 			// Verify Referer
 			if ( ! check_admin_referer( 'wp_sweep_' . $_GET['sweep_name'] ) ) {
 				wp_send_json_error( array(
-					'error'    => __( 'Failed to verify referrer.', 'wp-sweep' ),
+					'error'	=> __( 'Failed to verify referrer.', 'wp-sweep' ),
 				) );
 			} else {
 				$sweep = $this->sweep( $_GET['sweep_name'] );
@@ -773,7 +773,7 @@ class WPSweep {
 		return ( $total > 0 ? round( ( $current / $total ) * 100, 2 ) : 0 ) . '%';
 	}
 
-	/*
+	/**
 	 * Get excluded taxonomies
 	 *
 	 * @since 1.0.8
@@ -788,7 +788,7 @@ class WPSweep {
 		return apply_filters( 'wp_sweep_excluded_taxonomies', $excluded_taxonomies );
 	}
 
-	/*
+	/**
 	 * Get excluded term IDs
 	 *
 	 * @since 1.0.3
@@ -808,7 +808,7 @@ class WPSweep {
 		return array_merge( $default_term_ids, $parent_term_ids );
 	}
 
-	/*
+	/**
 	 * Get all default taxonomy term IDs
 	 *
 	 * @since 1.0.3
@@ -833,7 +833,7 @@ class WPSweep {
 		return $default_term_ids;
 	}
 
-	/*
+	/**
 	 * Get terms that has a parent term
 	 *
 	 * @since 1.0.3
@@ -847,6 +847,31 @@ class WPSweep {
 	}
 
 	/**
+	 * Wrapper to get WordPress Multisite
+	 *
+	 * @since 1.0.9
+	 *
+	 * @access private
+	 * @return array
+	 */
+	private function get_sites() {
+		return function_exists( 'get_sites' ) ? get_sites() : wp_get_sites();
+	}
+
+	/**
+	 * Wrapper to get WordPress Multisite ID
+	 *
+	 * @since 1.0.9
+	 *
+	 * @access private
+	 * @param WP_Site $ms_site
+	 * @return int
+	 */
+	private function get_site_blog_id( $ms_site ) {
+		return isset( $ms_site['blog_id'] ) ? $ms_site['blog_id'] : $ms_site->blog_id;
+	}
+
+	/**
 	 * What to do when the plugin is being deactivated
 	 *
 	 * @since 1.0.0
@@ -857,11 +882,11 @@ class WPSweep {
 	 */
 	public function plugin_activation( $network_wide ) {
 		if ( is_multisite() && $network_wide ) {
-			$ms_sites = $this->wp_sweep_get_sites();
+			$ms_sites = $this->get_sites();
 
 			if ( 0 < sizeof( $ms_sites ) ) {
 				foreach ( $ms_sites as $ms_site ) {
-					switch_to_blog( $this->wp_sweep_get_site_id($ms_site) );
+					switch_to_blog( $this->get_site_blog_id( $ms_site ) );
 					$this->plugin_activated();
 					restore_current_blog();
 				}
@@ -893,11 +918,11 @@ class WPSweep {
 	 */
 	public function plugin_deactivation( $network_wide ) {
 		if ( is_multisite() && $network_wide ) {
-			$ms_sites = $this->wp_sweep_get_sites();
+			$ms_sites = $this->get_sites();
 
 			if ( 0 < sizeof( $ms_sites ) ) {
 				foreach ( $ms_sites as $ms_site ) {
-					switch_to_blog( $this->wp_sweep_get_site_id($ms_site) );
+					switch_to_blog( $this->get_site_blog_id( $ms_site ) );
 					$this->plugin_deactivated();
 					restore_current_blog();
 				}
@@ -917,27 +942,6 @@ class WPSweep {
 	 */
 	private function plugin_deactivated() {
 	}
-
-    /**
-     * if is multisite
-     * get sites with backwards compatibily to version 4.4
-     * @return mixed
-     */
-    private function wp_sweep_get_sites()
-    {
-        return function_exists( 'get_sites' ) ? get_sites() : wp_get_sites();
-    }
-
-    /**
-     * if is multisite
-     * get the site id with backwards compatibily to version 4.4
-     * @param $ms_site
-     * @return int
-     */
-    private function wp_sweep_get_site_id($ms_site)
-    {
-        return isset( $ms_site['blog_id'] ) ? $ms_site['blog_id'] : $ms_site->blog_id;
-    }
 }
 
 /**
