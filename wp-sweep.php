@@ -857,11 +857,11 @@ class WPSweep {
 	 */
 	public function plugin_activation( $network_wide ) {
 		if ( is_multisite() && $network_wide ) {
-			$ms_sites = get_sites();
+			$ms_sites = $this->wp_sweep_get_sites();
 
 			if ( 0 < sizeof( $ms_sites ) ) {
 				foreach ( $ms_sites as $ms_site ) {
-					switch_to_blog( $ms_site['blog_id'] );
+					switch_to_blog( $this->wp_sweep_get_site_id($ms_site) );
 					$this->plugin_activated();
 					restore_current_blog();
 				}
@@ -893,11 +893,11 @@ class WPSweep {
 	 */
 	public function plugin_deactivation( $network_wide ) {
 		if ( is_multisite() && $network_wide ) {
-			$ms_sites = get_sites();
+			$ms_sites = $this->wp_sweep_get_sites();
 
 			if ( 0 < sizeof( $ms_sites ) ) {
 				foreach ( $ms_sites as $ms_site ) {
-					switch_to_blog( $ms_site['blog_id'] );
+					switch_to_blog( $this->wp_sweep_get_site_id($ms_site) );
 					$this->plugin_deactivated();
 					restore_current_blog();
 				}
@@ -917,6 +917,27 @@ class WPSweep {
 	 */
 	private function plugin_deactivated() {
 	}
+
+    /**
+     * if is multisite
+     * get sites with backwards compatibily to version 4.4
+     * @return mixed
+     */
+    private function wp_sweep_get_sites()
+    {
+        return function_exists( 'get_sites' ) ? get_sites() : wp_get_sites();
+    }
+
+    /**
+     * if is multisite
+     * get the site id with backwards compatibily to version 4.4
+     * @param $ms_site
+     * @return int
+     */
+    private function wp_sweep_get_site_id($ms_site)
+    {
+        return isset( $ms_site['blog_id'] ) ? $ms_site['blog_id'] : $ms_site->blog_id;
+    }
 }
 
 /**
