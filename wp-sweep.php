@@ -869,7 +869,7 @@ class WPSweep {
 	 * @return int
 	 */
 	private function get_site_blog_id( $ms_site ) {
-		return isset( $ms_site['blog_id'] ) ? $ms_site['blog_id'] : $ms_site->blog_id;
+		return class_exists( 'WP_Site' ) ? $ms_site->blog_id : $ms_site['blog_id'];
 	}
 
 	/**
