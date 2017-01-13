@@ -13,7 +13,7 @@ if ( is_multisite() ) {
 
 	if ( 0 < sizeof( $ms_sites ) ) {
 		foreach ( $ms_sites as $ms_site ) {
-			$blog_id = isset( $ms_site['blog_id'] ) ? $ms_site['blog_id'] : $ms_site->blog_id;
+			$blog_id = class_exists( 'WP_Site' ) ? $ms_site->blog_id : $ms_site['blog_id'];
 			switch_to_blog( $blog_id );
 			plugin_uninstalled();
 		}
