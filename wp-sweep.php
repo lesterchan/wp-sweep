@@ -1,17 +1,17 @@
 <?php
 /*
 Plugin Name: WP-Sweep
-Plugin URI: http://lesterchan.net/portfolio/programming/php/
+Plugin URI: https://lesterchan.net/portfolio/programming/php/
 Description: WP-Sweep allows you to clean up unused, orphaned and duplicated data in your WordPress. It cleans up revisions, auto drafts, unapproved comments, spam comments, trashed comments, orphan post meta, orphan comment meta, orphan user meta, orphan term relationships, unused terms, duplicated post meta, duplicated comment meta, duplicated user meta and transient options. It also optimizes your database tables.
-Version: 1.0.9
+Version: 1.0.10
 Author: Lester 'GaMerZ' Chan
-Author URI: http://lesterchan.net
+Author URI: https://lesterchan.net
 Text Domain: wp-sweep
 License: GPL2
 */
 
 /*
-	Copyright 2016  Lester Chan  (email : lesterchan@gmail.com)
+	Copyright 2017  Lester Chan  (email : lesterchan@gmail.com)
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License, version 2, as
@@ -32,7 +32,7 @@ License: GPL2
  *
  * @since 1.0.0
  */
-define( 'WP_SWEEP_VERSION', '1.0.9' );
+define( 'WP_SWEEP_VERSION', '1.0.10' );
 
 /**
  * WP-Sweep class
