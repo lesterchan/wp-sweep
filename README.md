@@ -52,6 +52,9 @@ Following delete functions are used:
 * delete_transient()
 * delete_site_transient()
 
+WP-Sweep is not compatible with the following plugins:
+* [Meta Slider](https://wordpress.org/support/plugin/ml-slider/)
+
 ### Development
 * [https://github.com/lesterchan/wp-sweep](https://github.com/lesterchan/wp-sweep "https://github.com/lesterchan/wp-sweep")
 
