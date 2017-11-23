@@ -1,11 +1,10 @@
 # WP-Sweep
-
 Contributors: GamerZ  
 Donate link: https://lesterchan.net/site/donation/  
 Tags: sweep, clean, cleanup, clean up, optimize, orphan, unused, duplicated, posts, post meta, comments, comment meta, users, user meta, terms, term meta, term relationships, revisions, auto drafts, transient, database, tables, oembed
 Requires at least: 4.4  
 Tested up to: 4.9  
-Stable tag: 1.0.10  
+Stable tag: 1.0.11  
 License: GPLv2 or later  
 License URI: http://www.gnu.org/licenses/gpl-2.0.html  
 
@@ -66,6 +65,10 @@ WP-Sweep is not compatible with the following plugins:
 I spent most of my free time creating, updating, maintaining and supporting these plugins, if you really love my plugins and could spare me a couple of bucks, I will really appreciate it. If not feel free to use it without any obligations.
 
 ## Changelog
+### 1.0.11
+* NEw: Bump to WordPress 4.9
+* NEW: Update README to incompatible plugins
+
 ### 1.0.10
 * FIXED: Invalid plugin head 'This plugin has an invalid header.'
 
