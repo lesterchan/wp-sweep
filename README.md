@@ -1,7 +1,5 @@
 # WP-Sweep
 
-[![Build Status](https://travis-ci.org/lesterchan/wp-sweep.svg?branch=master)](https://travis-ci.org/lesterchan/wp-sweep) [![Code Climate](https://codeclimate.com/github/lesterchan/wp-sweep/badges/gpa.svg)](https://codeclimate.com/github/lesterchan/wp-sweep) [![Issue Count](https://codeclimate.com/github/lesterchan/wp-sweep/badges/issue_count.svg)](https://codeclimate.com/github/lesterchan/wp-sweep)
-
 Contributors: GamerZ  
 Donate link: https://lesterchan.net/site/donation/  
 Tags: sweep, clean, cleanup, clean up, optimize, orphan, unused, duplicated, posts, post meta, comments, comment meta, users, user meta, terms, term meta, term relationships, revisions, auto drafts, transient, database, tables, oembed
@@ -54,6 +52,9 @@ Following delete functions are used:
 
 WP-Sweep is not compatible with the following plugins:
 * [Meta Slider](https://wordpress.org/support/plugin/ml-slider/)
+
+### Build Status
+[![Build Status](https://travis-ci.org/lesterchan/wp-sweep.svg?branch=master)](https://travis-ci.org/lesterchan/wp-sweep) [![Code Climate](https://codeclimate.com/github/lesterchan/wp-sweep/badges/gpa.svg)](https://codeclimate.com/github/lesterchan/wp-sweep) [![Issue Count](https://codeclimate.com/github/lesterchan/wp-sweep/badges/issue_count.svg)](https://codeclimate.com/github/lesterchan/wp-sweep)
 
 ### Development
 * [https://github.com/lesterchan/wp-sweep](https://github.com/lesterchan/wp-sweep "https://github.com/lesterchan/wp-sweep")
