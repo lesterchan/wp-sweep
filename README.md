@@ -66,7 +66,7 @@ I spent most of my free time creating, updating, maintaining and supporting thes
 
 ## Changelog
 ### 1.0.12
-* NEw: Bump to WordPress 4.9
+* NEW: Bump to WordPress 4.9
 * NEW: Update README to incompatible plugins
 
 ### 1.0.10
