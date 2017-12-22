@@ -164,7 +164,7 @@ class WPSweep {
 	 * @return void
 	 */
 	public function admin_menu() {
-		add_management_page( __( 'WP-Sweep', 'wp-sweep' ), __( 'WP-Sweep', 'wp-sweep' ), 'manage_options', 'wp-sweep/admin.php' );
+		add_management_page( _x( 'Sweep', 'Page title', 'wp-sweep' ), _x( 'Sweep', 'Menu title', 'wp-sweep' ), 'manage_options', 'wp-sweep/admin.php' );
 	}
 
 
