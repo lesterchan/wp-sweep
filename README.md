@@ -66,7 +66,7 @@ I spent most of my free time creating, updating, maintaining and supporting thes
 
 ## Changelog
 ### 1.0.12
-* NEw: Bump to WordPress 4.9
+* NEW: Bump to WordPress 4.9
 * NEW: Update README to incompatible plugins
 
 ### 1.0.10
@@ -121,7 +121,7 @@ I spent most of my free time creating, updating, maintaining and supporting thes
 ## Installation
 1. Upload `wp-sweep` folder to the `/wp-content/plugins/` directory
 2. Activate the `WP-Sweep` plugin through the 'Plugins' menu in WordPress
-3. You can access `WP-Sweep` via `WP-Admin -> Tools -> Sweep`
+3. You can access `WP-Sweep` via `WP-Admin -> Tools -> WP-Sweep`
 
 ## Screenshots
 1. WP-Sweep Administrator Page (Before Sweeping)
