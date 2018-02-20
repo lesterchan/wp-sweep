@@ -549,6 +549,7 @@ class WPSweep {
 						wp_delete_post_revision( (int) $id );
 					}
 
+					// translators: %s is Revisions count.
 					$message = sprintf( __( '%s Revisions Processed', 'wp-sweep' ), number_format_i18n( count( $query ) ) );
 				}
 				break;
@@ -559,6 +560,7 @@ class WPSweep {
 						wp_delete_post( (int) $id, true );
 					}
 
+					// translators: %s is the Auto Drafts count.
 					$message = sprintf( __( '%s Auto Drafts Processed', 'wp-sweep' ), number_format_i18n( count( $query ) ) );
 				}
 				break;
@@ -569,6 +571,7 @@ class WPSweep {
 						wp_delete_post( $id, true );
 					}
 
+					// translators: %s is the Deleted Posts count.
 					$message = sprintf( __( '%s Deleted Posts Processed', 'wp-sweep' ), number_format_i18n( count( $query ) ) );
 				}
 				break;
@@ -579,6 +582,7 @@ class WPSweep {
 						wp_delete_comment( (int) $id, true );
 					}
 
+					// translators: %s is the Unapproved Comments count.
 					$message = sprintf( __( '%s Unapproved Comments Processed', 'wp-sweep' ), number_format_i18n( count( $query ) ) );
 				}
 				break;
@@ -589,6 +593,7 @@ class WPSweep {
 						wp_delete_comment( (int) $id, true );
 					}
 
+					// translators: %s is the Spam Comments count.
 					$message = sprintf( __( '%s Spam Comments Processed', 'wp-sweep' ), number_format_i18n( count( $query ) ) );
 				}
 				break;
@@ -599,6 +604,7 @@ class WPSweep {
 						wp_delete_comment( (int) $id, true );
 					}
 
+					// translators: %s is the Trash Comments count.
 					$message = sprintf( __( '%s Trash Comments Processed', 'wp-sweep' ), number_format_i18n( count( $query ) ) );
 				}
 				break;
@@ -613,6 +619,7 @@ class WPSweep {
 						}
 					}
 
+					// translators: %s is the Transient Options count.
 					$message = sprintf( __( '%s Transient Options Processed', 'wp-sweep' ), number_format_i18n( count( $query ) ) );
 				}
 				break;
@@ -628,6 +635,7 @@ class WPSweep {
 						}
 					}
 
+					// translators: %s is the Orphaned Post Meta count.
 					$message = sprintf( __( '%s Orphaned Post Meta Processed', 'wp-sweep' ), number_format_i18n( count( $query ) ) );
 				}
 				break;
@@ -643,6 +651,7 @@ class WPSweep {
 						}
 					}
 
+					// translators: %s is the Orphaned Comment Meta count.
 					$message = sprintf( __( '%s Orphaned Comment Meta Processed', 'wp-sweep' ), number_format_i18n( count( $query ) ) );
 				}
 				break;
@@ -658,6 +667,7 @@ class WPSweep {
 						}
 					}
 
+					// translators: %s is the Orphaned User Meta count.
 					$message = sprintf( __( '%s Orphaned User Meta Processed', 'wp-sweep' ), number_format_i18n( count( $query ) ) );
 				}
 				break;
@@ -673,6 +683,7 @@ class WPSweep {
 						}
 					}
 
+					// translators: %s is the Orphaned Term Meta count.
 					$message = sprintf( __( '%s Orphaned Term Meta Processed', 'wp-sweep' ), number_format_i18n( count( $query ) ) );
 				}
 				break;
@@ -686,6 +697,7 @@ class WPSweep {
 						}
 					}
 
+					// translators: %s is the Orphaned Term Relationships count.
 					$message = sprintf( __( '%s Orphaned Term Relationships Processed', 'wp-sweep' ), number_format_i18n( count( $query ) ) );
 				}
 				break;
@@ -706,6 +718,7 @@ class WPSweep {
 						$wpdb->get_results( "DELETE FROM $wpdb->terms WHERE term_id NOT IN (SELECT term_id FROM $wpdb->term_taxonomy)" );
 					}
 
+					// translators: %s is the Unused Terms count.
 					$message = sprintf( __( '%s Unused Terms Processed', 'wp-sweep' ), number_format_i18n( count( $query ) ) );
 				}
 				break;
@@ -718,6 +731,7 @@ class WPSweep {
 						$wpdb->query( $wpdb->prepare( "DELETE FROM $wpdb->postmeta WHERE meta_id IN (" . implode( ',', $ids ) . ') AND post_id = %d', (int) $meta->post_id ) );
 					}
 
+					// translators: %s is the Duplicated Post Meta count.
 					$message = sprintf( __( '%s Duplicated Post Meta Processed', 'wp-sweep' ), number_format_i18n( count( $query ) ) );
 				}
 				break;
@@ -730,6 +744,7 @@ class WPSweep {
 						$wpdb->query( $wpdb->prepare( "DELETE FROM $wpdb->commentmeta WHERE meta_id IN (" . implode( ',', $ids ) . ') AND comment_id = %d', (int) $meta->comment_id ) );
 					}
 
+					// translators: %s is the Duplicated Comment Meta count.
 					$message = sprintf( __( '%s Duplicated Comment Meta Processed', 'wp-sweep' ), number_format_i18n( count( $query ) ) );
 				}
 				break;
@@ -742,6 +757,7 @@ class WPSweep {
 						$wpdb->query( $wpdb->prepare( "DELETE FROM $wpdb->usermeta WHERE umeta_id IN (" . implode( ',', $ids ) . ') AND user_id = %d', (int) $meta->user_id ) );
 					}
 
+					// translators: %s is the Duplicated User Meta count.
 					$message = sprintf( __( '%s Duplicated User Meta Processed', 'wp-sweep' ), number_format_i18n( count( $query ) ) );
 				}
 				break;
@@ -754,6 +770,7 @@ class WPSweep {
 						$wpdb->query( $wpdb->prepare( "DELETE FROM $wpdb->termmeta WHERE meta_id IN (" . implode( ',', $ids ) . ') AND term_id = %d', (int) $meta->term_id ) );
 					}
 
+					// translators: %s is the Duplicated Term Meta count.
 					$message = sprintf( __( '%s Duplicated Term Meta Processed', 'wp-sweep' ), number_format_i18n( count( $query ) ) );
 				}
 				break;
@@ -762,6 +779,8 @@ class WPSweep {
 				if ( $query ) {
 					$tables = implode( ',', $query );
 					$wpdb->query( "OPTIMIZE TABLE $tables" ); // WPCS: unprepared SQL ok.
+
+					// translators: %s is the Tables count.
 					$message = sprintf( __( '%s Tables Processed', 'wp-sweep' ), number_format_i18n( count( $query ) ) );
 				}
 				break;
@@ -776,7 +795,7 @@ class WPSweep {
 							delete_post_meta( $post_id, $meta->meta_key );
 						}
 					}
-
+					// translators: %s is the oEmbed Caches count.
 					$message = sprintf( __( '%s oEmbed Caches In Post Meta Processed', 'wp-sweep' ), number_format_i18n( count( $query ) ) );
 				}
 				break;
