@@ -186,7 +186,6 @@ class WPSweep {
 	 */
 	public function ajax_sweep_details() {
 		if ( ! empty( $_GET['action'] )
-			&& 'sweep_details' === $_GET['action']
 			&& ! empty( $_GET['sweep_name'] )
 			&& ! empty( $_GET['sweep_type'] )
 		) {
@@ -197,7 +196,7 @@ class WPSweep {
 						'error' => __( 'Failed to verify referrer.', 'wp-sweep' ),
 					)
 				);
-			} else {
+			} elseif ( 'sweep_details' === $_GET['action'] ) {
 				wp_send_json_success( $this->details( $_GET['sweep_name'] ) );
 			}
 		}
@@ -213,7 +212,6 @@ class WPSweep {
 	 */
 	public function ajax_sweep() {
 		if ( ! empty( $_GET['action'] )
-			&& 'sweep' === $_GET['action']
 			&& ! empty( $_GET['sweep_name'] )
 			&& ! empty( $_GET['sweep_type'] )
 		) {
@@ -224,7 +222,7 @@ class WPSweep {
 						'error' => __( 'Failed to verify referrer.', 'wp-sweep' ),
 					)
 				);
-			} else {
+			} elseif ( 'sweep' === $_GET['action'] ) {
 				$sweep       = $this->sweep( $_GET['sweep_name'] );
 				$count       = $this->count( $_GET['sweep_name'] );
 				$total_count = $this->total_count( $_GET['sweep_type'] );
