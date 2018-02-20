@@ -44,7 +44,7 @@ define( 'WP_SWEEP_VERSION', '1.1.0' );
  * WP Rest API
  */
 require __DIR__ . '/class-api.php';
-#59
+
 /**
  * WP-Sweep class
  *
