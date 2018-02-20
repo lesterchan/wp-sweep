@@ -1,0 +1,16 @@
+*.log
+
+# IDE
+.DS_Store
+.project
+.buildpath
+.settings
+.idea
+sftp-config.json
+
+# Build
+/vendor
+
+# VCS
+.svn
+.diff
