@@ -49,6 +49,37 @@ Following delete functions are used:
 * delete_transient()
 * delete_site_transient()
 
+WP-Sweep WP REST API Endpoints
+* `/wp-json/sweep/v1/count/<Name>`. Get the number of items that we will be sweeping.
+* `/wp-json/sweep/v1/details/<Name>`. Get the details of the items that we will be sweeping.
+* `/wp-json/sweep/v1/sweep/<Name>`. Runs sweep for that particular item.
+
+WP-Sweep WP-CLI Commands
+* `wp sweep --all`. Runs sweep for all items.
+* `wp sweep <Name>`. Runs sweep for that particular item.
+* `wp sweep <Name1> <Name2>`. Run sweep for the selected items.
+
+WP-Sweep Available Items:
+* revisions
+* auto_drafts
+* deleted_posts
+* unapproved_comments
+* spam_comments
+* deleted_comments
+* transient_options
+* orphan_postmeta
+* orphan_commentmeta
+* orphan_usermeta
+* orphan_termmeta
+* orphan_term_relationships
+* unused_terms
+* duplicated_postmeta
+* duplicated_commentmeta
+* duplicated_usermeta
+* duplicated_termmeta
+* optimize_database
+* oembed_postmeta
+
 WP-Sweep is not compatible with the following plugins:
 * [Meta Slider](https://wordpress.org/support/plugin/ml-slider/)
 * [Viba Portfolio](https://codecanyon.net/item/viba-portfolio-wordpress-plugin/9561599)
@@ -66,8 +97,12 @@ WP-Sweep is not compatible with the following plugins:
 I spent most of my free time creating, updating, maintaining and supporting these plugins, if you really love my plugins and could spare me a couple of bucks, I will really appreciate it. If not feel free to use it without any obligations.
 
 ## Changelog
+### 1.1.0
+* NEW: Added WP Rest API Endpoint support, sweep/v1/count/<name>, sweep/v1/details/<name>, and sweep/v1/sweep/<name>
+* FIXED: Follow as close as possible to WordPress Coding Standards
+
 ### 1.0.12
-* NEw: Bump to WordPress 4.9
+* NEW: Bump to WordPress 4.9
 * NEW: Update README to incompatible plugins
 
 ### 1.0.10

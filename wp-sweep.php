@@ -41,6 +41,11 @@ License: GPL2
 define( 'WP_SWEEP_VERSION', '1.1.0' );
 
 /**
+ * WP Rest API
+ */
+require __DIR__ . '/class-api.php';
+
+/**
  * WP-Sweep class
  *
  * @since 1.0.0

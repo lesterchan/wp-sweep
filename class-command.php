@@ -37,7 +37,7 @@ class WPSweep_Command extends WP_CLI_Command {
 	 *  duplicated_usermeta
 	 *  duplicated_termmeta
 	 *  optimize_database
-	 *  oembed_postmet
+	 *  oembed_postmeta
 	 *
 	 * ## EXAMPLES
 	 *
