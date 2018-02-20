@@ -141,18 +141,20 @@ class WPSweep {
 		}
 
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-			wp_enqueue_script( 'wp-sweep', plugins_url( 'wp-sweep/js/wp-sweep.js' ), array( 'jquery' ) , WP_SWEEP_VERSION, true );
+			wp_enqueue_script( 'wp-sweep', plugins_url( 'wp-sweep/js/wp-sweep.js' ), array( 'jquery' ), WP_SWEEP_VERSION, true );
 		} else {
-			wp_enqueue_script( 'wp-sweep', plugins_url( 'wp-sweep/js/wp-sweep.min.js' ), array( 'jquery' ) , WP_SWEEP_VERSION, true );
+			wp_enqueue_script( 'wp-sweep', plugins_url( 'wp-sweep/js/wp-sweep.min.js' ), array( 'jquery' ), WP_SWEEP_VERSION, true );
 		}
 
-		wp_localize_script( 'wp-sweep', 'wp_sweep', array(
-			'text_close_warning' => __( 'Sweeping is in progress. If you leave now, the process won\'t be completed.', 'wp-sweep' ),
-			'text_sweep' => __( 'Sweep', 'wp-sweep' ),
-			'text_sweep_all' => __( 'Sweep All', 'wp-sweep' ),
-			'text_sweeping' => __( 'Sweeping ...', 'wp-sweep' ),
-			'text_na' => __( 'N/A', 'wp-sweep' ),
-		) );
+		wp_localize_script(
+			'wp-sweep', 'wp_sweep', array(
+				'text_close_warning' => __( 'Sweeping is in progress. If you leave now, the process won\'t be completed.', 'wp-sweep' ),
+				'text_sweep'         => __( 'Sweep', 'wp-sweep' ),
+				'text_sweep_all'     => __( 'Sweep All', 'wp-sweep' ),
+				'text_sweeping'      => __( 'Sweeping ...', 'wp-sweep' ),
+				'text_na'            => __( 'N/A', 'wp-sweep' ),
+			)
+		);
 	}
 
 	/**
@@ -184,9 +186,11 @@ class WPSweep {
 		) {
 			// Verify Referer
 			if ( ! check_admin_referer( 'wp_sweep_details_' . $_GET['sweep_name'] ) ) {
-				wp_send_json_error( array(
-					'error' => __( 'Failed to verify referrer.', 'wp-sweep' ),
-				) );
+				wp_send_json_error(
+					array(
+						'error' => __( 'Failed to verify referrer.', 'wp-sweep' ),
+					)
+				);
 			} else {
 				wp_send_json_success( $this->details( $_GET['sweep_name'] ) );
 			}
@@ -209,32 +213,48 @@ class WPSweep {
 		) {
 			// Verify Referer
 			if ( ! check_admin_referer( 'wp_sweep_' . $_GET['sweep_name'] ) ) {
-				wp_send_json_error( array(
-					'error' => __( 'Failed to verify referrer.', 'wp-sweep' ),
-				) );
+				wp_send_json_error(
+					array(
+						'error' => __( 'Failed to verify referrer.', 'wp-sweep' ),
+					)
+				);
 			} else {
-				$sweep = $this->sweep( $_GET['sweep_name'] );
-				$count = $this->count( $_GET['sweep_name'] );
+				$sweep       = $this->sweep( $_GET['sweep_name'] );
+				$count       = $this->count( $_GET['sweep_name'] );
 				$total_count = $this->total_count( $_GET['sweep_type'] );
 				$total_stats = array();
 				switch ( $_GET['sweep_type'] ) {
 					case 'posts':
 					case 'postmeta':
-						$total_stats = array( 'posts' => $this->total_count( 'posts' ), 'postmeta' => $this->total_count( 'postmeta' ) );
+						$total_stats = array(
+							'posts'    => $this->total_count( 'posts' ),
+							'postmeta' => $this->total_count( 'postmeta' ),
+						);
 						break;
 					case 'comments':
 					case 'commentmeta':
-						$total_stats = array( 'comments' => $this->total_count( 'comments' ), 'commentmeta' => $this->total_count( 'commentmeta' ) );
+						$total_stats = array(
+							'comments'    => $this->total_count( 'comments' ),
+							'commentmeta' => $this->total_count( 'commentmeta' ),
+						);
 						break;
 					case 'users':
 					case 'usermeta':
-						$total_stats = array( 'users' => $this->total_count( 'users' ), 'usermeta' => $this->total_count( 'usermeta' ) );
+						$total_stats = array(
+							'users'    => $this->total_count( 'users' ),
+							'usermeta' => $this->total_count( 'usermeta' ),
+						);
 						break;
 					case 'term_relationships':
 					case 'term_taxonomy':
 					case 'terms':
 					case 'termmeta':
-						$total_stats = array( 'term_relationships' => $this->total_count( 'term_relationships' ), 'term_taxonomy' => $this->total_count( 'term_taxonomy' ), 'terms' => $this->total_count( 'terms' ), 'termmeta' => $this->total_count( 'termmeta' ) );
+						$total_stats = array(
+							'term_relationships' => $this->total_count( 'term_relationships' ),
+							'term_taxonomy'      => $this->total_count( 'term_taxonomy' ),
+							'terms'              => $this->total_count( 'terms' ),
+							'termmeta'           => $this->total_count( 'termmeta' ),
+						);
 						break;
 					case 'options':
 						$total_stats = array( 'options' => $this->total_count( 'options' ) );
@@ -244,13 +264,15 @@ class WPSweep {
 						break;
 				}
 
-				wp_send_json_success( array(
-					'sweep' => $sweep,
-					'count' => $count,
-					'total' => $total_count,
-					'percentage' => $this->format_percentage( $count, $total_count ),
-					'stats' => $total_stats,
-				) );
+				wp_send_json_success(
+					array(
+						'sweep'      => $sweep,
+						'count'      => $count,
+						'total'      => $total_count,
+						'percentage' => $this->format_percentage( $count, $total_count ),
+						'stats'      => $total_stats,
+					)
+				);
 			}
 		}
 	}
@@ -455,7 +477,7 @@ class WPSweep {
 				$details = $wpdb->get_col( $wpdb->prepare( "SELECT t.name FROM $wpdb->terms AS t INNER JOIN $wpdb->term_taxonomy AS tt ON t.term_id = tt.term_id WHERE tt.count = %d AND t.term_id NOT IN (" . implode( ',', $this->get_excluded_termids() ) . ') LIMIT %d', 0, $this->limit_details ) );
 				break;
 			case 'duplicated_postmeta':
-				$query = $wpdb->get_results( $wpdb->prepare( "SELECT COUNT(meta_id) AS count, meta_key FROM $wpdb->postmeta GROUP BY post_id, meta_key, meta_value HAVING count > %d LIMIT %d", 1, $this->limit_details ) );
+				$query   = $wpdb->get_results( $wpdb->prepare( "SELECT COUNT(meta_id) AS count, meta_key FROM $wpdb->postmeta GROUP BY post_id, meta_key, meta_value HAVING count > %d LIMIT %d", 1, $this->limit_details ) );
 				$details = array();
 				if ( $query ) {
 					foreach ( $query as $meta ) {
@@ -464,7 +486,7 @@ class WPSweep {
 				}
 				break;
 			case 'duplicated_commentmeta':
-				$query = $wpdb->get_results( $wpdb->prepare( "SELECT COUNT(meta_id) AS count, meta_key FROM $wpdb->commentmeta GROUP BY comment_id, meta_key, meta_value HAVING count > %d LIMIT %d", 1, $this->limit_details ) );
+				$query   = $wpdb->get_results( $wpdb->prepare( "SELECT COUNT(meta_id) AS count, meta_key FROM $wpdb->commentmeta GROUP BY comment_id, meta_key, meta_value HAVING count > %d LIMIT %d", 1, $this->limit_details ) );
 				$details = array();
 				if ( $query ) {
 					foreach ( $query as $meta ) {
@@ -473,7 +495,7 @@ class WPSweep {
 				}
 				break;
 			case 'duplicated_usermeta':
-				$query = $wpdb->get_results( $wpdb->prepare( "SELECT COUNT(umeta_id) AS count, meta_key FROM $wpdb->usermeta GROUP BY user_id, meta_key, meta_value HAVING count > %d LIMIT %d", 1, $this->limit_details ) );
+				$query   = $wpdb->get_results( $wpdb->prepare( "SELECT COUNT(umeta_id) AS count, meta_key FROM $wpdb->usermeta GROUP BY user_id, meta_key, meta_value HAVING count > %d LIMIT %d", 1, $this->limit_details ) );
 				$details = array();
 				if ( $query ) {
 					foreach ( $query as $meta ) {
@@ -482,7 +504,7 @@ class WPSweep {
 				}
 				break;
 			case 'duplicated_termmeta':
-				$query = $wpdb->get_results( $wpdb->prepare( "SELECT COUNT(meta_id) AS count, meta_key FROM $wpdb->termmeta GROUP BY term_id, meta_key, meta_value HAVING count > %d LIMIT %d", 1, $this->limit_details ) );
+				$query   = $wpdb->get_results( $wpdb->prepare( "SELECT COUNT(meta_id) AS count, meta_key FROM $wpdb->termmeta GROUP BY term_id, meta_key, meta_value HAVING count > %d LIMIT %d", 1, $this->limit_details ) );
 				$details = array();
 				if ( $query ) {
 					foreach ( $query as $meta ) {
@@ -783,7 +805,7 @@ class WPSweep {
 	 * @return array Excluded taxonomies
 	 */
 	private function get_excluded_taxonomies() {
-		$excluded_taxonomies = array();
+		$excluded_taxonomies   = array();
 		$excluded_taxonomies[] = 'link_category';
 
 		return apply_filters( 'wp_sweep_excluded_taxonomies', $excluded_taxonomies );
@@ -818,7 +840,7 @@ class WPSweep {
 	 * @return array Default taxonomy term IDs
 	 */
 	private function get_default_taxonomy_termids() {
-		$taxonomies = get_taxonomies();
+		$taxonomies       = get_taxonomies();
 		$default_term_ids = array();
 		if ( $taxonomies ) {
 			$tax = array_keys( $taxonomies );

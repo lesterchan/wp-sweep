@@ -1,4 +1,9 @@
 <?php
+/**
+ * WP-Sweep WP-CLI
+ *
+ * @package wp-sweep
+ */
 
 class WPSweep_Command extends WP_CLI_Command {
 	/**
@@ -11,37 +16,35 @@ class WPSweep_Command extends WP_CLI_Command {
 	 *
 	 * Name of the items selected individually
 	 * Available Items =
-	 * 	revisions
-	 * 	auto_drafts
-	 * 	deleted_posts
-	 * 	unapproved_comments
-	 * 	spam_comments
-	 * 	deleted_comments
-	 * 	transient_options
-	 * 	orphan_postmeta
-	 * 	orphan_commentmeta
-	 * 	orphan_usermeta
-	 * 	orphan_termmeta
-	 * 	orphan_term_relationships
-	 * 	unused_terms
-	 * 	duplicated_postmeta
-	 * 	duplicated_commentmeta
-	 * 	duplicated_usermeta
-	 * 	duplicated_termmeta
-	 * 	optimize_database
-	 * 	oembed_postmet
+	 *  revisions
+	 *  auto_drafts
+	 *  deleted_posts
+	 *  unapproved_comments
+	 *  spam_comments
+	 *  deleted_comments
+	 *  transient_options
+	 *  orphan_postmeta
+	 *  orphan_commentmeta
+	 *  orphan_usermeta
+	 *  orphan_termmeta
+	 *  orphan_term_relationships
+	 *  unused_terms
+	 *  duplicated_postmeta
+	 *  duplicated_commentmeta
+	 *  duplicated_usermeta
+	 *  duplicated_termmeta
+	 *  optimize_database
+	 *  oembed_postmet
 	 *
 	 * ## EXAMPLES
 	 *
 	 *  1. wp sweep --all
-	 *		- Run Sweep for all the items.
+	 *      - Run Sweep for all the items.
 	 *  2. wp sweep revisions
-	 *		- Sweep only Revision
+	 *      - Sweep only Revision
 	 *  3. wp sweep revisions auto_drafts deleted_posts unapproved_comments spam_comments deleted_comments transient_options orphan_postmeta orphan_commentmeta orphan_usermeta orphan_termmeta orphan_term_relationships unused_terms duplicated_postmeta duplicated_commentmeta duplicated_usermeta duplicated_termmeta optimize_database oembed_postmet
-	 *		- Sweep the selected items
-	 *
-	 *
-	*/
+	 *      - Sweep the selected items
+	 */
 	public function __invoke( $args, $assoc_args ) {
 
 		$items = array();
