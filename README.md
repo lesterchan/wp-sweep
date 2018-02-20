@@ -2,7 +2,7 @@
 Contributors: GamerZ  
 Donate link: https://lesterchan.net/site/donation/  
 Tags: sweep, clean, cleanup, clean up, optimize, orphan, unused, duplicated, posts, post meta, comments, comment meta, users, user meta, terms, term meta, term relationships, revisions, auto drafts, transient, database, tables, oembed
-Requires at least: 4.4  
+Requires at least: 4.6  
 Tested up to: 4.9  
 Stable tag: 1.1.0
 License: GPLv2 or later  

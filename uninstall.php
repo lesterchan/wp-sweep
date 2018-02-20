@@ -1,20 +1,20 @@
 <?php
-/*
- * Uninstall WP-Sweep
+/**
+ * WP-Sweep uninstall.php
+ *
+ * @package wp-sweep
  */
+
 if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 	exit;
 }
 
-
-
 if ( is_multisite() ) {
-	$ms_sites = function_exists( 'get_sites' ) ? get_sites() : wp_get_sites();
+	$ms_sites = get_sites();
 
-	if ( 0 < sizeof( $ms_sites ) ) {
+	if ( 0 < count( $ms_sites ) ) {
 		foreach ( $ms_sites as $ms_site ) {
-			$blog_id = class_exists( 'WP_Site' ) ? $ms_site->blog_id : $ms_site['blog_id'];
-			switch_to_blog( $blog_id );
+			switch_to_blog( $ms_site->blog_id );
 			plugin_uninstalled();
 		}
 	}

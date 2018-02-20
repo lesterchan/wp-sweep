@@ -848,31 +848,6 @@ class WPSweep {
 	}
 
 	/**
-	 * Wrapper to get WordPress Multisite
-	 *
-	 * @since 1.0.9
-	 *
-	 * @access private
-	 * @return array
-	 */
-	private function get_sites() {
-		return function_exists( 'get_sites' ) ? get_sites() : wp_get_sites();
-	}
-
-	/**
-	 * Wrapper to get WordPress Multisite ID
-	 *
-	 * @since 1.0.9
-	 *
-	 * @access private
-	 * @param WP_Site $ms_site
-	 * @return int
-	 */
-	private function get_site_blog_id( $ms_site ) {
-		return class_exists( 'WP_Site' ) ? $ms_site->blog_id : $ms_site['blog_id'];
-	}
-
-	/**
 	 * What to do when the plugin is being deactivated
 	 *
 	 * @since 1.0.0
@@ -883,11 +858,11 @@ class WPSweep {
 	 */
 	public function plugin_activation( $network_wide ) {
 		if ( is_multisite() && $network_wide ) {
-			$ms_sites = $this->get_sites();
+			$ms_sites = get_sites();
 
 			if ( 0 < count( $ms_sites ) ) {
 				foreach ( $ms_sites as $ms_site ) {
-					switch_to_blog( $this->get_site_blog_id( $ms_site ) );
+					switch_to_blog( $ms_site->blog_id );
 					$this->plugin_activated();
 					restore_current_blog();
 				}
@@ -919,11 +894,11 @@ class WPSweep {
 	 */
 	public function plugin_deactivation( $network_wide ) {
 		if ( is_multisite() && $network_wide ) {
-			$ms_sites = $this->get_sites();
+			$ms_sites = get_sites();
 
 			if ( 0 < count( $ms_sites ) ) {
 				foreach ( $ms_sites as $ms_site ) {
-					switch_to_blog( $this->get_site_blog_id( $ms_site ) );
+					switch_to_blog( $ms_site->blog_id );
 					$this->plugin_deactivated();
 					restore_current_blog();
 				}
