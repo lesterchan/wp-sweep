@@ -76,7 +76,7 @@ class WPSweep_Api {
 				),
 			));
 			register_rest_route( $this->namespace, 'sweep/(?P<name>\w+)', array(
-				'methods'             => WP_REST_Server::READABLE,
+				'methods'             => WP_REST_Server::DELETABLE,
 				'callback'            => array( $this, 'sweep' ),
 				'permission_callback' => array( $this, 'permission_check' ),
 				'args'                => array(

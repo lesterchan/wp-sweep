@@ -44,7 +44,7 @@ define( 'WP_SWEEP_VERSION', '1.1.0' );
  * WP Rest API
  */
 require __DIR__ . '/class-api.php';
-
+#59
 /**
  * WP-Sweep class
  *
@@ -439,7 +439,7 @@ class WPSweep {
 	 *
 	 * @access public
 	 * @param string $name Sweep name.
-	 * @return int Number of items belonging to each sweep
+	 * @return array Details of items belonging to each sweep
 	 */
 	public function details( $name ) {
 		global $wpdb;

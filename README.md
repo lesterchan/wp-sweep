@@ -50,9 +50,9 @@ Following delete functions are used:
 * delete_site_transient()
 
 WP-Sweep WP REST API Endpoints
-* `/wp-json/sweep/v1/count/<Name>`. Get the number of items that we will be sweeping.
-* `/wp-json/sweep/v1/details/<Name>`. Get the details of the items that we will be sweeping.
-* `/wp-json/sweep/v1/sweep/<Name>`. Runs sweep for that particular item.
+* `GET /wp-json/sweep/v1/count/<Name>`. Get the number of items that we will be sweeping.
+* `GET /wp-json/sweep/v1/details/<Name>`. Get the details of the items that we will be sweeping.
+* `DELETE /wp-json/sweep/v1/sweep/<Name>`. Runs sweep for that particular item.
 
 WP-Sweep WP-CLI Commands
 * `wp sweep --all`. Runs sweep for all items.
@@ -98,7 +98,7 @@ I spent most of my free time creating, updating, maintaining and supporting thes
 
 ## Changelog
 ### 1.1.0
-* NEW: Added WP Rest API Endpoint support, sweep/v1/count/<name>, sweep/v1/details/<name>, and sweep/v1/sweep/<name>
+* NEW: Added WP Rest API Endpoint support, `sweep/v1/count/<Name>`, `sweep/v1/details/<Name>`, and `sweep/v1/sweep/<Name>`
 * FIXED: Follow as close as possible to WordPress Coding Standards
 
 ### 1.0.12
