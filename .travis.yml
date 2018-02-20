@@ -18,7 +18,6 @@ install:
 script:
   - vendor/bin/phpcs --config-set installed_paths $TRAVIS_BUILD_DIR/vendor/wp-coding-standards/wpcs
   - vendor/bin/phpcs --standard=TechInAsia --extensions=php --ignore="*/vendor/*" . -ps
-  - find . "(" -name "*.php" ")" -exec php --syntax-check --file "{}" ";"
 
 notifications:
   email: false
