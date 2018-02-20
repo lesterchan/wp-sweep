@@ -1,4 +1,10 @@
 <?php
+/**
+ * WP-Sweep wp-sweep.php
+ *
+ * @package wp-sweep
+ */
+
 /*
 Plugin Name: WP-Sweep
 Plugin URI: https://lesterchan.net/portfolio/programming/php/
@@ -68,13 +74,13 @@ class WPSweep {
 	 * @access public
 	 */
 	public function __construct() {
-		// Add Plugin Hooks
+		// Add Plugin Hooks.
 		add_action( 'plugins_loaded', array( $this, 'add_hooks' ) );
 
-		// Load Translation
+		// Load Translation.
 		load_plugin_textdomain( 'wp-sweep' );
 
-		// Plugin Activation/Deactivation
+		// Plugin Activation/Deactivation.
 		register_activation_hook( __FILE__, array( $this, 'plugin_activation' ) );
 		register_deactivation_hook( __FILE__, array( $this, 'plugin_deactivation' ) );
 	}
@@ -103,7 +109,7 @@ class WPSweep {
 	 * @return void
 	 */
 	public function init() {
-		// include class for WP CLI command
+		// include class for WP CLI command.
 		if ( defined( 'WP_CLI' ) ) {
 			require __DIR__ . '/class-command.php';
 		}
@@ -118,7 +124,7 @@ class WPSweep {
 	 * @return void
 	 */
 	public function add_hooks() {
-		// Actions
+		// Actions.
 		add_action( 'init', array( $this, 'init' ) );
 		add_action( 'admin_menu', array( $this, 'admin_menu' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ) );
@@ -132,7 +138,7 @@ class WPSweep {
 	 * @since 1.0.3
 	 *
 	 * @access public
-	 * @param string $hook
+	 * @param string $hook Page hook.
 	 * @return void
 	 */
 	public function admin_enqueue_scripts( $hook ) {
@@ -184,7 +190,7 @@ class WPSweep {
 			&& ! empty( $_GET['sweep_name'] )
 			&& ! empty( $_GET['sweep_type'] )
 		) {
-			// Verify Referer
+			// Verify Referer.
 			if ( ! check_admin_referer( 'wp_sweep_details_' . $_GET['sweep_name'] ) ) {
 				wp_send_json_error(
 					array(
@@ -211,7 +217,7 @@ class WPSweep {
 			&& ! empty( $_GET['sweep_name'] )
 			&& ! empty( $_GET['sweep_type'] )
 		) {
-			// Verify Referer
+			// Verify Referer.
 			if ( ! check_admin_referer( 'wp_sweep_' . $_GET['sweep_name'] ) ) {
 				wp_send_json_error(
 					array(
@@ -283,7 +289,7 @@ class WPSweep {
 	 * @since 1.0.0
 	 *
 	 * @access public
-	 * @param string $name
+	 * @param string $name Sweep name.
 	 * @return int Number of items belonging to each sweep
 	 */
 	public function total_count( $name ) {
@@ -339,7 +345,7 @@ class WPSweep {
 	 * @since 1.0.0
 	 *
 	 * @access public
-	 * @param string $name
+	 * @param string $name Sweep name.
 	 * @return int Number of items belonging to each sweep
 	 */
 	public function count( $name ) {
@@ -428,7 +434,7 @@ class WPSweep {
 	 * @since 1.0.3
 	 *
 	 * @access public
-	 * @param string $name
+	 * @param string $name Sweep name.
 	 * @return int Number of items belonging to each sweep
 	 */
 	public function details( $name ) {
@@ -529,7 +535,7 @@ class WPSweep {
 	 * @since 1.0.0
 	 *
 	 * @access public
-	 * @param string $name
+	 * @param string $name Sweep name.
 	 * @return string Processed message
 	 */
 	public function sweep( $name ) {
@@ -697,7 +703,7 @@ class WPSweep {
 							$check_wp_terms = true;
 						}
 					}
-					// We need this for invalid taxonomies
+					// We need this for invalid taxonomies.
 					if ( $check_wp_terms ) {
 						$wpdb->get_results( "DELETE FROM $wpdb->terms WHERE term_id NOT IN (SELECT term_id FROM $wpdb->term_taxonomy)" );
 					}
@@ -757,7 +763,7 @@ class WPSweep {
 				$query = $wpdb->get_col( 'SHOW TABLES' );
 				if ( $query ) {
 					$tables = implode( ',', $query );
-					$wpdb->query( "OPTIMIZE TABLE $tables" );
+					$wpdb->query( "OPTIMIZE TABLE $tables" ); // WPCS: unprepared SQL ok.
 					$message = sprintf( __( '%s Tables Processed', 'wp-sweep' ), number_format_i18n( count( $query ) ) );
 				}
 				break;
@@ -788,8 +794,8 @@ class WPSweep {
 	 * @since 1.0.2
 	 *
 	 * @access public
-	 * @param int $current
-	 * @param int $total
+	 * @param int $current Current number.
+	 * @param int $total Total number.
 	 * @return string Number in percentage
 	 */
 	public function format_percentage( $current, $total ) {
@@ -875,7 +881,7 @@ class WPSweep {
 	 * @since 1.0.0
 	 *
 	 * @access public
-	 * @param boolean $network_wide
+	 * @param boolean $network_wide Is network wide.
 	 * @return void
 	 */
 	public function plugin_activation( $network_wide ) {
@@ -911,7 +917,7 @@ class WPSweep {
 	 * @since 1.0.0
 	 *
 	 * @access public
-	 * @param boolean $network_wide
+	 * @param boolean $network_wide Is network wide.
 	 * @return void
 	 */
 	public function plugin_deactivation( $network_wide ) {
