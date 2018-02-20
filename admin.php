@@ -81,7 +81,7 @@ $transient_options = WPSweep::get_instance()->count( 'transient_options' );
 	</div>
 	<p>
 		<?php /* translators: %s maximum number of results */ ?>
-		<?php echo esc_html( sprintf( __( 'For performance reasons, only %s items will be shown if you click Details', 'wp-sweep' ), number_format_i18n( WPSweep::get_instance()->limit_details ) ) ); ?>
+		<?php echo esc_html( sprintf( __( 'For performance reasons, only %s items will be shown if you click Details.', 'wp-sweep' ), number_format_i18n( WPSweep::get_instance()->limit_details ) ) ); ?>
 	</p>
 	<h3><?php esc_html_e( 'Post Sweep', 'wp-sweep' ); ?></h3>
 	<?php /* translators: %1 is the number of posts, %2 is the number of post meta */ ?>
