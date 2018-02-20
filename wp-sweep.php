@@ -162,7 +162,7 @@ class WPSweep {
 				'text_close_warning' => __( 'Sweeping is in progress. If you leave now, the process won\'t be completed.', 'wp-sweep' ),
 				'text_sweep'         => __( 'Sweep', 'wp-sweep' ),
 				'text_sweep_all'     => __( 'Sweep All', 'wp-sweep' ),
-				'text_sweeping'      => __( 'Sweeping ...', 'wp-sweep' ),
+				'text_sweeping'      => __( 'Sweeping...', 'wp-sweep' ),
 				'text_na'            => __( 'N/A', 'wp-sweep' ),
 			)
 		);
