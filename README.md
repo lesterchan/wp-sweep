@@ -82,6 +82,7 @@ WP-Sweep Available Items:
 
 WP-Sweep is not compatible with the following plugins:
 * [Meta Slider](https://wordpress.org/support/plugin/ml-slider/)
+* [Slider Revolution](https://revolution.themepunch.com/)
 * [Viba Portfolio](https://codecanyon.net/item/viba-portfolio-wordpress-plugin/9561599)
 * [MailPress](http://www.mailpress.org/)
 
