@@ -43,7 +43,8 @@ define( 'WP_SWEEP_VERSION', '1.1.0' );
 /**
  * WP Rest API
  */
-require __DIR__ . '/class-api.php';
+require __DIR__ . '/class-wpsweep-api.php';
+new WPSweep_Api();
 
 /**
  * WP-Sweep class
@@ -116,7 +117,8 @@ class WPSweep {
 	public function init() {
 		// include class for WP CLI command.
 		if ( defined( 'WP_CLI' ) ) {
-			require __DIR__ . '/class-command.php';
+			require __DIR__ . '/class-wpsweep-command.php';
+			WP_CLI::add_command( 'sweep', 'WPSweep_Command' );
 		}
 	}
 

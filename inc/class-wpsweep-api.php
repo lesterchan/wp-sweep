@@ -177,7 +177,4 @@ class WPSweep_Api {
 	public function permission_check() {
 		return current_user_can( 'manage_options' );
 	}
-
 }
-
-new WPSweep_Api();

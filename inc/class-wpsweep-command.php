@@ -125,5 +125,3 @@ class WPSweep_Command extends WP_CLI_Command {
 		}
 	}
 }
-
-WP_CLI::add_command( 'sweep', 'WPSweep_Command' );
