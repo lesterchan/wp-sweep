@@ -43,7 +43,8 @@ define( 'WP_SWEEP_VERSION', '1.1.0' );
 /**
  * WP Rest API
  */
-require __DIR__ . '/class-api.php';
+require __DIR__ . '/inc/class-wpsweep-api.php';
+new WPSweep_Api();
 
 /**
  * WP-Sweep class
@@ -67,7 +68,7 @@ class WPSweep {
 	 * @since 1.0.0
 	 *
 	 * @access private
-	 * @var $instance
+	 * @var WPSweep $instance
 	 */
 	private static $instance;
 
@@ -116,7 +117,8 @@ class WPSweep {
 	public function init() {
 		// include class for WP CLI command.
 		if ( defined( 'WP_CLI' ) ) {
-			require __DIR__ . '/class-command.php';
+			require __DIR__ . '/inc/class-wpsweep-command.php';
+			WP_CLI::add_command( 'sweep', 'WPSweep_Command' );
 		}
 	}
 
@@ -910,7 +912,7 @@ class WPSweep {
 	 */
 	public function plugin_activation( $network_wide ) {
 		if ( is_multisite() && $network_wide ) {
-			$ms_sites = get_sites();
+			$ms_sites = (array) get_sites();
 
 			if ( 0 < count( $ms_sites ) ) {
 				foreach ( $ms_sites as $ms_site ) {
@@ -946,7 +948,7 @@ class WPSweep {
 	 */
 	public function plugin_deactivation( $network_wide ) {
 		if ( is_multisite() && $network_wide ) {
-			$ms_sites = get_sites();
+			$ms_sites = (array) get_sites();
 
 			if ( 0 < count( $ms_sites ) ) {
 				foreach ( $ms_sites as $ms_site ) {
