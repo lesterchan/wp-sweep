@@ -12,8 +12,6 @@ class WPSweep_Sweep_Unapproved_Comments extends WPSweep_Sweep {
 
 	const SLUG = 'unapproved_comments';
 
-	const TYPE = 'comments';
-
 	const TOTAL = 'comments';
 
 	public function count() {

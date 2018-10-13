@@ -18,14 +18,6 @@ abstract class WPSweep_Sweep {
 	const SLUG = '';
 
 	/**
-	 * Sweep type
-	 *
-	 * @access public
-	 * @var string
-	 */
-	const TYPE = '';
-
-	/**
 	 * The total the sweep pertains to.
 	 *
 	 * @access public
@@ -59,19 +51,6 @@ abstract class WPSweep_Sweep {
 
 		$this->wp_sweep = $wp_sweep;
 		$this->wp_db = $wpdb;
-
-		add_filter( "wp_sweep_register_{self::TYPE}", array( $this, 'register' ) );
-	}
-
-	/**
-	 * Register sweep.
-	 *
-	 * @access public
-	 */
-	public function register( $classes ) {
-		$classes[] = self::class;
-
-		return $classes;
 	}
 
 	/**

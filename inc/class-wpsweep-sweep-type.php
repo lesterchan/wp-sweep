@@ -18,12 +18,20 @@ abstract class WPSweep_Sweep_Type {
 	const SLUG = '';
 
 	/**
-	 * Filter priority
+	 * Filter priority for sorting types
 	 *
 	 * @access public
 	 * @var int
 	 */
 	const ORDER = 10;
+
+	/**
+	 * Total provided by this sweep type.
+	 *
+	 * @access public
+	 * @var array
+	 */
+	public $total_dependency = array();
 
 	/**
 	 * WPSweep instance.
@@ -52,7 +60,9 @@ abstract class WPSweep_Sweep_Type {
 		$this->wp_sweep = $wp_sweep;
 		$this->wp_db = $wpdb;
 
-		add_filter( 'wp_sweep_type_register', array( $this, 'register' ), self::ORDER );
+		if ( ! empty( $this->total_dependency ) ) {
+			add_filter( 'wp_sweep_type_register', array( $this, 'register' ), self::ORDER );
+		}
 	}
 
 	/**
@@ -71,7 +81,7 @@ abstract class WPSweep_Sweep_Type {
 	 *
 	 * @access public
 	 */
-	abstract public function register_total();
+	public function register_total() {}
 
 	/**
 	 * Return translated sweep type name.

@@ -37,21 +37,6 @@ class WPSweep {
 	public $totals = array();
 
 	private $total_dependency = array();
-/*
-		'posts'              => array( 'posts', 'postmeta' ),
-		'postmeta'           => array( 'posts', 'postmeta' ),
-		'comments'           => array( 'comments', 'commentmeta' ),
-		'commentmeta'        => array( 'comments', 'commentmeta' ),
-		'users'              => array( 'users', 'usermeta' ),
-		'usermeta'           => array( 'users', 'usermeta' ),
-		'term_relationships' => array( 'term_relationships', 'term_taxonomy', 'terms', 'termmeta' ),
-		'term_taxonomy'      => array( 'term_relationships', 'term_taxonomy', 'terms', 'termmeta' ),
-		'terms'              => array( 'term_relationships', 'term_taxonomy', 'terms', 'termmeta' ),
-		'termmeta'           => array( 'term_relationships', 'term_taxonomy', 'terms', 'termmeta' ),
-		'options'            => array( 'options' ),
-		'tables'             => array( 'tables' ),
-	);
-*/
 
 	/**
 	 * Sweep type instances.
@@ -137,10 +122,12 @@ class WPSweep {
 	public function init() {
 		require __DIR__ . '/class-wpsweep-sweep-type.php';
 		require __DIR__ . '/class-wpsweep-sweep.php';
+
 		$this->register_default_sweep_types();
 		$this->load_sweep_types();
 		$this->register_default_sweeps();
 		$this->load_sweeps();
+
 		// Include class for WP CLI command.
 		if ( defined( 'WP_CLI' ) ) {
 			require __DIR__ . '/class-wpsweep-command.php';
@@ -161,7 +148,7 @@ class WPSweep {
 	}
 
 	/**
-	 * Instantiate all registered sweep types.
+	 * Instantiate registered sweep types.
 	 */
 	public function load_sweep_types() {
 		$type_classes = apply_filters( 'wp_sweep_register_type', array() );
@@ -178,14 +165,14 @@ class WPSweep {
 	public function register_default_sweeps() {
 		require __DIR__ . '/class-wpsweep-sweep-unapproved-comments.php';
 		// Register to its type.
-		add_filter( 'wp_sweep_register_comment', function ( $classes ) {
+		add_filter( 'wp_sweep_register_' . 'comment', function ( $classes ) {
 			$classes[] = 'WPSweep_Sweep_Unapproved_Comments';
 			return $classes;
 		} );
 	}
 
 	/**
-	 * Instantiate all registered sweeps.
+	 * Instantiate registered sweeps.
 	 */
 	public function load_sweeps() {
 		foreach ( $this->types as $sweep_type => $sweep_type_instance ) {
@@ -312,11 +299,10 @@ $minify = '';
 		}
 
 		$sweep       = $this->all_sweeps[ $_GET['sweep_name'] ];
-		$sweep_type  = $sweep::TYPE;
 		$message     = $sweep->get_message( $sweep->sweep() );
 		$count       = $sweep->count();
 		$total_count = $this->total_count( $sweep::TOTAL );
-		$deps        = $this->total_dependency[ $sweep_type ];
+		$deps        = $this->total_dependency[ $sweep::TOTAL ];
 		$total_stats = array();
 		foreach ( $deps as $dep ) {
 			$total_stats[ $dep ] = $this->total_count( $dep );
