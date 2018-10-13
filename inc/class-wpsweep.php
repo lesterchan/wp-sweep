@@ -22,6 +22,8 @@ class WPSweep {
 	 */
 	public $limit_details = 500;
 
+	private $admin_page_hook = '';
+
 	/**
 	 * Static instance
 	 *
@@ -206,7 +208,7 @@ class WPSweep {
 	 * @return void
 	 */
 	public function admin_enqueue_scripts( $hook ) {
-		if ( 'wp-sweep/admin.php' !== $hook ) {
+		if ( $this->admin_page_hook !== $hook ) {
 			return;
 		}
 
@@ -237,9 +239,17 @@ $minify = '';
 	 * @return void
 	 */
 	public function admin_menu() {
-		add_management_page( _x( 'Sweep', 'Page title', 'wp-sweep' ), _x( 'Sweep', 'Menu title', 'wp-sweep' ), 'manage_options', 'wp-sweep/admin.php' );
-	}
+		require __DIR__ . '/class-wpsweep-admin.php';
 
+		$admin = new WPSweep_Admin( self::get_instance() );
+		$this->admin_page_hook = add_management_page(
+			_x( 'Sweep', 'Page title', 'wp-sweep' ),
+			_x( 'Sweep', 'Menu title', 'wp-sweep' ),
+			'manage_options',
+			'wp_sweep',
+			array( $admin, 'print_page' )
+		);
+	}
 
 	/**
 	 * Sweep Details loaded via AJAX
