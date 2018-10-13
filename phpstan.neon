@@ -1,0 +1,16 @@
+parameters:
+    autoload_directories:
+        - %currentWorkingDirectory%/inc/
+    autoload_files:
+        - %currentWorkingDirectory%/vendor/autoload.php
+        - %currentWorkingDirectory%/vendor/wp-cli/wp-cli/php/class-wp-cli.php
+        - %currentWorkingDirectory%/vendor/wp-cli/wp-cli/php/class-wp-cli-command.php
+        - %currentWorkingDirectory%/wordpress-stubs.php
+        - %currentWorkingDirectory%/wp-sweep.php
+    paths:
+        - %currentWorkingDirectory%/inc/
+        - %currentWorkingDirectory%/wp-sweep.php
+    level: max
+    ignoreErrors:
+        - '/^Constant WP_DEBUG not found\.$/'
+        - '#^Function apply_filters invoked with 3 parameters, 2 required\.$#'

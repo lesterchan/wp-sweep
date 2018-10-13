@@ -21,6 +21,8 @@
     "php": ">=5.4.0"
   },
   "require-dev": {
-    "wp-coding-standards/wpcs": "dev-develop"
+    "wp-coding-standards/wpcs": "dev-develop",
+    "giacocorsiglia/wordpress-stubs": "^4.9.8",
+    "wp-cli/wp-cli": "^2.0.1"
   }
 }
