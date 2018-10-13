@@ -34,7 +34,8 @@ class WPSweep {
 
 	public $totals = array();
 
-	private $total_dependency = array(
+	private $total_dependency = array();
+/*
 		'posts'              => array( 'posts', 'postmeta' ),
 		'postmeta'           => array( 'posts', 'postmeta' ),
 		'comments'           => array( 'comments', 'commentmeta' ),
@@ -48,8 +49,14 @@ class WPSweep {
 		'options'            => array( 'options' ),
 		'tables'             => array( 'tables' ),
 	);
+*/
 
-	private $types = array( 'post', 'comment', 'user', 'term', 'option', 'database', 'other' );
+	/**
+	 * Sweep type instances.
+	 *
+	 * @var WPSweep_Sweep_Type[]
+	*/
+	public $types = array();
 
 	/**
 	 * Sweep instances per type.
@@ -126,7 +133,10 @@ class WPSweep {
 	 * @return void
 	 */
 	public function init() {
+		require __DIR__ . '/class-wpsweep-sweep-type.php';
 		require __DIR__ . '/class-wpsweep-sweep.php';
+		$this->register_default_sweep_types();
+		$this->load_sweep_types();
 		$this->register_default_sweeps();
 		$this->load_sweeps();
 		// Include class for WP CLI command.
@@ -137,10 +147,35 @@ class WPSweep {
 	}
 
 	/**
+	 * Register built-in sweep types.
+	 */
+	public function register_default_sweep_types() {
+		require __DIR__ . '/class-wpsweep-sweep-type-comment.php';
+		// Register it.
+		add_filter( 'wp_sweep_register_type', function ( $classes ) {
+			$classes[] = 'WPSweep_Sweep_Type_Comment';
+			return $classes;
+		} );
+	}
+
+	/**
+	 * Instantiate all registered sweep types.
+	 */
+	public function load_sweep_types() {
+		$type_classes = apply_filters( 'wp_sweep_register_type', array() );
+		foreach ( $type_classes as $class ) {
+			$type = new $class( self::get_instance() );
+			$this->types[ $type::SLUG ] = $type;
+			$this->total_dependency = array_merge( $this->total_dependency, $type->total_dependency );
+		}
+	}
+
+	/**
 	 * Register built-in sweeps.
 	 */
 	public function register_default_sweeps() {
 		require __DIR__ . '/class-wpsweep-sweep-unapproved-comments.php';
+		// Register to its type.
 		add_filter( 'wp_sweep_register_comment', function ( $classes ) {
 			$classes[] = 'WPSweep_Sweep_Unapproved_Comments';
 			return $classes;
@@ -151,10 +186,10 @@ class WPSweep {
 	 * Instantiate all registered sweeps.
 	 */
 	public function load_sweeps() {
-		foreach ( $this->types as $sweep_type ) {
+		foreach ( $this->types as $sweep_type => $sweep_type_instance ) {
 			$classes = apply_filters( "wp_sweep_register_{$sweep_type}", array() );
 			foreach ( $classes as $class ) {
-				$sweep = new $class( WPSweep::get_instance() );
+				$sweep = new $class( self::get_instance() );
 				$this->sweeps[ $sweep_type ][ $sweep::SLUG ] = $sweep;
 				$this->all_sweeps[ $sweep::SLUG ] = $sweep;
 			}
@@ -298,48 +333,14 @@ $minify = '';
 	 * @return int Number of items belonging to each total
 	 */
 	public function total_count( $name ) {
-		global $wpdb;
+		$tag = 'wp_sweep_' . $name;
 
-		$count = 0;
-
-		switch ( $name ) {
-			case 'posts':
-				$count = $wpdb->get_var( "SELECT COUNT(*) FROM $wpdb->posts" );
-				break;
-			case 'postmeta':
-				$count = $wpdb->get_var( "SELECT COUNT(*) FROM $wpdb->postmeta" );
-				break;
-			case 'comments':
-				$count = $wpdb->get_var( "SELECT COUNT(*) FROM $wpdb->comments" );
-				break;
-			case 'commentmeta':
-				$count = $wpdb->get_var( "SELECT COUNT(*) FROM $wpdb->commentmeta" );
-				break;
-			case 'users':
-				$count = $wpdb->get_var( "SELECT COUNT(*) FROM $wpdb->users" );
-				break;
-			case 'usermeta':
-				$count = $wpdb->get_var( "SELECT COUNT(*) FROM $wpdb->usermeta" );
-				break;
-			case 'term_relationships':
-				$count = $wpdb->get_var( "SELECT COUNT(*) FROM $wpdb->term_relationships" );
-				break;
-			case 'term_taxonomy':
-				$count = $wpdb->get_var( "SELECT COUNT(*) FROM $wpdb->term_taxonomy" );
-				break;
-			case 'terms':
-				$count = $wpdb->get_var( "SELECT COUNT(*) FROM $wpdb->terms" );
-				break;
-			case 'termmeta':
-				$count = $wpdb->get_var( "SELECT COUNT(*) FROM $wpdb->termmeta" );
-				break;
-			case 'options':
-				$count = $wpdb->get_var( "SELECT COUNT(*) FROM $wpdb->options" );
-				break;
-			case 'tables':
-				$count = count( $wpdb->get_col( 'SHOW TABLES' ) );
-				break;
+		// FIXME Show Error
+		if ( false === has_filter( $tag ) ) {
+			return 0;
 		}
+
+		$count = apply_filters( $tag, 0 );
 
 		$this->totals[ $name ] = apply_filters( 'wp_sweep_total_count', $count, $name );
 

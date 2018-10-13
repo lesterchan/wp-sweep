@@ -1,8 +1,8 @@
 parameters:
     autoload_directories:
-        - %currentWorkingDirectory%/inc/
+        - %currentWorkingDirectory%/inc
     autoload_files:
-        - %currentWorkingDirectory%/vendor/autoload.php
+#        - %currentWorkingDirectory%/vendor/autoload.php
         - %currentWorkingDirectory%/vendor/wp-cli/wp-cli/php/class-wp-cli.php
         - %currentWorkingDirectory%/vendor/wp-cli/wp-cli/php/class-wp-cli-command.php
         - %currentWorkingDirectory%/wordpress-stubs.php

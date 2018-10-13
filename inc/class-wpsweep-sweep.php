@@ -18,7 +18,7 @@ abstract class WPSweep_Sweep {
 	const SLUG = '';
 
 	/**
-	 * Sweep category
+	 * Sweep type
 	 *
 	 * @access public
 	 * @var string
