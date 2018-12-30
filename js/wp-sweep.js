@@ -11,7 +11,7 @@
 				// Add Disabled
 				$node.prop( 'disabled', true ).text( wp_sweep.text_sweeping );
 
-				return $.get(ajaxurl, { action: $node.data( 'action' ), sweep_name: $node.data( 'sweep_name' ), sweep_type: $node.data( 'sweep_type' ), '_wpnonce': $node.data( 'nonce' ) }, function(data) {
+				return $.get(ajaxurl, { action: $node.data( 'action' ), sweep_name: $node.data( 'sweep_name' ), '_wpnonce': $node.data( 'nonce' ) }, function(data) {
 					if (data.success) {
 						var count = parseInt( data.data.count, 10 );
 						// Count Col
@@ -47,7 +47,7 @@
 			evt.preventDefault();
 			var $node = $( this );
 
-			$.get(ajaxurl, { action: $node.data( 'action' ), sweep_name: $node.data( 'sweep_name' ), sweep_type: $node.data( 'sweep_type' ), '_wpnonce': $node.data( 'nonce' ) }, function(data) {
+			$.get(ajaxurl, { action: $node.data( 'action' ), sweep_name: $node.data( 'sweep_name' ), '_wpnonce': $node.data( 'nonce' ) }, function(data) {
 				if (data.success) {
 					if (data.data.length > 0) {
 						var html = '';
