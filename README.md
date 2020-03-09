@@ -81,11 +81,14 @@ WP-Sweep Available Items:
 * oembed_postmeta
 
 WP-Sweep is not compatible with the following plugins:
+* [Asgaros Forum](https://wordpress.org/plugins/asgaros-forum/)
+* [MailPress](https://wordpress.org/plugins/mailpress/)
 * [Meta Slider](https://wordpress.org/support/plugin/ml-slider/)
+* [Polylang](https://wordpress.org/plugins/polylang/)
 * [Slider Revolution](https://revolution.themepunch.com/)
 * [Viba Portfolio](https://codecanyon.net/item/viba-portfolio-wordpress-plugin/9561599)
-* [MailPress](https://www.mailpress.org/)
-* [Asgaros Forum](https://www.asgaros.de/)
+
+
 
 ### Build Status
 [![Build Status](https://travis-ci.org/lesterchan/wp-sweep.svg?branch=master)](https://travis-ci.org/lesterchan/wp-sweep) [![Code Climate](https://codeclimate.com/github/lesterchan/wp-sweep/badges/gpa.svg)](https://codeclimate.com/github/lesterchan/wp-sweep) [![Issue Count](https://codeclimate.com/github/lesterchan/wp-sweep/badges/issue_count.svg)](https://codeclimate.com/github/lesterchan/wp-sweep)
