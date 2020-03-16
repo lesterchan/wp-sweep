@@ -1,6 +1,5 @@
 language: php
 php:
-  - 7.4
   - 7.3
   - 7.2
   - 7.1
@@ -16,7 +15,7 @@ install:
 
 script:
   - vendor/bin/phpcs --config-set installed_paths $TRAVIS_BUILD_DIR/vendor/wp-coding-standards/wpcs
-  - vendor/bin/phpcs --standard=TechInAsia --extensions=php --ignore="*/vendor/*" -p -s .
+  - vendor/bin/phpcs --standard=LesterChan --extensions=php --ignore="*/vendor/*" -p -s .
 
 notifications:
   email: false
