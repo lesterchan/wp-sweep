@@ -394,10 +394,10 @@ class WPSweep {
 				break;
 			case 'orphan_term_relationships':
 				$orphan_term_relationships_sql = implode( "','", array_map( 'esc_sql', $this->get_excluded_taxonomies() ) );
-				$count                         = $wpdb->get_var( "SELECT COUNT(object_id) FROM $wpdb->term_relationships AS tr INNER JOIN $wpdb->term_taxonomy AS tt ON tr.term_taxonomy_id = tt.term_taxonomy_id WHERE tt.taxonomy NOT IN ('$orphan_term_relationships_sql') AND tr.object_id NOT IN (SELECT ID FROM $wpdb->posts)" ); // WPCS: unprepared SQL ok.
+				$count                         = $wpdb->get_var( "SELECT COUNT(object_id) FROM $wpdb->term_relationships AS tr INNER JOIN $wpdb->term_taxonomy AS tt ON tr.term_taxonomy_id = tt.term_taxonomy_id WHERE tt.taxonomy NOT IN ('$orphan_term_relationships_sql') AND tr.object_id NOT IN (SELECT ID FROM $wpdb->posts)" ); // phpcs:ignore
 				break;
 			case 'unused_terms':
-				$count = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(t.term_id) FROM $wpdb->terms AS t INNER JOIN $wpdb->term_taxonomy AS tt ON t.term_id = tt.term_id WHERE tt.count = %d AND t.term_id NOT IN (" . implode( ',', $this->get_excluded_termids() ) . ')', 0 ) ); // WPCS: unprepared SQL ok.
+				$count = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(t.term_id) FROM $wpdb->terms AS t INNER JOIN $wpdb->term_taxonomy AS tt ON t.term_id = tt.term_id WHERE tt.count = %d AND t.term_id NOT IN (" . implode( ',', $this->get_excluded_termids() ) . ')', 0 ) ); // phpcs:ignore
 				break;
 			case 'duplicated_postmeta':
 				$query = $wpdb->get_col( $wpdb->prepare( "SELECT COUNT(meta_id) AS count FROM $wpdb->postmeta GROUP BY post_id, meta_key, meta_value HAVING count > %d", 1 ) );
@@ -484,10 +484,10 @@ class WPSweep {
 				break;
 			case 'orphan_term_relationships':
 				$orphan_term_relationships_sql = implode( "','", array_map( 'esc_sql', $this->get_excluded_taxonomies() ) );
-				$details                       = $wpdb->get_col( $wpdb->prepare( "SELECT tt.taxonomy FROM $wpdb->term_relationships AS tr INNER JOIN $wpdb->term_taxonomy AS tt ON tr.term_taxonomy_id = tt.term_taxonomy_id WHERE tt.taxonomy NOT IN ('$orphan_term_relationships_sql') AND tr.object_id NOT IN (SELECT ID FROM $wpdb->posts) LIMIT %d", $this->limit_details ) ); // WPCS: unprepared SQL ok.
+				$details                       = $wpdb->get_col( $wpdb->prepare( "SELECT tt.taxonomy FROM $wpdb->term_relationships AS tr INNER JOIN $wpdb->term_taxonomy AS tt ON tr.term_taxonomy_id = tt.term_taxonomy_id WHERE tt.taxonomy NOT IN ('$orphan_term_relationships_sql') AND tr.object_id NOT IN (SELECT ID FROM $wpdb->posts) LIMIT %d", $this->limit_details ) ); // phpcs:ignore
 				break;
 			case 'unused_terms':
-				$details = $wpdb->get_col( $wpdb->prepare( "SELECT t.name FROM $wpdb->terms AS t INNER JOIN $wpdb->term_taxonomy AS tt ON t.term_id = tt.term_id WHERE tt.count = %d AND t.term_id NOT IN (" . implode( ',', $this->get_excluded_termids() ) . ') LIMIT %d', 0, $this->limit_details ) ); // WPCS: unprepared SQL ok.
+				$details = $wpdb->get_col( $wpdb->prepare( "SELECT t.name FROM $wpdb->terms AS t INNER JOIN $wpdb->term_taxonomy AS tt ON t.term_id = tt.term_id WHERE tt.count = %d AND t.term_id NOT IN (" . implode( ',', $this->get_excluded_termids() ) . ') LIMIT %d', 0, $this->limit_details ) ); // phpcs:ignore
 				break;
 			case 'duplicated_postmeta':
 				$query   = $wpdb->get_results( $wpdb->prepare( "SELECT COUNT(meta_id) AS count, meta_key FROM $wpdb->postmeta GROUP BY post_id, meta_key, meta_value HAVING count > %d LIMIT %d", 1, $this->limit_details ) );
@@ -697,7 +697,7 @@ class WPSweep {
 				}
 				break;
 			case 'orphan_term_relationships':
-				$query = $wpdb->get_results( "SELECT tr.object_id, tr.term_taxonomy_id, tt.term_id, tt.taxonomy FROM $wpdb->term_relationships AS tr INNER JOIN $wpdb->term_taxonomy AS tt ON tr.term_taxonomy_id = tt.term_taxonomy_id WHERE tt.taxonomy NOT IN ('" . implode( '\',\'', $this->get_excluded_taxonomies() ) . "') AND tr.object_id NOT IN (SELECT ID FROM $wpdb->posts)" ); // WPCS: unprepared SQL ok.
+				$query = $wpdb->get_results( "SELECT tr.object_id, tr.term_taxonomy_id, tt.term_id, tt.taxonomy FROM $wpdb->term_relationships AS tr INNER JOIN $wpdb->term_taxonomy AS tt ON tr.term_taxonomy_id = tt.term_taxonomy_id WHERE tt.taxonomy NOT IN ('" . implode( '\',\'', $this->get_excluded_taxonomies() ) . "') AND tr.object_id NOT IN (SELECT ID FROM $wpdb->posts)" ); // phpcs:ignore
 				if ( $query ) {
 					foreach ( $query as $tax ) {
 						$wp_remove_object_terms = wp_remove_object_terms( (int) $tax->object_id, (int) $tax->term_id, $tax->taxonomy );
@@ -711,7 +711,7 @@ class WPSweep {
 				}
 				break;
 			case 'unused_terms':
-				$query = $wpdb->get_results( $wpdb->prepare( "SELECT tt.term_taxonomy_id, t.term_id, tt.taxonomy FROM $wpdb->terms AS t INNER JOIN $wpdb->term_taxonomy AS tt ON t.term_id = tt.term_id WHERE tt.count = %d AND t.term_id NOT IN (" . implode( ',', $this->get_excluded_termids() ) . ')', 0 ) ); // WPCS: unprepared SQL ok.
+				$query = $wpdb->get_results( $wpdb->prepare( "SELECT tt.term_taxonomy_id, t.term_id, tt.taxonomy FROM $wpdb->terms AS t INNER JOIN $wpdb->term_taxonomy AS tt ON t.term_id = tt.term_id WHERE tt.count = %d AND t.term_id NOT IN (" . implode( ',', $this->get_excluded_termids() ) . ')', 0 ) ); // phpcs:ignore
 				if ( $query ) {
 					$check_wp_terms = false;
 					foreach ( $query as $tax ) {
@@ -737,7 +737,7 @@ class WPSweep {
 					foreach ( $query as $meta ) {
 						$ids = array_map( 'intval', explode( ',', $meta->ids ) );
 						array_pop( $ids );
-						$wpdb->query( $wpdb->prepare( "DELETE FROM $wpdb->postmeta WHERE meta_id IN (" . implode( ',', $ids ) . ') AND post_id = %d', (int) $meta->post_id ) ); // WPCS: unprepared SQL ok.
+						$wpdb->query( $wpdb->prepare( "DELETE FROM $wpdb->postmeta WHERE meta_id IN (" . implode( ',', $ids ) . ') AND post_id = %d', (int) $meta->post_id ) ); // phpcs:ignore
 					}
 
 					// translators: %s is the Duplicated Post Meta count.
@@ -750,7 +750,7 @@ class WPSweep {
 					foreach ( $query as $meta ) {
 						$ids = array_map( 'intval', explode( ',', $meta->ids ) );
 						array_pop( $ids );
-						$wpdb->query( $wpdb->prepare( "DELETE FROM $wpdb->commentmeta WHERE meta_id IN (" . implode( ',', $ids ) . ') AND comment_id = %d', (int) $meta->comment_id ) ); // WPCS: unprepared SQL ok.
+						$wpdb->query( $wpdb->prepare( "DELETE FROM $wpdb->commentmeta WHERE meta_id IN (" . implode( ',', $ids ) . ') AND comment_id = %d', (int) $meta->comment_id ) ); // phpcs:ignore
 					}
 
 					// translators: %s is the Duplicated Comment Meta count.
@@ -763,7 +763,7 @@ class WPSweep {
 					foreach ( $query as $meta ) {
 						$ids = array_map( 'intval', explode( ',', $meta->ids ) );
 						array_pop( $ids );
-						$wpdb->query( $wpdb->prepare( "DELETE FROM $wpdb->usermeta WHERE umeta_id IN (" . implode( ',', $ids ) . ') AND user_id = %d', (int) $meta->user_id ) ); // WPCS: unprepared SQL ok.
+						$wpdb->query( $wpdb->prepare( "DELETE FROM $wpdb->usermeta WHERE umeta_id IN (" . implode( ',', $ids ) . ') AND user_id = %d', (int) $meta->user_id ) ); // phpcs:ignore
 					}
 
 					// translators: %s is the Duplicated User Meta count.
@@ -776,7 +776,7 @@ class WPSweep {
 					foreach ( $query as $meta ) {
 						$ids = array_map( 'intval', explode( ',', $meta->ids ) );
 						array_pop( $ids );
-						$wpdb->query( $wpdb->prepare( "DELETE FROM $wpdb->termmeta WHERE meta_id IN (" . implode( ',', $ids ) . ') AND term_id = %d', (int) $meta->term_id ) ); // WPCS: unprepared SQL ok.
+						$wpdb->query( $wpdb->prepare( "DELETE FROM $wpdb->termmeta WHERE meta_id IN (" . implode( ',', $ids ) . ') AND term_id = %d', (int) $meta->term_id ) ); // phpcs:ignore
 					}
 
 					// translators: %s is the Duplicated Term Meta count.
@@ -787,7 +787,7 @@ class WPSweep {
 				$query = $wpdb->get_col( 'SHOW TABLES' );
 				if ( $query ) {
 					$tables = implode( ',', $query );
-					$wpdb->query( "OPTIMIZE TABLE $tables" ); // WPCS: unprepared SQL ok.
+					$wpdb->query( "OPTIMIZE TABLE $tables" ); // phpcs:ignore
 
 					// translators: %s is the Tables count.
 					$message = sprintf( __( '%s Tables Processed', 'wp-sweep' ), number_format_i18n( count( $query ) ) );
