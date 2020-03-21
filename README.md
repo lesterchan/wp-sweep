@@ -82,6 +82,7 @@ WP-Sweep Available Items:
 
 WP-Sweep is not compatible with the following plugins:
 * [Asgaros Forum](https://wordpress.org/plugins/asgaros-forum/)
+* [Elementor Popup Builder](https://elementor.com/features/popup-builder/)
 * [MailPress](https://wordpress.org/plugins/mailpress/)
 * [Meta Slider](https://wordpress.org/support/plugin/ml-slider/)
 * [Polylang](https://wordpress.org/plugins/polylang/)
