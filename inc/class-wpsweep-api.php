@@ -189,6 +189,6 @@ class WPSweep_Api {
 	 * @return bool Does the user has access to sweep?
 	 */
 	public function permission_check() {
-		return current_user_can( 'manage_options' );
+		return current_user_can( 'update_plugins' );
 	}
 }
