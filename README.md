@@ -105,7 +105,7 @@ I spent most of my free time creating, updating, maintaining and supporting thes
 
 ## Changelog
 ### 1.1.2
-* NEW: Changed permission check to `manage_plugins` for better MultiSite compatibility.
+* NEW: Changed permission check to `update_plugins` for better MultiSite compatibility.
 * NEW: Bump min PHP version to 5.6.
 
 ### 1.1.1
