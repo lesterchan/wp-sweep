@@ -88,8 +88,7 @@ WP-Sweep is not compatible with the following plugins:
 * [Polylang](https://wordpress.org/plugins/polylang/)
 * [Slider Revolution](https://revolution.themepunch.com/)
 * [Viba Portfolio](https://codecanyon.net/item/viba-portfolio-wordpress-plugin/9561599)
-
-
+* [WPML](https://wpml.org/)
 
 ### Build Status
 [![Build Status](https://travis-ci.org/lesterchan/wp-sweep.svg?branch=master)](https://travis-ci.org/lesterchan/wp-sweep) [![Code Climate](https://codeclimate.com/github/lesterchan/wp-sweep/badges/gpa.svg)](https://codeclimate.com/github/lesterchan/wp-sweep) [![Issue Count](https://codeclimate.com/github/lesterchan/wp-sweep/badges/issue_count.svg)](https://codeclimate.com/github/lesterchan/wp-sweep)
