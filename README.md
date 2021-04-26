@@ -3,8 +3,8 @@ Contributors: GamerZ
 Donate link: https://lesterchan.net/site/donation/  
 Tags: sweep, clean, cleanup, clean up, optimize, orphan, unused, duplicated, posts, post meta, comments, comment meta, users, user meta, terms, term meta, term relationships, revisions, auto drafts, transient, database, tables, oembed
 Requires at least: 4.6  
-Tested up to: 5.6  
-Stable tag: 1.1.3  
+Tested up to: 5.7  
+Stable tag: 1.1.4  
 License: GPLv2 or later  
 License URI: http://www.gnu.org/licenses/gpl-2.0.html  
 
@@ -104,6 +104,9 @@ WP-Sweep is not compatible with the following plugins:
 I spent most of my free time creating, updating, maintaining and supporting these plugins, if you really love my plugins and could spare me a couple of bucks, I will really appreciate it. If not feel free to use it without any obligations.
 
 ## Changelog
+### 1.1.4
+* FIXED: Replaced %\_transient\_% with %\\\_transient\\\_%. Escape _ in MySQL if not it is being used as a wildcard character. Props @janrenn.
+
 ### 1.1.3
 * FIXED: Changed permissions check to `activate_plugins` because `update_plugins` will return false when DISALLOW_FILE_MODS=true.
 
