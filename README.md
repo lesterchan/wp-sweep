@@ -104,14 +104,14 @@ WP-Sweep is not compatible with the following plugins:
 I spent most of my free time creating, updating, maintaining and supporting these plugins, if you really love my plugins and could spare me a couple of bucks, I will really appreciate it. If not feel free to use it without any obligations.
 
 ## Changelog
-### 1.1.17
+### 1.1.7
 * FIXED: Pass in default blank string to fix fatal error
 
-### 1.1.16
+### 1.1.6
 * NEW: Re-org wp-sweep.php to inc/class-wpsweep.php
 * NEW: Bump to WordPress 6.2
 
-### 1.1.15
+### 1.1.5
 * NEW: Bump to WordPress 5.8
 
 ### 1.1.4
