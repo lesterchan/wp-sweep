@@ -39,7 +39,7 @@ class WPSweep {
 	 * @access public
 	 * @param string $plugin_file Main plugin file.
 	 */
-	public function __construct( $plugin_file ) {
+	public function __construct( $plugin_file = '' ) {
 		// Add Plugin Hooks.
 		add_action( 'plugins_loaded', array( $this, 'add_hooks' ) );
 
@@ -59,7 +59,7 @@ class WPSweep {
 	 * @access public
 	 * @return object The plugin object instance
 	 */
-	public static function get_instance( $plugin_file ) {
+	public static function get_instance( $plugin_file = '' ) {
 		if ( ! isset( self::$instance ) ) {
 			self::$instance = new self( $plugin_file );
 		}
