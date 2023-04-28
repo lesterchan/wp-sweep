@@ -37,7 +37,6 @@ class WPSweep {
 	 * @since 1.0.0
 	 *
 	 * @access public
-	 * @param string $plugin_file Main plugin file.
 	 */
 	public function __construct() {
 		// Add Plugin Hooks.
