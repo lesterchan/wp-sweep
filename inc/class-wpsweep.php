@@ -152,27 +152,16 @@ class WPSweep {
 	 * @return void
 	 */
 	public function ajax_sweep_details() {
-		if ( ! empty( $_GET['action'] )
-			&& ! empty( $_GET['sweep_name'] )
-			&& ! empty( $_GET['sweep_type'] )
+		// Verify referer and check permissions.
+		if (
+			empty( $_GET['sweep_name'] )
+			|| ! check_admin_referer( 'wp_sweep_details_' . $_GET['sweep_name'] )
+			|| ! current_user_can( 'activate_plugins' )
 		) {
-			// Verify Referer.
-			if ( ! check_admin_referer( 'wp_sweep_details_' . $_GET['sweep_name'] ) ) {
-				wp_send_json_error(
-					array(
-						'error' => __( 'Failed to verify referrer.', 'wp-sweep' ),
-					)
-				);
-			} elseif ( ! current_user_can( 'activate_plugins' ) ) {
-				wp_send_json_error(
-					array(
-						'error' => __( 'Invalid permission', 'wp-sweep' ),
-					)
-				);
-			} elseif ( 'sweep_details' === $_GET['action'] ) {
-				wp_send_json_success( $this->details( $_GET['sweep_name'] ) );
-			}
+			wp_send_json_error( array( 'error' => __( 'Invalid AJAX request.', 'wp-sweep' ) ) );
 		}
+
+		wp_send_json_success( $this->details( $_GET['sweep_name'] ) );
 	}
 
 	/**
