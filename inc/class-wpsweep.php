@@ -163,6 +163,12 @@ class WPSweep {
 						'error' => __( 'Failed to verify referrer.', 'wp-sweep' ),
 					)
 				);
+			} elseif ( ! current_user_can( 'activate_plugins' ) ) {
+				wp_send_json_error(
+					array(
+						'error' => __( 'Invalid permission', 'wp-sweep' ),
+					)
+				);
 			} elseif ( 'sweep_details' === $_GET['action'] ) {
 				wp_send_json_success( $this->details( $_GET['sweep_name'] ) );
 			}
@@ -187,6 +193,12 @@ class WPSweep {
 				wp_send_json_error(
 					array(
 						'error' => __( 'Failed to verify referrer.', 'wp-sweep' ),
+					)
+				);
+			} elseif ( ! current_user_can( 'activate_plugins' ) ) {
+				wp_send_json_error(
+					array(
+						'error' => __( 'Invalid permission', 'wp-sweep' ),
 					)
 				);
 			} elseif ( 'sweep' === $_GET['action'] ) {

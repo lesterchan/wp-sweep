@@ -4,7 +4,7 @@ Donate link: https://lesterchan.net/site/donation/
 Tags: sweep, clean, cleanup, clean up, optimize, orphan, unused, duplicated, posts, post meta, comments, comment meta, users, user meta, terms, term meta, term relationships, revisions, auto drafts, transient, database, tables, oembed
 Requires at least: 4.6  
 Tested up to: 6.2  
-Stable tag: 1.1.7  
+Stable tag: 1.1.8  
 License: GPLv2 or later  
 License URI: http://www.gnu.org/licenses/gpl-2.0.html  
 
@@ -92,7 +92,8 @@ WP-Sweep is not compatible with the following plugins:
 * [WPML](https://wpml.org/)
 
 ### Build Status
-[![Build Status](https://travis-ci.org/lesterchan/wp-sweep.svg?branch=master)](https://travis-ci.org/lesterchan/wp-sweep) [![Code Climate](https://codeclimate.com/github/lesterchan/wp-sweep/badges/gpa.svg)](https://codeclimate.com/github/lesterchan/wp-sweep) [![Issue Count](https://codeclimate.com/github/lesterchan/wp-sweep/badges/issue_count.svg)](https://codeclimate.com/github/lesterchan/wp-sweep)
+[![Code Climate](https://codeclimate.com/github/lesterchan/wp-sweep/badges/gpa.svg)](https://codeclimate.com/github/lesterchan/wp-sweep)
+[![Issue Count](https://codeclimate.com/github/lesterchan/wp-sweep/badges/issue_count.svg)](https://codeclimate.com/github/lesterchan/wp-sweep)
 
 ### Development
 * [https://github.com/lesterchan/wp-sweep](https://github.com/lesterchan/wp-sweep "https://github.com/lesterchan/wp-sweep")
@@ -104,6 +105,9 @@ WP-Sweep is not compatible with the following plugins:
 I spent most of my free time creating, updating, maintaining and supporting these plugins, if you really love my plugins and could spare me a couple of bucks, I will really appreciate it. If not feel free to use it without any obligations.
 
 ## Changelog
+### 1.1.8
+* FIXED: Added current_user_can() Check For AJAX Calls
+
 ### 1.1.7
 * FIXED: Pass in default blank string to fix fatal error
 
