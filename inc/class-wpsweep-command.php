@@ -114,7 +114,7 @@ class WPSweep_Command extends WP_CLI_Command {
 	 */
 	public function run_sweep( $items ) {
 
-		$sweep = new WPSweep();
+		$sweep = WPSweep::get_instance();
 
 		foreach ( $items as $key => $value ) {
 			$count = $sweep->count( $value );

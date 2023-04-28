@@ -108,7 +108,7 @@ class WPSweep_Api {
 	public function count( $request ) {
 		$params = $request->get_params();
 
-		$sweep = new WPSweep();
+		$sweep = WPSweep::get_instance();
 		$count = (int) $sweep->count( $params['name'] );
 
 		return new WP_REST_Response(
@@ -131,7 +131,7 @@ class WPSweep_Api {
 	public function details( $request ) {
 		$params = $request->get_params();
 
-		$sweep   = new WPSweep();
+		$sweep   = WPSweep::get_instance();
 		$details = $sweep->details( $params['name'] );
 
 		return new WP_REST_Response(
@@ -155,7 +155,7 @@ class WPSweep_Api {
 	public function sweep( $request ) {
 		$params = $request->get_params();
 
-		$sweep   = new WPSweep();
+		$sweep   = WPSweep::get_instance();
 		$results = $sweep->sweep( $params['name'] );
 
 		return new WP_REST_Response(

@@ -39,7 +39,7 @@ class WPSweep {
 	 * @access public
 	 * @param string $plugin_file Main plugin file.
 	 */
-	public function __construct( $plugin_file = '' ) {
+	public function __construct() {
 		// Add Plugin Hooks.
 		add_action( 'plugins_loaded', array( $this, 'add_hooks' ) );
 
@@ -47,8 +47,8 @@ class WPSweep {
 		load_plugin_textdomain( 'wp-sweep' );
 
 		// Plugin Activation/Deactivation.
-		register_activation_hook( $plugin_file, array( $this, 'plugin_activation' ) );
-		register_deactivation_hook( $plugin_file, array( $this, 'plugin_deactivation' ) );
+		register_activation_hook( WP_SWEEP_MAIN_FILE, array( $this, 'plugin_activation' ) );
+		register_deactivation_hook( WP_SWEEP_MAIN_FILE, array( $this, 'plugin_deactivation' ) );
 	}
 
 	/**
@@ -59,10 +59,11 @@ class WPSweep {
 	 * @access public
 	 * @return object The plugin object instance
 	 */
-	public static function get_instance( $plugin_file = '' ) {
+	public static function get_instance() {
 		if ( ! isset( self::$instance ) ) {
-			self::$instance = new self( $plugin_file );
+			self::$instance = new self();
 		}
+
 		return self::$instance;
 	}
 

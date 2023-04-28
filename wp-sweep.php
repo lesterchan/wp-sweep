@@ -31,12 +31,17 @@
  *     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-/** 
+/**
  * WP-Sweep version
  *
  * @since 1.0.0
  */
 define( 'WP_SWEEP_VERSION', '1.1.8' );
+
+/**
+ * WP-Sweep main file
+ */
+define( 'WP_SWEEP_MAIN_FILE', __FILE__ );
 
 require __DIR__ . '/inc/class-wpsweep.php';
 require __DIR__ . '/inc/class-wpsweep-api.php';
@@ -49,4 +54,4 @@ new WPSweep_Api();
 /**
  * Init WP-Sweep
  */
-WPSweep::get_instance( __FILE__ );
+WPSweep::get_instance();
