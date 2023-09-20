@@ -81,7 +81,6 @@ WP-Sweep Available Items:
 * oembed_postmeta
 
 WP-Sweep is not compatible with the following plugins:
-* [Asgaros Forum](https://wordpress.org/plugins/asgaros-forum/)
 * [Custom Fonts](https://wordpress.org/plugins/custom-fonts/)
 * [Elementor Popup Builder](https://elementor.com/features/popup-builder/)
 * [MailPress](https://wordpress.org/plugins/mailpress/)
