@@ -332,22 +332,22 @@ class WPSweep {
 				$count = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(option_id) FROM $wpdb->options WHERE option_name LIKE(%s)", '%\_transient\_%' ) );
 				break;
 			case 'orphan_postmeta':
-				$excluded_meta_keys = $this->get_excluded_meta_keys();
+				$excluded_meta_keys = apply_filters( 'wp_sweep_postmeta_whitelist', array() );
 				$exclude_clause      = $this->get_meta_key_exclude_clause( $excluded_meta_keys );
 				$count               = $wpdb->get_var( "SELECT COUNT(meta_id) FROM $wpdb->postmeta WHERE post_id NOT IN (SELECT ID FROM $wpdb->posts) $exclude_clause" );
 				break;
 			case 'orphan_commentmeta':
-				$excluded_meta_keys = $this->get_excluded_meta_keys();
+				$excluded_meta_keys = apply_filters( 'wp_sweep_commentmeta_whitelist', array() );
 				$exclude_clause      = $this->get_meta_key_exclude_clause( $excluded_meta_keys );
 				$count               = $wpdb->get_var( "SELECT COUNT(meta_id) FROM $wpdb->commentmeta WHERE comment_id NOT IN (SELECT comment_ID FROM $wpdb->comments) $exclude_clause" );
 				break;
 			case 'orphan_usermeta':
-				$excluded_meta_keys = $this->get_excluded_meta_keys();
-				$exclude_clause      = $this->get_meta_key_exclude_clause( $excluded_meta_keys, 'umeta_id' );
+				$excluded_meta_keys = apply_filters( 'wp_sweep_usermeta_whitelist', array() );
+				$exclude_clause      = $this->get_meta_key_exclude_clause( $excluded_meta_keys );
 				$count               = $wpdb->get_var( "SELECT COUNT(umeta_id) FROM $wpdb->usermeta WHERE user_id NOT IN (SELECT ID FROM $wpdb->users) $exclude_clause" );
 				break;
 			case 'orphan_termmeta':
-				$excluded_meta_keys = $this->get_excluded_meta_keys();
+				$excluded_meta_keys = apply_filters( 'wp_sweep_termmeta_whitelist', array() );
 				$exclude_clause      = $this->get_meta_key_exclude_clause( $excluded_meta_keys );
 				$count               = $wpdb->get_var( "SELECT COUNT(meta_id) FROM $wpdb->termmeta WHERE term_id NOT IN (SELECT term_id FROM $wpdb->terms) $exclude_clause" );
 				break;
@@ -430,22 +430,22 @@ class WPSweep {
 				$details = $wpdb->get_col( $wpdb->prepare( "SELECT option_name FROM $wpdb->options WHERE option_name LIKE(%s) LIMIT %d", '%\_transient\_%', $this->limit_details ) );
 				break;
 			case 'orphan_postmeta':
-				$excluded_meta_keys = $this->get_excluded_meta_keys();
+				$excluded_meta_keys = apply_filters( 'wp_sweep_postmeta_whitelist', array() );
 				$exclude_clause      = $this->get_meta_key_exclude_clause( $excluded_meta_keys );
 				$details             = $wpdb->get_col( $wpdb->prepare( "SELECT meta_key FROM $wpdb->postmeta WHERE post_id NOT IN (SELECT ID FROM $wpdb->posts) $exclude_clause LIMIT %d", $this->limit_details ) );
 				break;
 			case 'orphan_commentmeta':
-				$excluded_meta_keys = $this->get_excluded_meta_keys();
+				$excluded_meta_keys = apply_filters( 'wp_sweep_commentmeta_whitelist', array() );
 				$exclude_clause      = $this->get_meta_key_exclude_clause( $excluded_meta_keys );
 				$details             = $wpdb->get_col( $wpdb->prepare( "SELECT meta_key FROM $wpdb->commentmeta WHERE comment_id NOT IN (SELECT comment_ID FROM $wpdb->comments) $exclude_clause LIMIT %d", $this->limit_details ) );
 				break;
 			case 'orphan_usermeta':
-				$excluded_meta_keys = $this->get_excluded_meta_keys();
+				$excluded_meta_keys = apply_filters( 'wp_sweep_usermeta_whitelist', array() );
 				$exclude_clause      = $this->get_meta_key_exclude_clause( $excluded_meta_keys );
 				$details             = $wpdb->get_col( $wpdb->prepare( "SELECT meta_key FROM $wpdb->usermeta WHERE user_id NOT IN (SELECT ID FROM $wpdb->users) $exclude_clause LIMIT %d", $this->limit_details ) );
 				break;
 			case 'orphan_termmeta':
-				$excluded_meta_keys = $this->get_excluded_meta_keys();
+				$excluded_meta_keys = apply_filters( 'wp_sweep_termmeta_whitelist', array() );
 				$exclude_clause      = $this->get_meta_key_exclude_clause( $excluded_meta_keys );
 				$details             = $wpdb->get_col( $wpdb->prepare( "SELECT meta_key FROM $wpdb->termmeta WHERE term_id NOT IN (SELECT term_id FROM $wpdb->terms) $exclude_clause LIMIT %d", $this->limit_details ) );
 				break;
@@ -600,7 +600,7 @@ class WPSweep {
 				}
 				break;
 			case 'orphan_postmeta':
-				$excluded_meta_keys = $this->get_excluded_meta_keys();
+				$excluded_meta_keys = apply_filters( 'wp_sweep_postmeta_whitelist', array() );
 				$exclude_clause      = $this->get_meta_key_exclude_clause( $excluded_meta_keys );
 				$query               = $wpdb->get_results( "SELECT post_id, meta_key FROM $wpdb->postmeta WHERE post_id NOT IN (SELECT ID FROM $wpdb->posts) $exclude_clause" );
 				if ( $query ) {
@@ -618,7 +618,7 @@ class WPSweep {
 				}
 				break;
 			case 'orphan_commentmeta':
-				$excluded_meta_keys = $this->get_excluded_meta_keys();
+				$excluded_meta_keys = apply_filters( 'wp_sweep_commentmeta_whitelist', array() );
 				$exclude_clause      = $this->get_meta_key_exclude_clause( $excluded_meta_keys );
 				$query               = $wpdb->get_results( "SELECT comment_id, meta_key FROM $wpdb->commentmeta WHERE comment_id NOT IN (SELECT comment_ID FROM $wpdb->comments) $exclude_clause" );
 				if ( $query ) {
@@ -636,7 +636,7 @@ class WPSweep {
 				}
 				break;
 			case 'orphan_usermeta':
-				$excluded_meta_keys = $this->get_excluded_meta_keys();
+				$excluded_meta_keys = apply_filters( 'wp_sweep_usermeta_whitelist', array() );
 				$exclude_clause      = $this->get_meta_key_exclude_clause( $excluded_meta_keys );
 				$query               = $wpdb->get_results( "SELECT user_id, meta_key FROM $wpdb->usermeta WHERE user_id NOT IN (SELECT ID FROM $wpdb->users) $exclude_clause" );
 				if ( $query ) {
@@ -654,7 +654,7 @@ class WPSweep {
 				}
 				break;
 			case 'orphan_termmeta':
-				$excluded_meta_keys = $this->get_excluded_meta_keys();
+				$excluded_meta_keys = apply_filters( 'wp_sweep_termmeta_whitelist', array() );
 				$exclude_clause      = $this->get_meta_key_exclude_clause( $excluded_meta_keys );
 				$query               = $wpdb->get_results( "SELECT term_id, meta_key FROM $wpdb->termmeta WHERE term_id NOT IN (SELECT term_id FROM $wpdb->terms) $exclude_clause" );
 				if ( $query ) {
@@ -878,52 +878,6 @@ class WPSweep {
 	}
 
 	/**
-	 * Get excluded meta keys
-	 *
-	 * @since 1.0.9
-	 *
-	 * @access private
-	 * @return array Excluded meta keys that should not be deleted when orphaned
-	 */
-	private function get_excluded_meta_keys() {
-		$excluded_keys = array(
-			// WordPress core post meta.
-			'_wp_page_template',
-			'_wp_trash_meta_*',
-			'_wp_desired_post_slug',
-			'_wp_attachment_metadata',
-			'_wp_attachment_image_alt',
-			'_thumbnail_id',
-			'_edit_lock',
-			'_edit_last',
-			// WordPress core user meta.
-			'session_tokens',
-			'capabilities',
-			'user-settings',
-			'user-settings-time',
-			'dismissed_wp_pointers',
-			'show_welcome_panel',
-			// WordPress core comment meta.
-			'akismet_*',
-			// Plugin meta prefixes (common plugins).
-			'_acf_*',
-			'_field_*',
-			'_group_*',
-			'woocommerce_*',
-			'_wccs_*',
-			'_jet_*',
-			'_elementor_*',
-			'_beaver_*',
-			'_divi_*',
-			'_yoast_*',
-			'rank_math_*',
-			'mb_*',
-		);
-
-		return apply_filters( 'wp_sweep_excluded_meta_keys', $excluded_keys );
-	}
-
-	/**
 	 * Build SQL WHERE clause to exclude whitelisted meta keys
 	 *
 	 * @since 1.0.9
@@ -1031,3 +985,4 @@ class WPSweep {
 	private function plugin_deactivated() {
 	}
 }
+
