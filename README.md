@@ -4,7 +4,7 @@ Donate link: https://lesterchan.net/site/donation/
 Tags: sweep, clean, cleanup, clean up, optimize, orphan, unused, duplicated, posts, post meta, comments, comment meta, users, user meta, terms, term meta, term relationships, revisions, auto drafts, transient, database, tables, oembed
 Requires at least: 4.6  
 Tested up to: 7.0  
-Stable tag: 1.1.9  
+Stable tag: 1.2.0  
 License: GPLv2 or later  
 License URI: http://www.gnu.org/licenses/gpl-2.0.html  
 
@@ -80,6 +80,40 @@ WP-Sweep Available Items:
 * optimize_database
 * oembed_postmeta
 
+WP-Sweep Available Filters:
+
+WP-Sweep exposes a number of filters so you can customise what gets swept and protect data you do not want deleted.
+
+* `wp_sweep_postmeta_whitelist` (array) — Meta keys to exclude when sweeping orphaned and duplicated **post** meta. Return an array of `meta_key` values to keep them from being deleted. Default: empty array.
+* `wp_sweep_commentmeta_whitelist` (array) — Meta keys to exclude when sweeping orphaned and duplicated **comment** meta. Default: empty array.
+* `wp_sweep_usermeta_whitelist` (array) — Meta keys to exclude when sweeping orphaned and duplicated **user** meta. Default: empty array.
+* `wp_sweep_termmeta_whitelist` (array) — Meta keys to exclude when sweeping orphaned and duplicated **term** meta. Default: empty array.
+* `wp_sweep_excluded_taxonomies` (array) — Taxonomies to exclude from the orphaned term relationships sweep. Default: `array( 'link_category' )`.
+* `wp_sweep_excluded_termids` (array) — Term IDs to exclude from the unused terms sweep. Default: the default taxonomy terms plus any term that is a parent of another term.
+* `wp_sweep_total_count` (int `$count`, string `$name`) — Filter the total number of rows reported for a given sweep type (used for the "% of" column).
+* `wp_sweep_count` (int `$count`, string `$name`) — Filter the number of items that will be swept for a given sweep name.
+* `wp_sweep_details` (array `$details`, string `$name`) — Filter the sample list of items shown in the details view for a given sweep name.
+* `wp_sweep_sweep` (string `$message`, string `$name`) — Filter the result message returned after a sweep has run.
+
+Example — protect specific post meta keys from being swept:
+
+```php
+add_filter( 'wp_sweep_postmeta_whitelist', function ( $meta_keys ) {
+	$meta_keys[] = '_my_plugin_setting';
+	$meta_keys[] = '_keep_this_meta';
+	return $meta_keys;
+} );
+```
+
+Example — exclude an additional taxonomy from the orphaned term relationships sweep:
+
+```php
+add_filter( 'wp_sweep_excluded_taxonomies', function ( $taxonomies ) {
+	$taxonomies[] = 'product_type';
+	return $taxonomies;
+} );
+```
+
 WP-Sweep is not compatible with the following plugins:
 * [Custom Fonts](https://wordpress.org/plugins/custom-fonts/)
 * [Elementor Popup Builder](https://elementor.com/features/popup-builder/)
@@ -89,10 +123,6 @@ WP-Sweep is not compatible with the following plugins:
 * [Slider Revolution](https://revolution.themepunch.com/)
 * [Viba Portfolio](https://codecanyon.net/item/viba-portfolio-wordpress-plugin/9561599)
 * [WPML](https://wpml.org/)
-
-### Build Status
-[![Code Climate](https://codeclimate.com/github/lesterchan/wp-sweep/badges/gpa.svg)](https://codeclimate.com/github/lesterchan/wp-sweep)
-[![Issue Count](https://codeclimate.com/github/lesterchan/wp-sweep/badges/issue_count.svg)](https://codeclimate.com/github/lesterchan/wp-sweep)
 
 ### Development
 * [https://github.com/lesterchan/wp-sweep](https://github.com/lesterchan/wp-sweep "https://github.com/lesterchan/wp-sweep")
@@ -104,6 +134,10 @@ WP-Sweep is not compatible with the following plugins:
 I spent most of my free time creating, updating, maintaining and supporting these plugins, if you really love my plugins and could spare me a couple of bucks, I will really appreciate it. If not feel free to use it without any obligations.
 
 ## Changelog
+### 1.2.0
+* NEW: Per-type meta key filters (`wp_sweep_postmeta_whitelist`, `wp_sweep_commentmeta_whitelist`, `wp_sweep_usermeta_whitelist`, `wp_sweep_termmeta_whitelist`) to protect metadata from accidental deletion
+* NEW: Documented all available filters in README
+
 ### 1.1.9
 * NEW: Bump WordPress 7.0
 * NEW: Add CLAUDE.md
