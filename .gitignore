@@ -20,3 +20,6 @@ sftp-config.json
 
 # PHPUnit
 .phpunit.result.cache
+
+# Vitest
+/coverage

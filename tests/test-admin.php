@@ -38,6 +38,10 @@ class Test_WP_Sweep_Admin extends WP_Sweep_TestCase {
 
 		wp_set_current_user( self::$admin );
 		set_current_screen( 'tools' );
+
+		// WP_Scripts is a global that survives the transaction rollback, so a
+		// handle enqueued by one test is still enqueued in the next one.
+		$GLOBALS['wp_scripts'] = null;
 	}
 
 	/**
@@ -257,6 +261,107 @@ class Test_WP_Sweep_Admin extends WP_Sweep_TestCase {
 			number_format_i18n( $this->sweep()->limit_details ),
 			$html
 		);
+	}
+
+	/**
+	 * The admin script loads on the plugin's own screen.
+	 */
+	public function test_script_is_enqueued_on_the_sweep_screen() {
+		$this->sweep()->admin_enqueue_scripts( $this->admin_hook_suffix );
+
+		$this->assertTrue( wp_script_is( 'wp-sweep', 'enqueued' ) );
+	}
+
+	/**
+	 * It loads nowhere else. This screen is the only thing that uses it.
+	 *
+	 * @dataProvider data_other_admin_screens
+	 *
+	 * @param string $hook Hook suffix of some other screen.
+	 */
+	public function test_script_is_not_enqueued_elsewhere( $hook ) {
+		$this->sweep()->admin_enqueue_scripts( $hook );
+
+		$this->assertFalse( wp_script_is( 'wp-sweep', 'enqueued' ) );
+	}
+
+	/**
+	 * Admin screens the plugin has no business loading its script on.
+	 *
+	 * @return array
+	 */
+	public function data_other_admin_screens() {
+		return array(
+			array( 'index.php' ),
+			array( 'tools.php' ),
+			array( 'edit.php' ),
+			array( 'plugins.php' ),
+			array( 'settings_page_something-else' ),
+		);
+	}
+
+	/**
+	 * The script depends on nothing. It was written against jQuery until
+	 * 2.0.0, and jQuery was the only reason this screen loaded it at all.
+	 */
+	public function test_script_has_no_dependencies() {
+		$this->sweep()->admin_enqueue_scripts( $this->admin_hook_suffix );
+
+		$script = wp_scripts()->registered['wp-sweep'];
+
+		$this->assertSame( array(), $script->deps );
+		$this->assertNotContains( 'jquery', $script->deps );
+	}
+
+	/**
+	 * One unminified file ships, not a hand-maintained minified twin that
+	 * drifts out of sync with it.
+	 */
+	public function test_script_is_the_unminified_source() {
+		$this->sweep()->admin_enqueue_scripts( $this->admin_hook_suffix );
+
+		$script = wp_scripts()->registered['wp-sweep'];
+
+		$this->assertStringEndsWith( '/js/wp-sweep.js', $script->src );
+		$this->assertStringNotContainsString( '.min.js', $script->src );
+		$this->assertFileDoesNotExist( dirname( __DIR__ ) . '/js/wp-sweep.min.js' );
+	}
+
+	/**
+	 * The script carries no jQuery in its source either.
+	 */
+	public function test_script_source_uses_no_jquery() {
+		$source = file_get_contents( dirname( __DIR__ ) . '/js/wp-sweep.js' );
+
+		$this->assertStringNotContainsString( 'jQuery', $source );
+		$this->assertStringNotContainsString( '$(', $source );
+	}
+
+	/**
+	 * The details list is built from text nodes. Assembling it by string
+	 * concatenation put a comment author's markup into the administrator's
+	 * browser; the JS suite covers the behaviour, this guards the source.
+	 */
+	public function test_script_never_assigns_innerhtml() {
+		$source = file_get_contents( dirname( __DIR__ ) . '/js/wp-sweep.js' );
+
+		$this->assertStringNotContainsString( 'innerHTML', $source );
+		$this->assertStringContainsString( 'textContent', $source );
+	}
+
+	/**
+	 * Every string the script shows the user is localised.
+	 */
+	public function test_script_is_localised() {
+		$this->sweep()->admin_enqueue_scripts( $this->admin_hook_suffix );
+
+		$data = wp_scripts()->registered['wp-sweep']->extra['data'];
+
+		$this->assertStringContainsString( 'wpSweepL10n', $data );
+
+		foreach ( array( 'text_close_warning', 'text_sweep', 'text_sweep_all', 'text_sweeping', 'text_na' ) as $key ) {
+			$this->assertStringContainsString( $key, $data );
+		}
 	}
 
 	/**

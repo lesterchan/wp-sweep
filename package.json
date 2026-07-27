@@ -1,0 +1,20 @@
+{
+	"name": "wp-sweep",
+	"private": true,
+	"description": "Dev tooling for WP-Sweep. Excluded from the SVN deploy; never ships to users.",
+	"license": "GPL-2.0-or-later",
+	"scripts": {
+		"lint:js": "eslint .",
+		"lint:js:fix": "eslint . --fix",
+		"test:js": "vitest run",
+		"test:php": "bin/test.sh",
+		"test": "npm run test:js && npm run test:php"
+	},
+	"devDependencies": {
+		"@wordpress/eslint-plugin": "^25.7.0",
+		"eslint": "^9.39.0",
+		"globals": "^16.0.0",
+		"jsdom": "^29.1.1",
+		"vitest": "^4.1.10"
+	}
+}

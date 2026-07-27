@@ -1,0 +1,370 @@
+/**
+ * Tests for the WP-Sweep admin script.
+ *
+ * The script is evaluated once for the whole file: its listeners live on
+ * `document`, so they survive resetting document.body between tests, and a
+ * second evaluation would make every handler fire twice.
+ */
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+	bootScript,
+	clickAndSettle,
+	detailsResponse,
+	l10n,
+	sentParams,
+	stubFetch,
+	sweepResponse,
+	sweepSection,
+} from './helpers.js';
+
+beforeAll( () => {
+	bootScript();
+} );
+
+beforeEach( () => {
+	document.body.innerHTML = '';
+	document.body.className = '';
+} );
+
+describe( 'the request it sends', () => {
+	it( 'posts the name, type and nonce read off the button', async () => {
+		document.body.innerHTML = sweepSection();
+		const fetchSpy = stubFetch( sweepResponse() );
+
+		await clickAndSettle( document.querySelector( '.btn-sweep' ) );
+
+		expect( fetchSpy ).toHaveBeenCalledTimes( 1 );
+		expect( sentParams( fetchSpy ) ).toEqual( {
+			action: 'sweep',
+			sweep_name: 'revisions',
+			sweep_type: 'posts',
+			_wpnonce: 'NONCE',
+		} );
+	} );
+
+	it( 'sends the details action and its own separate nonce', async () => {
+		document.body.innerHTML = sweepSection();
+		const fetchSpy = stubFetch( detailsResponse( [ 'Hello world' ] ) );
+
+		await clickAndSettle( document.querySelector( '.btn-sweep-details' ) );
+
+		expect( sentParams( fetchSpy ) ).toMatchObject( {
+			action: 'sweep_details',
+			_wpnonce: 'DNONCE',
+		} );
+	} );
+
+	it( 'sends cookies, or admin-ajax would not know who is asking', async () => {
+		document.body.innerHTML = sweepSection();
+		const fetchSpy = stubFetch( sweepResponse() );
+
+		await clickAndSettle( document.querySelector( '.btn-sweep' ) );
+
+		expect( fetchSpy.mock.calls[ 0 ][ 1 ] ).toMatchObject( {
+			credentials: 'same-origin',
+		} );
+	} );
+} );
+
+describe( 'the details list', () => {
+	// The reason this file exists. Every entry comes out of the database, and
+	// comment author names are written by whoever left the comment.
+	it( 'renders entries as text, never as markup', async () => {
+		document.body.innerHTML = sweepSection();
+		stubFetch(
+			detailsResponse( [ '<img src=x onerror="window.pwned = true">' ] ),
+		);
+
+		await clickAndSettle( document.querySelector( '.btn-sweep-details' ) );
+
+		const details = document.querySelector( '.sweep-details' );
+
+		expect( details.querySelector( 'img' ) ).toBeNull();
+		expect( details.querySelector( 'li' ).textContent ).toBe(
+			'<img src=x onerror="window.pwned = true">',
+		);
+		expect( window.pwned ).toBeUndefined();
+	} );
+
+	it( 'does not let a crafted entry close the list and inject siblings', async () => {
+		document.body.innerHTML = sweepSection();
+		stubFetch( detailsResponse( [ '</li></ol><script>x</script><ol><li>' ] ) );
+
+		await clickAndSettle( document.querySelector( '.btn-sweep-details' ) );
+
+		const details = document.querySelector( '.sweep-details' );
+
+		expect( details.querySelectorAll( 'ol' ) ).toHaveLength( 1 );
+		expect( details.querySelectorAll( 'li' ) ).toHaveLength( 1 );
+		expect( details.querySelector( 'script' ) ).toBeNull();
+	} );
+
+	it( 'lists every item in order and reveals the container', async () => {
+		document.body.innerHTML = sweepSection();
+		stubFetch( detailsResponse( [ 'first', 'second', 'third' ] ) );
+
+		const details = document.querySelector( '.sweep-details' );
+		expect( details.style.display ).toBe( 'none' );
+
+		await clickAndSettle( document.querySelector( '.btn-sweep-details' ) );
+
+		expect(
+			[ ...details.querySelectorAll( 'li' ) ].map( ( li ) => li.textContent ),
+		).toEqual( [ 'first', 'second', 'third' ] );
+		expect( details.style.display ).not.toBe( 'none' );
+	} );
+
+	it( 'stays hidden when there is nothing to list', async () => {
+		document.body.innerHTML = sweepSection();
+		stubFetch( detailsResponse( [] ) );
+
+		await clickAndSettle( document.querySelector( '.btn-sweep-details' ) );
+
+		expect( document.querySelector( '.sweep-details' ).style.display ).toBe(
+			'none',
+		);
+	} );
+
+	it( 'replaces a previous list rather than appending to it', async () => {
+		document.body.innerHTML = sweepSection();
+		stubFetch( [
+			detailsResponse( [ 'first' ] ),
+			detailsResponse( [ 'second' ] ),
+		] );
+
+		const button = document.querySelector( '.btn-sweep-details' );
+		await clickAndSettle( button );
+		await clickAndSettle( button );
+
+		const items = document.querySelectorAll( '.sweep-details li' );
+		expect( items ).toHaveLength( 1 );
+		expect( items[ 0 ].textContent ).toBe( 'second' );
+	} );
+} );
+
+describe( 'the result of a sweep', () => {
+	it( 'writes the new count and percentage into the row', async () => {
+		document.body.innerHTML = sweepSection( { count: 2, percentage: '20%' } );
+		stubFetch( sweepResponse( { count: 0, percentage: '0%' } ) );
+
+		await clickAndSettle( document.querySelector( '.btn-sweep' ) );
+
+		expect( document.querySelector( '.sweep-count' ).textContent ).toBe( '0' );
+		expect( document.querySelector( '.sweep-percentage' ).textContent ).toBe(
+			'0%',
+		);
+	} );
+
+	it( 'updates the running totals for the whole section', async () => {
+		document.body.innerHTML = sweepSection();
+		stubFetch( sweepResponse( { stats: { posts: 8, postmeta: 3 } } ) );
+
+		await clickAndSettle( document.querySelector( '.btn-sweep' ) );
+
+		expect(
+			document.querySelector( '.sweep-count-type-posts' ).textContent,
+		).toBe( '8' );
+		expect(
+			document.querySelector( '.sweep-count-type-postmeta' ).textContent,
+		).toBe( '3' );
+	} );
+
+	it( 'shows the message above the table it belongs to', async () => {
+		document.body.innerHTML = sweepSection();
+		stubFetch( sweepResponse( { sweep: '2 Revisions Processed' } ) );
+
+		await clickAndSettle( document.querySelector( '.btn-sweep' ) );
+
+		const message = document.querySelector( '.sweep-message' );
+		expect( message.querySelector( '.updated p' ).textContent ).toBe(
+			'2 Revisions Processed',
+		);
+	} );
+
+	it( 'renders the message as text too', async () => {
+		document.body.innerHTML = sweepSection();
+		stubFetch( sweepResponse( { sweep: '<script>window.pwned = 1</script>' } ) );
+
+		await clickAndSettle( document.querySelector( '.btn-sweep' ) );
+
+		expect( document.querySelector( '.sweep-message script' ) ).toBeNull();
+		expect( window.pwned ).toBeUndefined();
+	} );
+
+	it( 'replaces the buttons with N/A once the count reaches zero', async () => {
+		document.body.innerHTML = sweepSection();
+		stubFetch( sweepResponse( { count: 0 } ) );
+
+		await clickAndSettle( document.querySelector( '.btn-sweep' ) );
+
+		expect( document.querySelector( '.btn-sweep' ) ).toBeNull();
+		expect( document.querySelector( '.btn-sweep-details' ) ).toBeNull();
+		expect( document.body.textContent ).toContain( l10n.text_na );
+	} );
+
+	it( 'leaves the buttons in place when items remain', async () => {
+		document.body.innerHTML = sweepSection();
+		stubFetch( sweepResponse( { count: 5 } ) );
+
+		await clickAndSettle( document.querySelector( '.btn-sweep' ) );
+
+		const button = document.querySelector( '.btn-sweep' );
+		expect( button ).not.toBeNull();
+		expect( button.disabled ).toBe( false );
+		expect( button.textContent ).toBe( l10n.text_sweep );
+	} );
+
+	it( 'clears any details that were on screen', async () => {
+		document.body.innerHTML = sweepSection();
+		stubFetch( [ detailsResponse( [ 'a revision' ] ), sweepResponse() ] );
+
+		await clickAndSettle( document.querySelector( '.btn-sweep-details' ) );
+		expect( document.querySelectorAll( '.sweep-details li' ) ).toHaveLength( 1 );
+
+		await clickAndSettle( document.querySelector( '.btn-sweep' ) );
+
+		const details = document.querySelector( '.sweep-details' );
+		expect( details.textContent ).toBe( '' );
+		expect( details.style.display ).toBe( 'none' );
+	} );
+
+	it( 'ignores a response the server marked unsuccessful', async () => {
+		document.body.innerHTML = sweepSection( { count: 2 } );
+		stubFetch( { success: false, data: { error: 'Invalid AJAX request.' } } );
+
+		await clickAndSettle( document.querySelector( '.btn-sweep' ) );
+
+		expect( document.querySelector( '.sweep-count' ).textContent ).toBe( '2' );
+		expect( document.querySelector( '.sweep-message' ).textContent ).toBe( '' );
+	} );
+} );
+
+describe( 'the close warning', () => {
+	it( 'marks the page busy while a sweep is in flight', async () => {
+		document.body.innerHTML = sweepSection();
+
+		let resolveFetch;
+		const spy = vi.fn(
+			() =>
+				new Promise( ( resolve ) => {
+					resolveFetch = () =>
+						resolve( { json: () => Promise.resolve( sweepResponse() ) } );
+				} ),
+		);
+		global.fetch = spy;
+		window.fetch = spy;
+
+		const button = document.querySelector( '.btn-sweep' );
+		button.dispatchEvent( new window.MouseEvent( 'click', { bubbles: true } ) );
+
+		expect( document.body.classList.contains( 'sweep-active' ) ).toBe( true );
+		expect( button.disabled ).toBe( true );
+		expect( button.textContent ).toBe( l10n.text_sweeping );
+
+		resolveFetch();
+		await new Promise( ( resolve ) => setTimeout( resolve, 0 ) );
+		await new Promise( ( resolve ) => setTimeout( resolve, 0 ) );
+
+		expect( document.body.classList.contains( 'sweep-active' ) ).toBe( false );
+	} );
+
+	it( 'warns on beforeunload only while a sweep is running', () => {
+		// jsdom's Event.returnValue is the spec boolean, not the string slot
+		// BeforeUnloadEvent carries, so the assertion is on preventDefault()
+		// having been called — which is what every current browser acts on.
+		const fire = () => {
+			const event = new window.Event( 'beforeunload', { cancelable: true } );
+			window.dispatchEvent( event );
+			return event.defaultPrevented;
+		};
+
+		expect( fire() ).toBe( false );
+
+		document.body.classList.add( 'sweep-active' );
+		expect( fire() ).toBe( true );
+	} );
+
+	it( 'supplies the warning text for browsers that still show one', () => {
+		// The legacy string is returned from the handler, so a browser that
+		// reads it gets the translated sentence rather than a blank dialog.
+		expect( l10n.text_close_warning ).toContain( 'Sweeping is in progress' );
+
+		let captured;
+		const handler = ( event ) => {
+			captured = event;
+		};
+		window.addEventListener( 'beforeunload', handler );
+
+		document.body.classList.add( 'sweep-active' );
+		window.dispatchEvent(
+			new window.Event( 'beforeunload', { cancelable: true } ),
+		);
+		window.removeEventListener( 'beforeunload', handler );
+
+		expect( captured.defaultPrevented ).toBe( true );
+	} );
+} );
+
+describe( 'Sweep All', () => {
+	it( 'runs every sweep one at a time, not all at once', async () => {
+		document.body.innerHTML =
+			sweepSection( { name: 'revisions', type: 'posts' } ) +
+			sweepSection( { name: 'auto_drafts', type: 'posts' } ) +
+			'<button class="btn-sweep-all">Sweep All</button>';
+
+		const inFlight = [];
+		let peak = 0;
+
+		const spy = vi.fn( () => {
+			inFlight.push( 1 );
+			peak = Math.max( peak, inFlight.length );
+
+			return Promise.resolve( {
+				json: () => {
+					inFlight.pop();
+					return Promise.resolve( sweepResponse( { count: 0 } ) );
+				},
+			} );
+		} );
+		global.fetch = spy;
+		window.fetch = spy;
+
+		const all = document.querySelector( '.btn-sweep-all' );
+		all.dispatchEvent( new window.MouseEvent( 'click', { bubbles: true } ) );
+
+		for ( let i = 0; i < 20; i++ ) {
+			await new Promise( ( resolve ) => setTimeout( resolve, 0 ) );
+		}
+
+		expect( spy ).toHaveBeenCalledTimes( 2 );
+		expect( peak ).toBe( 1 );
+		expect( sentParams( spy, 0 ).sweep_name ).toBe( 'revisions' );
+		expect( sentParams( spy, 1 ).sweep_name ).toBe( 'auto_drafts' );
+	} );
+
+	it( 're-enables itself when every sweep has finished', async () => {
+		document.body.innerHTML =
+			sweepSection() + '<button class="btn-sweep-all">Sweep All</button>';
+		stubFetch( sweepResponse( { count: 0 } ) );
+
+		const all = document.querySelector( '.btn-sweep-all' );
+		all.dispatchEvent( new window.MouseEvent( 'click', { bubbles: true } ) );
+
+		expect( all.disabled ).toBe( true );
+
+		for ( let i = 0; i < 20; i++ ) {
+			await new Promise( ( resolve ) => setTimeout( resolve, 0 ) );
+		}
+
+		expect( all.disabled ).toBe( false );
+		expect( all.textContent ).toBe( l10n.text_sweep_all );
+		expect( document.body.classList.contains( 'sweep-active' ) ).toBe( false );
+	} );
+} );
+
+describe( 'jQuery', () => {
+	it( 'is not needed — the script runs with no jQuery on the page', () => {
+		expect( window.jQuery ).toBeUndefined();
+		expect( window.$ ).toBeUndefined();
+	} );
+} );

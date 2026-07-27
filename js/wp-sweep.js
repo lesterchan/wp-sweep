@@ -1,95 +1,257 @@
-(function ($) {
+/**
+ * WP-Sweep admin screen.
+ *
+ * Drives the Sweep and Details buttons against admin-ajax.php, keeps the
+ * running totals at the top of each section up to date, and warns before the
+ * page is closed mid-sweep.
+ *
+ * Listeners are delegated from `document`, so a row added by one of the
+ * wp_sweep_admin_*_sweep actions works without re-binding anything.
+ */
+( function() {
 	'use strict';
 
-	$(function () {
-		var $body = $( 'body' ),
-			sweep = function($node) {
-				var $row = $node.parents( 'tr' );
+	const l10n = window.wpSweepL10n || {};
 
-				// Add Active
-				$body.addClass( 'sweep-active' );
-				// Add Disabled
-				$node.prop( 'disabled', true ).text( wp_sweep.text_sweeping );
+	/**
+	 * Ask admin-ajax.php to run a sweep or fetch its details.
+	 *
+	 * @param {HTMLElement} button The button that was clicked.
+	 * @return {Promise<Object>} The decoded JSON response.
+	 */
+	function request( button ) {
+		const params = new URLSearchParams( {
+			action: button.dataset.action,
+			sweep_name: button.dataset.sweep_name,
+			sweep_type: button.dataset.sweep_type,
+			_wpnonce: button.dataset.nonce,
+		} );
 
-				return $.get(ajaxurl, { action: $node.data( 'action' ), sweep_name: $node.data( 'sweep_name' ), sweep_type: $node.data( 'sweep_type' ), '_wpnonce': $node.data( 'nonce' ) }, function(data) {
-					if (data.success) {
-						var count = parseInt( data.data.count, 10 );
-						// Count Col
-						$( '.sweep-count', $row ).text( count.toLocaleString() );
-						// % Of Col
-						$( '.sweep-percentage', $row ).text( data.data.percentage );
-						// Action Col
-						if (count === 0) {
-							$node.parent( 'td' ).html( wp_sweep.text_na );
-						}
-						// Stats
-						$.each(data.data.stats, function(key, value) {
-							$( '.sweep-count-type-' + key ).text( parseInt( value, 10 ).toLocaleString() );
-						});
-						// Message
-						$row.parents( '.table-sweep' ).prev( '.sweep-message' ).html( '<div class="updated"><p>' + data.data.sweep + '</p></div>' );
-						// Hide Sweep Details
-						$( '.sweep-details', $row ).html( '' ).hide();
-						// Remove Active
-						$body.removeClass( 'sweep-active' );
-						// Remove Disabled
-						$node.prop( 'disabled', false ).text( wp_sweep.text_sweep );
-					}
-				});
-			};
+		return fetch( window.ajaxurl + '?' + params.toString(), {
+			credentials: 'same-origin',
+		} ).then( function( response ) {
+			return response.json();
+		} );
+	}
 
-		$( '.btn-sweep' ).click(function(evt) {
-			evt.preventDefault();
-			sweep( $( this ) );
-		});
+	/**
+	 * Find the message container that belongs to a row's table.
+	 *
+	 * @param {HTMLElement} row The table row.
+	 * @return {HTMLElement|null} The container, if there is one.
+	 */
+	function messageContainer( row ) {
+		const table = row.closest( '.table-sweep' );
 
-		$( '.btn-sweep-details' ).click(function(evt) {
-			evt.preventDefault();
-			var $node = $( this );
+		if ( ! table ) {
+			return null;
+		}
 
-			$.get(ajaxurl, { action: $node.data( 'action' ), sweep_name: $node.data( 'sweep_name' ), sweep_type: $node.data( 'sweep_type' ), '_wpnonce': $node.data( 'nonce' ) }, function(data) {
-				if (data.success) {
-					if (data.data.length > 0) {
-						var html = '';
-						$.each(data.data, function(i, n) {
-							html += '<li>' + n + '</li>';
-						});
-						$( '.sweep-details', $node.parents( 'tr' ) ).html( '<ol>' + html + '</ol>' ).show();
-					}
+		let previous = table.previousElementSibling;
+
+		while ( previous && ! previous.classList.contains( 'sweep-message' ) ) {
+			previous = previous.previousElementSibling;
+		}
+
+		return previous;
+	}
+
+	/**
+	 * Render the list of items a sweep would remove.
+	 *
+	 * Every entry here comes out of the database — post titles, comment
+	 * author names, meta keys, option names. Comment author names in
+	 * particular are supplied by whoever left the comment, which is exactly
+	 * the sort of person who leaves markup in them. They are written as text
+	 * nodes rather than as HTML: before 2.0.0 this list was assembled by
+	 * string concatenation and injected with .html(), so a spam comment
+	 * signed with a script tag ran that script in the administrator's
+	 * browser the moment Details was clicked.
+	 *
+	 * @param {HTMLElement} row   The row the details belong to.
+	 * @param {Array}       items The items to list.
+	 */
+	function renderDetails( row, items ) {
+		const target = row.querySelector( '.sweep-details' );
+
+		if ( ! target ) {
+			return;
+		}
+
+		const list = document.createElement( 'ol' );
+
+		items.forEach( function( item ) {
+			const entry = document.createElement( 'li' );
+			entry.textContent = item;
+			list.appendChild( entry );
+		} );
+
+		target.textContent = '';
+		target.appendChild( list );
+		target.style.display = '';
+	}
+
+	/**
+	 * Clear and hide a row's details list.
+	 *
+	 * @param {HTMLElement} row The table row.
+	 */
+	function hideDetails( row ) {
+		const target = row.querySelector( '.sweep-details' );
+
+		if ( target ) {
+			target.textContent = '';
+			target.style.display = 'none';
+		}
+	}
+
+	/**
+	 * Show the result of a sweep above its table.
+	 *
+	 * @param {HTMLElement} row  The row that was swept.
+	 * @param {string}      text The message from the server.
+	 */
+	function showMessage( row, text ) {
+		const container = messageContainer( row );
+
+		if ( ! container ) {
+			return;
+		}
+
+		const notice = document.createElement( 'div' );
+		notice.className = 'updated';
+
+		const paragraph = document.createElement( 'p' );
+		paragraph.textContent = text;
+		notice.appendChild( paragraph );
+
+		container.textContent = '';
+		container.appendChild( notice );
+	}
+
+	/**
+	 * Run one sweep and fold the result back into the page.
+	 *
+	 * @param {HTMLElement} button The Sweep button that was clicked.
+	 * @return {Promise} Resolves once the row has been updated.
+	 */
+	function sweep( button ) {
+		const row = button.closest( 'tr' );
+
+		document.body.classList.add( 'sweep-active' );
+		button.disabled = true;
+		button.textContent = l10n.text_sweeping;
+
+		return request( button )
+			.then( function( response ) {
+				if ( ! response || ! response.success ) {
+					return;
 				}
-			});
-		});
 
-		$( '.btn-sweep-all' ).click(function(evt) {
-			evt.preventDefault();
-			var $node = $( this ), $btn_sweep = $( '.btn-sweep' ), sweep_all;
+				const count = parseInt( response.data.count, 10 );
 
-			$node.prop( 'disabled', true ).text( wp_sweep.text_sweeping );
+				const countCell = row.querySelector( '.sweep-count' );
+				if ( countCell ) {
+					countCell.textContent = count.toLocaleString();
+				}
 
-			sweep_all = $btn_sweep.toArray().reduce(function(current, next) {
-				return current.then(function() {
-					return sweep( $( next ) );
-				});
-			}, $().promise());
+				const percentageCell = row.querySelector( '.sweep-percentage' );
+				if ( percentageCell ) {
+					percentageCell.textContent = response.data.percentage;
+				}
 
-			sweep_all.done(function() {
-				// Remove Active
-				$body.removeClass( 'sweep-active' );
-				// Remove Disabled
-				$node.prop( 'disabled', false ).text( wp_sweep.text_sweep_all );
-			});
-		});
+				// Running totals for the whole section.
+				Object.keys( response.data.stats || {} ).forEach( function( key ) {
+					document
+						.querySelectorAll( '.sweep-count-type-' + key )
+						.forEach( function( node ) {
+							node.textContent = parseInt(
+								response.data.stats[ key ],
+								10,
+							).toLocaleString();
+						} );
+				} );
 
-		/*
-        Page closing confirmation
-        https://developer.mozilla.org/en-US/docs/DOM/Mozilla_event_reference/beforeunload
-         */
-		$( window ).on('beforeunload', function (e) {
-			if ($body.hasClass( 'sweep-active' )) {
-				(e || window.event).returnValue = wp_sweep.text_close_warning; // Gecko and Trident
-				return wp_sweep.text_close_warning; // Gecko and WebKit
-			}
-		});
-	});
+				showMessage( row, response.data.sweep );
+				hideDetails( row );
 
-})(jQuery);
+				document.body.classList.remove( 'sweep-active' );
+
+				// Nothing left to sweep, so the buttons go with it.
+				if ( 0 === count ) {
+					button.closest( 'td' ).textContent = l10n.text_na;
+					return;
+				}
+
+				button.disabled = false;
+				button.textContent = l10n.text_sweep;
+			} )
+			.catch( function() {
+				document.body.classList.remove( 'sweep-active' );
+				button.disabled = false;
+				button.textContent = l10n.text_sweep;
+			} );
+	}
+
+	document.addEventListener( 'click', function( event ) {
+		const button = event.target.closest(
+			'.btn-sweep, .btn-sweep-details, .btn-sweep-all',
+		);
+
+		if ( ! button ) {
+			return;
+		}
+
+		event.preventDefault();
+
+		if ( button.classList.contains( 'btn-sweep' ) ) {
+			sweep( button );
+			return;
+		}
+
+		if ( button.classList.contains( 'btn-sweep-details' ) ) {
+			request( button ).then( function( response ) {
+				if ( response && response.success && response.data.length > 0 ) {
+					renderDetails( button.closest( 'tr' ), response.data );
+				}
+			} );
+			return;
+		}
+
+		// Sweep All: one at a time, so the server is never asked to run
+		// nineteen deletions at once.
+		button.disabled = true;
+		button.textContent = l10n.text_sweeping;
+
+		const buttons = Array.prototype.slice.call(
+			document.querySelectorAll( '.btn-sweep' ),
+		);
+
+		buttons
+			.reduce( function( chain, next ) {
+				return chain.then( function() {
+					return sweep( next );
+				} );
+			}, Promise.resolve() )
+			.then( function() {
+				document.body.classList.remove( 'sweep-active' );
+				button.disabled = false;
+				button.textContent = l10n.text_sweep_all;
+			} );
+	} );
+
+	/*
+	 * Page closing confirmation.
+	 * https://developer.mozilla.org/en-US/docs/Web/API/Window/beforeunload_event
+	 */
+	window.addEventListener( 'beforeunload', function( event ) {
+		if ( ! document.body.classList.contains( 'sweep-active' ) ) {
+			return undefined;
+		}
+
+		event.preventDefault();
+		event.returnValue = l10n.text_close_warning;
+
+		return l10n.text_close_warning;
+	} );
+}() );

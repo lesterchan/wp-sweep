@@ -76,6 +76,16 @@ abstract class WP_Sweep_TestCase extends WP_UnitTestCase {
 	protected $admin_page = '/admin.php';
 
 	/**
+	 * The hook suffix WordPress hands the admin screen.
+	 *
+	 * Kept beside $admin_page for the same reason: it changes when the menu
+	 * registration changes, and once here is better than in every test.
+	 *
+	 * @var string
+	 */
+	protected $admin_hook_suffix = 'wp-sweep/admin.php';
+
+	/**
 	 * Renders the admin screen and captures anything PHP complained about.
 	 *
 	 * The template runs at global scope under wp-admin and reaches for globals

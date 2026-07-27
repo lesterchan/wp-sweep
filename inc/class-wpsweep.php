@@ -116,14 +116,16 @@ class WPSweep {
 			return;
 		}
 
-		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-			wp_enqueue_script( 'wp-sweep', plugins_url( 'wp-sweep/js/wp-sweep.js' ), array( 'jquery' ), WP_SWEEP_VERSION, true );
-		} else {
-			wp_enqueue_script( 'wp-sweep', plugins_url( 'wp-sweep/js/wp-sweep.min.js' ), array( 'jquery' ), WP_SWEEP_VERSION, true );
-		}
+		/*
+		 * One unminified file, no jQuery. There is no build step in this
+		 * plugin, so a hand-minified twin drifts out of sync with the source
+		 * it is supposed to mirror — and under a kilobyte gzipped the saving
+		 * was noise.
+		 */
+		wp_enqueue_script( 'wp-sweep', plugins_url( 'wp-sweep/js/wp-sweep.js' ), array(), WP_SWEEP_VERSION, true );
 
 		wp_localize_script(
-			'wp-sweep', 'wp_sweep', array(
+			'wp-sweep', 'wpSweepL10n', array(
 				'text_close_warning' => __( 'Sweeping is in progress. If you leave now, the process won\'t be completed.', 'wp-sweep' ),
 				'text_sweep'         => __( 'Sweep', 'wp-sweep' ),
 				'text_sweep_all'     => __( 'Sweep All', 'wp-sweep' ),
