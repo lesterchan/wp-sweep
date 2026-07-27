@@ -17,33 +17,6 @@ class WPSweep_Api {
 	private $namespace = 'sweep/v1';
 
 	/**
-	 * List of sweeps
-	 *
-	 * @var array
-	 */
-	private $sweeps = array(
-		'revisions',
-		'auto_drafts',
-		'deleted_posts',
-		'unapproved_comments',
-		'spam_comments',
-		'deleted_comments',
-		'transient_options',
-		'orphan_postmeta',
-		'orphan_commentmeta',
-		'orphan_usermeta',
-		'orphan_termmeta',
-		'orphan_term_relationships',
-		'unused_terms',
-		'duplicated_postmeta',
-		'duplicated_commentmeta',
-		'duplicated_usermeta',
-		'duplicated_termmeta',
-		'optimize_database',
-		'oembed_postmeta',
-	);
-
-	/**
 	 * Register WP-Sweep API Routes
 	 *
 	 * @since 1.1.0
@@ -177,7 +150,7 @@ class WPSweep_Api {
 	 * @return bool Is the sweep name valid?
 	 */
 	public function is_sweep_name_valid( $name ) {
-		return in_array( $name, $this->sweeps, true );
+		return WPSweep::get_instance()->is_sweep_name_valid( $name );
 	}
 
 	/**

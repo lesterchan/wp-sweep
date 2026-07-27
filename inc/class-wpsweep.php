@@ -45,9 +45,12 @@ class WPSweep {
 		// Load Translation.
 		load_plugin_textdomain( 'wp-sweep' );
 
-		// Plugin Activation/Deactivation.
-		register_activation_hook( WP_SWEEP_MAIN_FILE, array( $this, 'plugin_activation' ) );
-		register_deactivation_hook( WP_SWEEP_MAIN_FILE, array( $this, 'plugin_deactivation' ) );
+		/*
+		 * There are no activation or deactivation hooks. WP-Sweep cleans up
+		 * after other plugins and persists nothing of its own — no options, no
+		 * tables, no capabilities, no scheduled events — so there is nothing to
+		 * create on activation or tear down on deactivation.
+		 */
 	}
 
 	/**
@@ -152,16 +155,18 @@ class WPSweep {
 	 * @return void
 	 */
 	public function ajax_sweep_details() {
-		// Verify referer and check permissions.
-		if (
-			empty( $_GET['sweep_name'] )
-			|| ! check_admin_referer( 'wp_sweep_details_' . $_GET['sweep_name'] )
-			|| ! current_user_can( 'activate_plugins' )
-		) {
+		$sweep_name = isset( $_GET['sweep_name'] ) ? sanitize_key( wp_unslash( $_GET['sweep_name'] ) ) : '';
+
+		// Check permissions and validate the name before verifying the referer,
+		// so a caller without the capability gets a JSON error rather than the
+		// nonce failure screen.
+		if ( ! current_user_can( 'activate_plugins' ) || ! $this->is_sweep_name_valid( $sweep_name ) ) {
 			wp_send_json_error( array( 'error' => __( 'Invalid AJAX request.', 'wp-sweep' ) ) );
 		}
 
-		wp_send_json_success( $this->details( $_GET['sweep_name'] ) );
+		check_admin_referer( 'wp_sweep_details_' . $sweep_name );
+
+		wp_send_json_success( $this->details( $sweep_name ) );
 	}
 
 	/**
@@ -173,21 +178,27 @@ class WPSweep {
 	 * @return void
 	 */
 	public function ajax_sweep() {
-		// Verify referer and check permissions.
+		$sweep_name = isset( $_GET['sweep_name'] ) ? sanitize_key( wp_unslash( $_GET['sweep_name'] ) ) : '';
+		$sweep_type = isset( $_GET['sweep_type'] ) ? sanitize_key( wp_unslash( $_GET['sweep_type'] ) ) : '';
+
+		// Check permissions and validate both parameters before verifying the
+		// referer, so a caller without the capability gets a JSON error rather
+		// than the nonce failure screen.
 		if (
-			empty( $_GET['sweep_name'] )
-			|| empty( $_GET['sweep_type'] )
-			|| ! check_admin_referer( 'wp_sweep_' . $_GET['sweep_name'] )
-			|| ! current_user_can( 'activate_plugins' )
+			! current_user_can( 'activate_plugins' )
+			|| ! $this->is_sweep_name_valid( $sweep_name )
+			|| ! $this->is_sweep_type_valid( $sweep_type )
 		) {
 			wp_send_json_error( array( 'error' => __( 'Invalid AJAX request.', 'wp-sweep' ) ) );
 		}
 
-		$sweep       = $this->sweep( $_GET['sweep_name'] );
-		$count       = $this->count( $_GET['sweep_name'] );
-		$total_count = $this->total_count( $_GET['sweep_type'] );
+		check_admin_referer( 'wp_sweep_' . $sweep_name );
+
+		$sweep       = $this->sweep( $sweep_name );
+		$count       = $this->count( $sweep_name );
+		$total_count = $this->total_count( $sweep_type );
 		$total_stats = array();
-		switch ( $_GET['sweep_type'] ) {
+		switch ( $sweep_type ) {
 			case 'posts':
 			case 'postmeta':
 				$total_stats = array(
@@ -237,6 +248,94 @@ class WPSweep {
 				'stats'      => $total_stats,
 			)
 		);
+	}
+
+	/**
+	 * Every sweep this plugin knows how to run
+	 *
+	 * The single list the REST API, the WP-CLI command and the AJAX handlers
+	 * all validate against. Keeping one copy is what stops a name being added
+	 * to the switch statements but missed in an allow list, where it is
+	 * silently unavailable rather than an error.
+	 *
+	 * @since 2.0.0
+	 *
+	 * @access public
+	 * @return array Sweep names.
+	 */
+	public function get_sweep_names() {
+		return array(
+			'revisions',
+			'auto_drafts',
+			'deleted_posts',
+			'unapproved_comments',
+			'spam_comments',
+			'deleted_comments',
+			'transient_options',
+			'orphan_postmeta',
+			'orphan_commentmeta',
+			'orphan_usermeta',
+			'orphan_termmeta',
+			'orphan_term_relationships',
+			'unused_terms',
+			'duplicated_postmeta',
+			'duplicated_commentmeta',
+			'duplicated_usermeta',
+			'duplicated_termmeta',
+			'optimize_database',
+			'oembed_postmeta',
+		);
+	}
+
+	/**
+	 * Whether a sweep name came from the list above
+	 *
+	 * @since 2.0.0
+	 *
+	 * @access public
+	 * @param string $name Sweep name.
+	 * @return bool Whether the name is one this plugin implements.
+	 */
+	public function is_sweep_name_valid( $name ) {
+		return in_array( $name, $this->get_sweep_names(), true );
+	}
+
+	/**
+	 * The table shorthands total_count() understands
+	 *
+	 * @since 2.0.0
+	 *
+	 * @access public
+	 * @return array Sweep types.
+	 */
+	public function get_sweep_types() {
+		return array(
+			'posts',
+			'postmeta',
+			'comments',
+			'commentmeta',
+			'users',
+			'usermeta',
+			'term_relationships',
+			'term_taxonomy',
+			'terms',
+			'termmeta',
+			'options',
+			'tables',
+		);
+	}
+
+	/**
+	 * Whether a sweep type came from the list above
+	 *
+	 * @since 2.0.0
+	 *
+	 * @access public
+	 * @param string $type Sweep type.
+	 * @return bool Whether the type is one this plugin counts.
+	 */
+	public function is_sweep_type_valid( $type ) {
+		return in_array( $type, $this->get_sweep_types(), true );
 	}
 
 	/**
@@ -360,7 +459,8 @@ class WPSweep {
 				$count                         = $wpdb->get_var( "SELECT COUNT(object_id) FROM $wpdb->term_relationships AS tr INNER JOIN $wpdb->term_taxonomy AS tt ON tr.term_taxonomy_id = tt.term_taxonomy_id WHERE tt.taxonomy NOT IN ('$orphan_term_relationships_sql') AND tr.object_id NOT IN (SELECT ID FROM $wpdb->posts)" ); // phpcs:ignore
 				break;
 			case 'unused_terms':
-				$count = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(t.term_id) FROM $wpdb->terms AS t INNER JOIN $wpdb->term_taxonomy AS tt ON t.term_id = tt.term_id WHERE tt.count = %d AND t.term_id NOT IN (" . implode( ',', $this->get_excluded_termids() ) . ')', 0 ) ); // phpcs:ignore
+				$excluded_clause = $this->get_excluded_termids_clause();
+				$count           = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(t.term_id) FROM $wpdb->terms AS t INNER JOIN $wpdb->term_taxonomy AS tt ON t.term_id = tt.term_id WHERE tt.count = %d" . $excluded_clause, 0 ) ); // phpcs:ignore
 				break;
 			case 'duplicated_postmeta':
 				$query = $wpdb->get_col( $wpdb->prepare( "SELECT COUNT(meta_id) AS count FROM $wpdb->postmeta GROUP BY post_id, meta_key, meta_value HAVING count > %d", 1 ) );
@@ -462,7 +562,8 @@ class WPSweep {
 				$details                       = $wpdb->get_col( $wpdb->prepare( "SELECT tt.taxonomy FROM $wpdb->term_relationships AS tr INNER JOIN $wpdb->term_taxonomy AS tt ON tr.term_taxonomy_id = tt.term_taxonomy_id WHERE tt.taxonomy NOT IN ('$orphan_term_relationships_sql') AND tr.object_id NOT IN (SELECT ID FROM $wpdb->posts) LIMIT %d", $this->limit_details ) ); // phpcs:ignore
 				break;
 			case 'unused_terms':
-				$details = $wpdb->get_col( $wpdb->prepare( "SELECT t.name FROM $wpdb->terms AS t INNER JOIN $wpdb->term_taxonomy AS tt ON t.term_id = tt.term_id WHERE tt.count = %d AND t.term_id NOT IN (" . implode( ',', $this->get_excluded_termids() ) . ') LIMIT %d', 0, $this->limit_details ) ); // phpcs:ignore
+				$excluded_clause = $this->get_excluded_termids_clause();
+				$details         = $wpdb->get_col( $wpdb->prepare( "SELECT t.name FROM $wpdb->terms AS t INNER JOIN $wpdb->term_taxonomy AS tt ON t.term_id = tt.term_id WHERE tt.count = %d" . $excluded_clause . ' LIMIT %d', 0, $this->limit_details ) ); // phpcs:ignore
 				break;
 			case 'duplicated_postmeta':
 				$query   = $wpdb->get_results( $wpdb->prepare( "SELECT COUNT(meta_id) AS count, meta_key FROM $wpdb->postmeta GROUP BY post_id, meta_key, meta_value HAVING count > %d LIMIT %d", 1, $this->limit_details ) );
@@ -698,7 +799,8 @@ class WPSweep {
 				}
 				break;
 			case 'unused_terms':
-				$query = $wpdb->get_results( $wpdb->prepare( "SELECT tt.term_taxonomy_id, t.term_id, tt.taxonomy FROM $wpdb->terms AS t INNER JOIN $wpdb->term_taxonomy AS tt ON t.term_id = tt.term_id WHERE tt.count = %d AND t.term_id NOT IN (" . implode( ',', $this->get_excluded_termids() ) . ')', 0 ) ); // phpcs:ignore
+				$excluded_clause = $this->get_excluded_termids_clause();
+				$query           = $wpdb->get_results( $wpdb->prepare( "SELECT tt.term_taxonomy_id, t.term_id, tt.taxonomy FROM $wpdb->terms AS t INNER JOIN $wpdb->term_taxonomy AS tt ON t.term_id = tt.term_id WHERE tt.count = %d" . $excluded_clause, 0 ) ); // phpcs:ignore
 				if ( $query ) {
 					$check_wp_terms = false;
 					foreach ( $query as $tax ) {
@@ -852,6 +954,33 @@ class WPSweep {
 	}
 
 	/**
+	 * Build the SQL fragment that keeps excluded terms out of the unused terms sweep
+	 *
+	 * wp_sweep_excluded_termids is public API, so a site is entitled to filter
+	 * it down to nothing. Interpolating an empty list produced `NOT IN ()`,
+	 * which is a syntax error rather than a clause that matches everything —
+	 * the count came back NULL and the admin screen rendered a blank cell.
+	 * Returning an empty fragment is the correct reading of "exclude nothing".
+	 *
+	 * The IDs are cast to int rather than bound, because a variable-length
+	 * IN list cannot be expressed with a fixed placeholder string.
+	 *
+	 * @since 2.0.0
+	 *
+	 * @access private
+	 * @return string SQL fragment, or an empty string when nothing is excluded.
+	 */
+	private function get_excluded_termids_clause() {
+		$excluded_termids = array_filter( array_map( 'intval', (array) $this->get_excluded_termids() ) );
+
+		if ( empty( $excluded_termids ) ) {
+			return '';
+		}
+
+		return ' AND t.term_id NOT IN (' . implode( ',', array_unique( $excluded_termids ) ) . ')';
+	}
+
+	/**
 	 * Get all default taxonomy term IDs
 	 *
 	 * @since 1.0.3
@@ -924,76 +1053,5 @@ class WPSweep {
 		return array( 'AND ' . implode( ' AND ', $conditions ), $args );
 	}
 
-	/**
-	 * What to do when the plugin is being deactivated
-	 *
-	 * @since 1.0.0
-	 *
-	 * @access public
-	 * @param boolean $network_wide Is network wide.
-	 * @return void
-	 */
-	public function plugin_activation( $network_wide ) {
-		if ( is_multisite() && $network_wide ) {
-			$ms_sites = (array) get_sites();
-
-			if ( 0 < count( $ms_sites ) ) {
-				foreach ( $ms_sites as $ms_site ) {
-					switch_to_blog( $ms_site->blog_id );
-					$this->plugin_activated();
-					restore_current_blog();
-				}
-			}
-		} else {
-			$this->plugin_activated();
-		}
-	}
-
-	/**
-	 * Perform plugin activation tasks
-	 *
-	 * @since 1.0.0
-	 *
-	 * @access private
-	 * @return void
-	 */
-	private function plugin_activated() {
-	}
-
-	/**
-	 * What to do when the plugin is being activated
-	 *
-	 * @since 1.0.0
-	 *
-	 * @access public
-	 * @param boolean $network_wide Is network wide.
-	 * @return void
-	 */
-	public function plugin_deactivation( $network_wide ) {
-		if ( is_multisite() && $network_wide ) {
-			$ms_sites = (array) get_sites();
-
-			if ( 0 < count( $ms_sites ) ) {
-				foreach ( $ms_sites as $ms_site ) {
-					switch_to_blog( $ms_site->blog_id );
-					$this->plugin_deactivated();
-					restore_current_blog();
-				}
-			}
-		} else {
-			$this->plugin_deactivated();
-		}
-	}
-
-	/**
-	 * Perform plugin deactivation tasks
-	 *
-	 * @since 1.0.0
-	 *
-	 * @access private
-	 * @return void
-	 */
-	private function plugin_deactivated() {
-	}
 }
 

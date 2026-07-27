@@ -11,14 +11,22 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Variables.
-$current_page = admin_url( 'tools.php?page=' . plugin_basename( 'wp-sweep/admin.php' ) );
-$message      = '';
+$message = '';
 
-// Sweeping.
-if ( ! empty( $_GET['sweep'] ) ) {
-	if ( check_admin_referer( 'wp_sweep_' . $_GET['sweep'] ) ) {
-		$message = WPSweep::get_instance()->sweep( $_GET['sweep'] );
-	}
+/*
+ * Sweeping without JavaScript.
+ *
+ * The name is validated against the plugin's own list before the referer is
+ * checked, so a crafted value never reaches sweep(). The resulting message is
+ * rendered below; before 2.0.0 it was assigned and then silently discarded,
+ * which meant this path deleted data and told the user nothing at all.
+ */
+$requested_sweep = isset( $_GET['sweep'] ) ? sanitize_key( wp_unslash( $_GET['sweep'] ) ) : '';
+
+if ( '' !== $requested_sweep && WPSweep::get_instance()->is_sweep_name_valid( $requested_sweep ) ) {
+	check_admin_referer( 'wp_sweep_' . $requested_sweep );
+
+	$message = WPSweep::get_instance()->sweep( $requested_sweep );
 }
 
 // Database Table Status.
@@ -73,6 +81,11 @@ $transient_options = WPSweep::get_instance()->count( 'transient_options' );
 </style>
 <div class="wrap">
 	<h2><?php esc_html_e( 'WP-Sweep', 'wp-sweep' ); ?></h2>
+	<?php if ( '' !== $message ) : ?>
+		<div class="notice notice-success">
+			<p><?php echo esc_html( $message ); ?></p>
+		</div>
+	<?php endif; ?>
 	<div class="notice notice-warning">
 		<p>
 			<?php /* translators: %1 WP-DBManager Plugin URL, %2 _blank to open new window */ ?>

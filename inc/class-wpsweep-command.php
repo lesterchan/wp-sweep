@@ -60,27 +60,7 @@ class WPSweep_Command extends WP_CLI_Command {
 
 		$items = array();
 
-		$default_items = array(
-			'0'  => 'revisions',
-			'1'  => 'auto_drafts',
-			'2'  => 'deleted_posts',
-			'3'  => 'unapproved_comments',
-			'4'  => 'spam_comments',
-			'5'  => 'deleted_comments',
-			'6'  => 'transient_options',
-			'7'  => 'orphan_postmeta',
-			'8'  => 'orphan_commentmeta',
-			'9'  => 'orphan_usermeta',
-			'10' => 'orphan_termmeta',
-			'11' => 'orphan_term_relationships',
-			'12' => 'unused_terms',
-			'13' => 'duplicated_postmeta',
-			'14' => 'duplicated_commentmeta',
-			'15' => 'duplicated_usermeta',
-			'16' => 'duplicated_termmeta',
-			'17' => 'optimize_database',
-			'18' => 'oembed_postmeta',
-		);
+		$default_items = WPSweep::get_instance()->get_sweep_names();
 
 		if ( isset( $assoc_args['all'] ) && true === $assoc_args['all'] ) {
 			$this->run_sweep( $default_items );

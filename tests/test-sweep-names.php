@@ -41,56 +41,51 @@ class Test_WP_Sweep_Sweep_Names extends WP_Sweep_TestCase {
 	);
 
 	/**
-	 * Reads the sweep names the REST API accepts.
+	 * The canonical list holds exactly the expected names, in order.
 	 *
-	 * @return array
+	 * Order matters for the CLI: `wp sweep --all` walks it top to bottom, and
+	 * the sweeps are sequenced so that deleting posts comes before hunting
+	 * for the post meta that deletion just orphaned.
 	 */
-	protected function rest_sweep_names() {
-		$api        = new WPSweep_Api();
-		$reflection = new ReflectionProperty( $api, 'sweeps' );
-		$reflection->setAccessible( true );
-
-		return $reflection->getValue( $api );
+	public function test_canonical_list_holds_every_sweep() {
+		$this->assertSame( self::$expected, $this->sweep()->get_sweep_names() );
 	}
 
 	/**
-	 * Reads the sweep names the WP-CLI command iterates.
+	 * The REST API validates against the canonical list rather than a copy
+	 * of it. Before 2.0.0 there were three hand-maintained copies of these
+	 * nineteen names.
+	 */
+	public function test_rest_api_defers_to_the_canonical_list() {
+		$source = file_get_contents( dirname( __DIR__ ) . '/inc/class-wpsweep-api.php' );
+
+		$this->assertStringNotContainsString(
+			"'oembed_postmeta'",
+			$source,
+			'The REST API keeps its own copy of the sweep names again.'
+		);
+
+		$api = new WPSweep_Api();
+		foreach ( self::$expected as $name ) {
+			$this->assertTrue( $api->is_sweep_name_valid( $name ) );
+		}
+		$this->assertFalse( $api->is_sweep_name_valid( 'no_such_sweep' ) );
+	}
+
+	/**
+	 * The WP-CLI command iterates the canonical list rather than a copy.
 	 *
 	 * The command class extends WP_CLI_Command, which does not exist in the
-	 * test run, so the list is read from the source rather than the class.
-	 *
-	 * @return array
+	 * test run, so this is read from the source.
 	 */
-	protected function cli_sweep_names() {
+	public function test_cli_command_defers_to_the_canonical_list() {
 		$source = file_get_contents( dirname( __DIR__ ) . '/inc/class-wpsweep-command.php' );
 
-		preg_match( "/\\\$default_items\s*=\s*array\((.*?)\);/s", $source, $matches );
-		$this->assertNotEmpty( $matches, 'Could not find $default_items in the CLI command.' );
-
-		preg_match_all( "/=>\s*'([a-z_]+)'/", $matches[1], $names );
-
-		return $names[1];
-	}
-
-	/**
-	 * The REST allow list holds exactly the expected names.
-	 */
-	public function test_rest_api_lists_every_sweep() {
-		$this->assertSame( self::$expected, $this->rest_sweep_names() );
-	}
-
-	/**
-	 * The CLI command iterates exactly the expected names.
-	 */
-	public function test_cli_command_lists_every_sweep() {
-		$this->assertSame( self::$expected, $this->cli_sweep_names() );
-	}
-
-	/**
-	 * The two lists agree with each other.
-	 */
-	public function test_rest_and_cli_lists_agree() {
-		$this->assertSame( $this->rest_sweep_names(), $this->cli_sweep_names() );
+		$this->assertMatchesRegularExpression(
+			'/\$default_items\s*=\s*WPSweep::get_instance\(\)->get_sweep_names\(\);/',
+			$source,
+			'The WP-CLI command keeps its own copy of the sweep names again.'
+		);
 	}
 
 	/**
