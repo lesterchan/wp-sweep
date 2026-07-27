@@ -29,9 +29,7 @@ class Test_WP_Sweep_Regressions extends WP_Sweep_TestCase {
 		self::$admin = $factory->user->create( array( 'role' => 'administrator' ) );
 	}
 
-	/* ---------------------------------------------------------------------
-	 * An empty excluded term ID list built invalid SQL
-	 * ------------------------------------------------------------------ */
+	// -- An empty excluded term ID list built invalid SQL. --
 
 	/**
 	 * wp_sweep_excluded_termids is public API, so a site is entitled to
@@ -102,9 +100,7 @@ class Test_WP_Sweep_Regressions extends WP_Sweep_TestCase {
 		$this->assertNull( get_term( $terms[1], 'post_tag' ) );
 	}
 
-	/* ---------------------------------------------------------------------
-	 * The sweep name from the request was never validated
-	 * ------------------------------------------------------------------ */
+	// -- The sweep name from the request was never validated. --
 
 	/**
 	 * There is one canonical list of sweep names, and everything that
@@ -144,9 +140,7 @@ class Test_WP_Sweep_Regressions extends WP_Sweep_TestCase {
 		$this->assertTrue( $this->sweep()->is_sweep_name_valid( 'revisions' ) );
 	}
 
-	/* ---------------------------------------------------------------------
-	 * There is nothing to install, and therefore nothing to uninstall
-	 * ------------------------------------------------------------------ */
+	// -- There is nothing to install, and therefore nothing to uninstall. --
 
 	/**
 	 * WP-Sweep cleans up after other plugins and stores nothing of its own.

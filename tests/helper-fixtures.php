@@ -124,9 +124,7 @@ abstract class WP_Sweep_TestCase extends WP_UnitTestCase {
 		}
 	}
 
-	/* ---------------------------------------------------------------------
-	 * Fixtures
-	 * ------------------------------------------------------------------ */
+	// -- Fixtures. --
 
 	/**
 	 * Creates post revisions attached to a real parent post.

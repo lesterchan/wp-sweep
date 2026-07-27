@@ -26,9 +26,12 @@ class WPSweep_Api {
 	 */
 	public function __construct() {
 		add_action(
-			'rest_api_init', function() {
+			'rest_api_init',
+			function () {
 				register_rest_route(
-					$this->namespace, 'count/(?P<name>\w+)', array(
+					$this->namespace,
+					'count/(?P<name>\w+)',
+					array(
 						'methods'             => WP_REST_Server::READABLE,
 						'callback'            => array( $this, 'count' ),
 						'permission_callback' => array( $this, 'permission_check' ),
@@ -41,7 +44,9 @@ class WPSweep_Api {
 					)
 				);
 				register_rest_route(
-					$this->namespace, 'details/(?P<name>\w+)', array(
+					$this->namespace,
+					'details/(?P<name>\w+)',
+					array(
 						'methods'             => WP_REST_Server::READABLE,
 						'callback'            => array( $this, 'details' ),
 						'permission_callback' => array( $this, 'permission_check' ),
@@ -54,7 +59,9 @@ class WPSweep_Api {
 					)
 				);
 				register_rest_route(
-					$this->namespace, 'sweep/(?P<name>\w+)', array(
+					$this->namespace,
+					'sweep/(?P<name>\w+)',
+					array(
 						'methods'             => WP_REST_Server::DELETABLE,
 						'callback'            => array( $this, 'sweep' ),
 						'permission_callback' => array( $this, 'permission_check' ),

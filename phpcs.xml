@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<ruleset name="WP-Sweep">
+	<description>WordPress Coding Standards for WP-Sweep.</description>
+
+	<file>.</file>
+
+	<!-- Scanning these makes the CI runner run out of memory. -->
+	<exclude-pattern>/vendor/*</exclude-pattern>
+	<exclude-pattern>/node_modules/*</exclude-pattern>
+
+	<arg name="extensions" value="php"/>
+	<arg name="colors"/>
+	<arg value="ps"/>
+
+	<rule ref="WordPress">
+		<!--
+		Every query this plugin runs is a direct one by design. WP-Sweep exists
+		to find rows the WordPress APIs cannot see — meta attached to objects
+		that no longer exist, duplicate rows the meta API will not report, term
+		relationships pointing at deleted posts. There is no core API to use
+		instead, and nothing worth caching in a tool whose whole job is to
+		report the current state of the tables.
+		-->
+		<exclude name="WordPress.DB.DirectDatabaseQuery.DirectQuery"/>
+		<exclude name="WordPress.DB.DirectDatabaseQuery.NoCaching"/>
+		<!-- Table identifiers cannot be bound, and %i needs WP 6.2. -->
+		<exclude name="WordPress.DB.PreparedSQL.InterpolatedNotPrepared"/>
+	</rule>
+
+	<!--
+	OPTIMIZE TABLE is the entire point of the Database Sweep, and SHOW TABLES
+	is how the plugin discovers what to optimize. Both read as schema changes
+	to the sniff.
+	-->
+	<rule ref="WordPress.DB.DirectDatabaseQuery.SchemaChange">
+		<exclude-pattern>/includes/class-sweep.php</exclude-pattern>
+	</rule>
+
+	<!--
+	The admin screen reads $_GET['sweep'] to decide whether the no-JavaScript
+	path was requested. The name is validated against the plugin's own list and
+	then check_admin_referer() runs before anything is deleted, which the sniff
+	cannot see because the two are separate statements.
+	-->
+	<rule ref="WordPress.Security.NonceVerification">
+		<exclude-pattern>/includes/admin.php</exclude-pattern>
+	</rule>
+
+	<rule ref="WordPress.WP.I18n">
+		<properties>
+			<property name="text_domain" type="array" value="wp-sweep"/>
+		</properties>
+	</rule>
+
+	<!-- Tests assemble their own markup and assert on it. -->
+	<rule ref="WordPress.Security.EscapeOutput">
+		<exclude-pattern>/tests/*</exclude-pattern>
+	</rule>
+
+	<!--
+	The class-*.php file naming rule exempts test classes, which follow
+	PHPUnit's own test-*.php convention.
+	-->
+	<rule ref="WordPress.Files.FileName.InvalidClassFileName">
+		<exclude-pattern>/tests/*</exclude-pattern>
+	</rule>
+
+	<!-- The tests reach into private state to prove the lists are not copies. -->
+	<rule ref="WordPress.PHP.DevelopmentFunctions.error_log_trigger_error">
+		<exclude-pattern>/tests/*</exclude-pattern>
+	</rule>
+</ruleset>

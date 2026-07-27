@@ -125,7 +125,9 @@ class WPSweep {
 		wp_enqueue_script( 'wp-sweep', plugins_url( 'wp-sweep/js/wp-sweep.js' ), array(), WP_SWEEP_VERSION, true );
 
 		wp_localize_script(
-			'wp-sweep', 'wpSweepL10n', array(
+			'wp-sweep',
+			'wpSweepL10n',
+			array(
 				'text_close_warning' => __( 'Sweeping is in progress. If you leave now, the process won\'t be completed.', 'wp-sweep' ),
 				'text_sweep'         => __( 'Sweep', 'wp-sweep' ),
 				'text_sweep_all'     => __( 'Sweep All', 'wp-sweep' ),
@@ -433,28 +435,28 @@ class WPSweep {
 				$count = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(option_id) FROM $wpdb->options WHERE option_name LIKE(%s)", '%\_transient\_%' ) );
 				break;
 			case 'orphan_postmeta':
-				$excluded_meta_keys              = apply_filters( 'wp_sweep_postmeta_whitelist', array() );
+				$excluded_meta_keys               = apply_filters( 'wp_sweep_postmeta_whitelist', array() );
 				list( $exclude_clause, $ex_args ) = $this->get_meta_key_exclude_clause( $excluded_meta_keys );
-				$sql                             = "SELECT COUNT(meta_id) FROM $wpdb->postmeta WHERE post_id NOT IN (SELECT ID FROM $wpdb->posts) $exclude_clause";
-				$count                           = empty( $ex_args ) ? $wpdb->get_var( $sql ) : $wpdb->get_var( $wpdb->prepare( $sql, $ex_args ) );
+				$sql                              = "SELECT COUNT(meta_id) FROM $wpdb->postmeta WHERE post_id NOT IN (SELECT ID FROM $wpdb->posts) $exclude_clause";
+				$count                            = empty( $ex_args ) ? $wpdb->get_var( $sql ) : $wpdb->get_var( $wpdb->prepare( $sql, $ex_args ) );
 				break;
 			case 'orphan_commentmeta':
-				$excluded_meta_keys              = apply_filters( 'wp_sweep_commentmeta_whitelist', array() );
+				$excluded_meta_keys               = apply_filters( 'wp_sweep_commentmeta_whitelist', array() );
 				list( $exclude_clause, $ex_args ) = $this->get_meta_key_exclude_clause( $excluded_meta_keys );
-				$sql                             = "SELECT COUNT(meta_id) FROM $wpdb->commentmeta WHERE comment_id NOT IN (SELECT comment_ID FROM $wpdb->comments) $exclude_clause";
-				$count                           = empty( $ex_args ) ? $wpdb->get_var( $sql ) : $wpdb->get_var( $wpdb->prepare( $sql, $ex_args ) );
+				$sql                              = "SELECT COUNT(meta_id) FROM $wpdb->commentmeta WHERE comment_id NOT IN (SELECT comment_ID FROM $wpdb->comments) $exclude_clause";
+				$count                            = empty( $ex_args ) ? $wpdb->get_var( $sql ) : $wpdb->get_var( $wpdb->prepare( $sql, $ex_args ) );
 				break;
 			case 'orphan_usermeta':
-				$excluded_meta_keys              = apply_filters( 'wp_sweep_usermeta_whitelist', array() );
+				$excluded_meta_keys               = apply_filters( 'wp_sweep_usermeta_whitelist', array() );
 				list( $exclude_clause, $ex_args ) = $this->get_meta_key_exclude_clause( $excluded_meta_keys );
-				$sql                             = "SELECT COUNT(umeta_id) FROM $wpdb->usermeta WHERE user_id NOT IN (SELECT ID FROM $wpdb->users) $exclude_clause";
-				$count                           = empty( $ex_args ) ? $wpdb->get_var( $sql ) : $wpdb->get_var( $wpdb->prepare( $sql, $ex_args ) );
+				$sql                              = "SELECT COUNT(umeta_id) FROM $wpdb->usermeta WHERE user_id NOT IN (SELECT ID FROM $wpdb->users) $exclude_clause";
+				$count                            = empty( $ex_args ) ? $wpdb->get_var( $sql ) : $wpdb->get_var( $wpdb->prepare( $sql, $ex_args ) );
 				break;
 			case 'orphan_termmeta':
-				$excluded_meta_keys              = apply_filters( 'wp_sweep_termmeta_whitelist', array() );
+				$excluded_meta_keys               = apply_filters( 'wp_sweep_termmeta_whitelist', array() );
 				list( $exclude_clause, $ex_args ) = $this->get_meta_key_exclude_clause( $excluded_meta_keys );
-				$sql                             = "SELECT COUNT(meta_id) FROM $wpdb->termmeta WHERE term_id NOT IN (SELECT term_id FROM $wpdb->terms) $exclude_clause";
-				$count                           = empty( $ex_args ) ? $wpdb->get_var( $sql ) : $wpdb->get_var( $wpdb->prepare( $sql, $ex_args ) );
+				$sql                              = "SELECT COUNT(meta_id) FROM $wpdb->termmeta WHERE term_id NOT IN (SELECT term_id FROM $wpdb->terms) $exclude_clause";
+				$count                            = empty( $ex_args ) ? $wpdb->get_var( $sql ) : $wpdb->get_var( $wpdb->prepare( $sql, $ex_args ) );
 				break;
 			case 'orphan_term_relationships':
 				$orphan_term_relationships_sql = implode( "','", array_map( 'esc_sql', $this->get_excluded_taxonomies() ) );
@@ -536,28 +538,28 @@ class WPSweep {
 				$details = $wpdb->get_col( $wpdb->prepare( "SELECT option_name FROM $wpdb->options WHERE option_name LIKE(%s) LIMIT %d", '%\_transient\_%', $this->limit_details ) );
 				break;
 			case 'orphan_postmeta':
-				$excluded_meta_keys              = apply_filters( 'wp_sweep_postmeta_whitelist', array() );
+				$excluded_meta_keys               = apply_filters( 'wp_sweep_postmeta_whitelist', array() );
 				list( $exclude_clause, $ex_args ) = $this->get_meta_key_exclude_clause( $excluded_meta_keys );
-				$args                            = array_merge( $ex_args, array( $this->limit_details ) );
-				$details                         = $wpdb->get_col( $wpdb->prepare( "SELECT meta_key FROM $wpdb->postmeta WHERE post_id NOT IN (SELECT ID FROM $wpdb->posts) $exclude_clause LIMIT %d", $args ) );
+				$args                             = array_merge( $ex_args, array( $this->limit_details ) );
+				$details                          = $wpdb->get_col( $wpdb->prepare( "SELECT meta_key FROM $wpdb->postmeta WHERE post_id NOT IN (SELECT ID FROM $wpdb->posts) $exclude_clause LIMIT %d", $args ) );
 				break;
 			case 'orphan_commentmeta':
-				$excluded_meta_keys              = apply_filters( 'wp_sweep_commentmeta_whitelist', array() );
+				$excluded_meta_keys               = apply_filters( 'wp_sweep_commentmeta_whitelist', array() );
 				list( $exclude_clause, $ex_args ) = $this->get_meta_key_exclude_clause( $excluded_meta_keys );
-				$args                            = array_merge( $ex_args, array( $this->limit_details ) );
-				$details                         = $wpdb->get_col( $wpdb->prepare( "SELECT meta_key FROM $wpdb->commentmeta WHERE comment_id NOT IN (SELECT comment_ID FROM $wpdb->comments) $exclude_clause LIMIT %d", $args ) );
+				$args                             = array_merge( $ex_args, array( $this->limit_details ) );
+				$details                          = $wpdb->get_col( $wpdb->prepare( "SELECT meta_key FROM $wpdb->commentmeta WHERE comment_id NOT IN (SELECT comment_ID FROM $wpdb->comments) $exclude_clause LIMIT %d", $args ) );
 				break;
 			case 'orphan_usermeta':
-				$excluded_meta_keys              = apply_filters( 'wp_sweep_usermeta_whitelist', array() );
+				$excluded_meta_keys               = apply_filters( 'wp_sweep_usermeta_whitelist', array() );
 				list( $exclude_clause, $ex_args ) = $this->get_meta_key_exclude_clause( $excluded_meta_keys );
-				$args                            = array_merge( $ex_args, array( $this->limit_details ) );
-				$details                         = $wpdb->get_col( $wpdb->prepare( "SELECT meta_key FROM $wpdb->usermeta WHERE user_id NOT IN (SELECT ID FROM $wpdb->users) $exclude_clause LIMIT %d", $args ) );
+				$args                             = array_merge( $ex_args, array( $this->limit_details ) );
+				$details                          = $wpdb->get_col( $wpdb->prepare( "SELECT meta_key FROM $wpdb->usermeta WHERE user_id NOT IN (SELECT ID FROM $wpdb->users) $exclude_clause LIMIT %d", $args ) );
 				break;
 			case 'orphan_termmeta':
-				$excluded_meta_keys              = apply_filters( 'wp_sweep_termmeta_whitelist', array() );
+				$excluded_meta_keys               = apply_filters( 'wp_sweep_termmeta_whitelist', array() );
 				list( $exclude_clause, $ex_args ) = $this->get_meta_key_exclude_clause( $excluded_meta_keys );
-				$args                            = array_merge( $ex_args, array( $this->limit_details ) );
-				$details                         = $wpdb->get_col( $wpdb->prepare( "SELECT meta_key FROM $wpdb->termmeta WHERE term_id NOT IN (SELECT term_id FROM $wpdb->terms) $exclude_clause LIMIT %d", $args ) );
+				$args                             = array_merge( $ex_args, array( $this->limit_details ) );
+				$details                          = $wpdb->get_col( $wpdb->prepare( "SELECT meta_key FROM $wpdb->termmeta WHERE term_id NOT IN (SELECT term_id FROM $wpdb->terms) $exclude_clause LIMIT %d", $args ) );
 				break;
 			case 'orphan_term_relationships':
 				$orphan_term_relationships_sql = implode( "','", array_map( 'esc_sql', $this->get_excluded_taxonomies() ) );
@@ -711,10 +713,10 @@ class WPSweep {
 				}
 				break;
 			case 'orphan_postmeta':
-				$excluded_meta_keys              = apply_filters( 'wp_sweep_postmeta_whitelist', array() );
+				$excluded_meta_keys               = apply_filters( 'wp_sweep_postmeta_whitelist', array() );
 				list( $exclude_clause, $ex_args ) = $this->get_meta_key_exclude_clause( $excluded_meta_keys );
-				$sql                             = "SELECT post_id, meta_key FROM $wpdb->postmeta WHERE post_id NOT IN (SELECT ID FROM $wpdb->posts) $exclude_clause";
-				$query                           = empty( $ex_args ) ? $wpdb->get_results( $sql ) : $wpdb->get_results( $wpdb->prepare( $sql, $ex_args ) );
+				$sql                              = "SELECT post_id, meta_key FROM $wpdb->postmeta WHERE post_id NOT IN (SELECT ID FROM $wpdb->posts) $exclude_clause";
+				$query                            = empty( $ex_args ) ? $wpdb->get_results( $sql ) : $wpdb->get_results( $wpdb->prepare( $sql, $ex_args ) );
 				if ( $query ) {
 					foreach ( $query as $meta ) {
 						$post_id = (int) $meta->post_id;
@@ -730,10 +732,10 @@ class WPSweep {
 				}
 				break;
 			case 'orphan_commentmeta':
-				$excluded_meta_keys              = apply_filters( 'wp_sweep_commentmeta_whitelist', array() );
+				$excluded_meta_keys               = apply_filters( 'wp_sweep_commentmeta_whitelist', array() );
 				list( $exclude_clause, $ex_args ) = $this->get_meta_key_exclude_clause( $excluded_meta_keys );
-				$sql                             = "SELECT comment_id, meta_key FROM $wpdb->commentmeta WHERE comment_id NOT IN (SELECT comment_ID FROM $wpdb->comments) $exclude_clause";
-				$query                           = empty( $ex_args ) ? $wpdb->get_results( $sql ) : $wpdb->get_results( $wpdb->prepare( $sql, $ex_args ) );
+				$sql                              = "SELECT comment_id, meta_key FROM $wpdb->commentmeta WHERE comment_id NOT IN (SELECT comment_ID FROM $wpdb->comments) $exclude_clause";
+				$query                            = empty( $ex_args ) ? $wpdb->get_results( $sql ) : $wpdb->get_results( $wpdb->prepare( $sql, $ex_args ) );
 				if ( $query ) {
 					foreach ( $query as $meta ) {
 						$comment_id = (int) $meta->comment_id;
@@ -749,10 +751,10 @@ class WPSweep {
 				}
 				break;
 			case 'orphan_usermeta':
-				$excluded_meta_keys              = apply_filters( 'wp_sweep_usermeta_whitelist', array() );
+				$excluded_meta_keys               = apply_filters( 'wp_sweep_usermeta_whitelist', array() );
 				list( $exclude_clause, $ex_args ) = $this->get_meta_key_exclude_clause( $excluded_meta_keys );
-				$sql                             = "SELECT user_id, meta_key FROM $wpdb->usermeta WHERE user_id NOT IN (SELECT ID FROM $wpdb->users) $exclude_clause";
-				$query                           = empty( $ex_args ) ? $wpdb->get_results( $sql ) : $wpdb->get_results( $wpdb->prepare( $sql, $ex_args ) );
+				$sql                              = "SELECT user_id, meta_key FROM $wpdb->usermeta WHERE user_id NOT IN (SELECT ID FROM $wpdb->users) $exclude_clause";
+				$query                            = empty( $ex_args ) ? $wpdb->get_results( $sql ) : $wpdb->get_results( $wpdb->prepare( $sql, $ex_args ) );
 				if ( $query ) {
 					foreach ( $query as $meta ) {
 						$user_id = (int) $meta->user_id;
@@ -768,10 +770,10 @@ class WPSweep {
 				}
 				break;
 			case 'orphan_termmeta':
-				$excluded_meta_keys              = apply_filters( 'wp_sweep_termmeta_whitelist', array() );
+				$excluded_meta_keys               = apply_filters( 'wp_sweep_termmeta_whitelist', array() );
 				list( $exclude_clause, $ex_args ) = $this->get_meta_key_exclude_clause( $excluded_meta_keys );
-				$sql                             = "SELECT term_id, meta_key FROM $wpdb->termmeta WHERE term_id NOT IN (SELECT term_id FROM $wpdb->terms) $exclude_clause";
-				$query                           = empty( $ex_args ) ? $wpdb->get_results( $sql ) : $wpdb->get_results( $wpdb->prepare( $sql, $ex_args ) );
+				$sql                              = "SELECT term_id, meta_key FROM $wpdb->termmeta WHERE term_id NOT IN (SELECT term_id FROM $wpdb->terms) $exclude_clause";
+				$query                            = empty( $ex_args ) ? $wpdb->get_results( $sql ) : $wpdb->get_results( $wpdb->prepare( $sql, $ex_args ) );
 				if ( $query ) {
 					foreach ( $query as $meta ) {
 						$term_id = (int) $meta->term_id;
@@ -1054,6 +1056,4 @@ class WPSweep {
 
 		return array( 'AND ' . implode( ' AND ', $conditions ), $args );
 	}
-
 }
-
