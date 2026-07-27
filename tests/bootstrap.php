@@ -31,3 +31,4 @@ tests_add_filter( 'muplugins_loaded', '_wp_sweep_manually_load_plugin' );
 require $_tests_dir . '/includes/bootstrap.php';
 
 require_once __DIR__ . '/helper-fixtures.php';
+require_once __DIR__ . '/helper-wp-cli.php';

@@ -249,4 +249,76 @@ class Test_WP_Sweep_Regressions extends WP_Sweep_TestCase {
 
 		return $sources;
 	}
+
+	// -- A stale default_<taxonomy> option protected an unrelated term. --
+
+	/**
+	 * A default_<taxonomy> option is only honoured if the term really exists
+	 * in that taxonomy.
+	 *
+	 * WordPress ships default_link_category set to 2, naming the "Blogroll"
+	 * term that installs have not had since the Links Manager was retired in
+	 * 3.5. Before 2.0.0 the plugin trusted every default_<taxonomy> option
+	 * blindly, so term ID 2 was excluded from the unused terms sweep on
+	 * essentially every site — and on most sites term 2 is an ordinary
+	 * category or tag, which simply refused to sweep with no explanation.
+	 */
+	public function test_stale_default_option_does_not_protect_an_unrelated_term() {
+		$this->assertSame(
+			2,
+			(int) get_option( 'default_link_category' ),
+			'WordPress no longer ships default_link_category as 2; revisit this test.'
+		);
+		$this->assertNull(
+			term_exists( 2, 'link_category' ),
+			'This install really has a link_category term 2; revisit this test.'
+		);
+
+		$excluded = $this->excluded_termids();
+
+		$this->assertNotContains( 2, $excluded, 'A term is protected by a stale option.' );
+	}
+
+	/**
+	 * The real default category is still protected.
+	 */
+	public function test_live_default_option_still_protects_its_term() {
+		$default = (int) get_option( 'default_category' );
+
+		$this->assertNotNull( term_exists( $default, 'category' ) );
+		$this->assertContains( $default, $this->excluded_termids() );
+	}
+
+	/**
+	 * A term that happens to hold the ID of a stale default option sweeps
+	 * like any other unused term.
+	 */
+	public function test_a_term_holding_a_stale_default_id_can_be_swept() {
+		$excluded = $this->excluded_termids();
+
+		$term_id = self::factory()->term->create(
+			array(
+				'taxonomy' => 'post_tag',
+				'name'     => 'sweep-collides-with-stale-default',
+			)
+		);
+
+		$this->assertNotContains( $term_id, $excluded );
+
+		$this->sweep()->sweep( 'unused_terms' );
+
+		$this->assertNull( get_term( $term_id, 'post_tag' ) );
+	}
+
+	/**
+	 * Reads the private list of excluded term IDs.
+	 *
+	 * @return array Excluded term IDs, as integers.
+	 */
+	protected function excluded_termids() {
+		$method = new ReflectionMethod( $this->sweep(), 'get_excluded_termids' );
+		$method->setAccessible( true );
+
+		return array_map( 'intval', (array) $method->invoke( $this->sweep() ) );
+	}
 }

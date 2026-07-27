@@ -10,6 +10,13 @@ bin/test.sh                     # starts wp-env, installs deps in the container,
 bin/test.sh --filter Test_WP_Sweep_Sweep
 ```
 
+**Measure coverage** (needs Xdebug, so the environment has to be restarted):
+```bash
+npx @wordpress/env start --xdebug=coverage
+bin/test.sh --coverage-filter includes --coverage-text
+npx @wordpress/env start          # back to normal, Xdebug is slow
+```
+
 **Run the script tests and linters:**
 ```bash
 npm install
@@ -127,8 +134,10 @@ with string concatenation is how the stored XSS fixed in 2.0.0 got there.
 
 ## Testing
 
-`tests/` holds 250 PHPUnit tests against a real MySQL database via wp-env, plus 22
-vitest/jsdom tests for the script. CI runs phpcs, eslint, vitest and PHPUnit on
+`tests/` holds 296 PHPUnit tests against a real MySQL database via wp-env, plus 27
+vitest/jsdom tests for the script. Line coverage of `includes/` is ~95%; the
+remainder is `__construct`, `get_instance`, `init` and `add_hooks`, which all run
+during bootstrap before the coverage driver starts. CI runs phpcs, eslint, vitest and PHPUnit on
 WP 6.0/PHP 7.4 and WP latest/PHP 8.3.
 
 Notes that will save time:

@@ -142,12 +142,13 @@ I spent most of my free time creating, updating, maintaining and supporting thes
 * SECURITY: Fixed a stored XSS on the admin screen. The Details list was built by string concatenation and injected as HTML, so a comment author name containing markup ran as script in the administrator's browser.
 * FIXED: The plugin no longer builds paths from its own directory name, so the admin script loads when it is installed under a directory other than `wp-sweep`.
 * FIXED: Filtering `wp_sweep_excluded_termids` to an empty array produced invalid SQL, leaving the Unused Terms count blank.
+* FIXED: A term was excluded from the Unused Terms sweep whenever its ID matched a `default_<taxonomy>` option, even if that option pointed at a term that no longer exists. WordPress ships `default_link_category` set to 2, so on most sites whatever term held ID 2 quietly refused to sweep.
 * FIXED: Sweeping without JavaScript deleted data and displayed nothing; the result is now shown.
 * FIXED: Removed activation, deactivation and uninstall routines that looped over a multisite network to call empty functions, capped at 100 sites and leaving the switch stack unwound.
 * NEW: Rewrote the admin script in vanilla JavaScript. jQuery is no longer loaded, and `js/wp-sweep.min.js` is gone.
 * NEW: Request parameters are sanitized and validated against the plugin's own list of sweeps.
 * NEW: Restructured into `includes/`, following the Plugin Handbook.
-* NEW: 250 PHPUnit tests, 22 script tests and GitHub Actions CI.
+* NEW: 296 PHPUnit tests, 27 script tests and GitHub Actions CI.
 
 ### 1.2.0
 * NEW: Per-type meta key filters (`wp_sweep_postmeta_whitelist`, `wp_sweep_commentmeta_whitelist`, `wp_sweep_usermeta_whitelist`, `wp_sweep_termmeta_whitelist`) to protect metadata from accidental deletion

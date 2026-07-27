@@ -368,3 +368,71 @@ describe( 'jQuery', () => {
 		expect( window.$ ).toBeUndefined();
 	} );
 } );
+
+describe( 'when things go wrong', () => {
+	it( 'recovers the button and the page state if the request fails', async () => {
+		document.body.innerHTML = sweepSection();
+
+		const spy = vi.fn( () => Promise.reject( new Error( 'network down' ) ) );
+		global.fetch = spy;
+		window.fetch = spy;
+
+		const button = document.querySelector( '.btn-sweep' );
+		await clickAndSettle( button );
+
+		// Without the catch, the page stays flagged busy for ever and the
+		// beforeunload warning fires on every subsequent navigation.
+		expect( document.body.classList.contains( 'sweep-active' ) ).toBe( false );
+		expect( button.disabled ).toBe( false );
+		expect( button.textContent ).toBe( l10n.text_sweep );
+	} );
+
+	it( 'does not throw when a row has no details container', async () => {
+		document.body.innerHTML = `
+			<div class="sweep-message"></div>
+			<table class="widefat table-sweep"><tbody><tr>
+				<td><strong>Revisions</strong></td>
+				<td><span class="sweep-count">2</span></td>
+				<td><span class="sweep-percentage">20%</span></td>
+				<td><button data-action="sweep_details" data-sweep_name="revisions" data-sweep_type="posts" data-nonce="D" class="btn-sweep-details">Details</button></td>
+			</tr></tbody></table>
+		`;
+		stubFetch( detailsResponse( [ 'an item' ] ) );
+
+		await clickAndSettle( document.querySelector( '.btn-sweep-details' ) );
+
+		expect( document.querySelector( '.btn-sweep-details' ) ).not.toBeNull();
+	} );
+
+	it( 'survives a row that is not inside a table', async () => {
+		document.body.innerHTML =
+			'<button data-action="sweep" data-sweep_name="revisions" data-sweep_type="posts" data-nonce="N" class="btn-sweep">Sweep</button>';
+		stubFetch( sweepResponse( { count: 3 } ) );
+
+		await clickAndSettle( document.querySelector( '.btn-sweep' ) );
+
+		expect( document.body.classList.contains( 'sweep-active' ) ).toBe( false );
+	} );
+
+	it( 'ignores clicks that are not on one of its buttons', async () => {
+		document.body.innerHTML =
+			sweepSection() + '<a href="#" id="unrelated">Something else</a>';
+		const spy = stubFetch( sweepResponse() );
+
+		await clickAndSettle( document.querySelector( '#unrelated' ) );
+
+		expect( spy ).not.toHaveBeenCalled();
+	} );
+
+	it( 'treats a click on text inside the button as a click on the button', async () => {
+		document.body.innerHTML = sweepSection();
+		const button = document.querySelector( '.btn-sweep' );
+		button.innerHTML = '<span id="label">Sweep</span>';
+		const spy = stubFetch( sweepResponse() );
+
+		await clickAndSettle( document.querySelector( '#label' ) );
+
+		expect( spy ).toHaveBeenCalledTimes( 1 );
+		expect( sentParams( spy ).sweep_name ).toBe( 'revisions' );
+	} );
+} );

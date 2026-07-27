@@ -1060,6 +1060,19 @@ class Sweep {
 	/**
 	 * Get all default taxonomy term IDs
 	 *
+	 * A `default_<taxonomy>` option is only worth protecting if it still names
+	 * a term that exists in that taxonomy. WordPress ships
+	 * `default_link_category` set to 2, pointing at the "Blogroll" term that
+	 * installs have not had since the Links Manager was retired in 3.5 — so
+	 * before 2.0.0 this method returned 2 on essentially every site, and
+	 * whatever term happened to hold ID 2 was silently excluded from the
+	 * unused terms sweep forever. On most sites that is an ordinary category
+	 * or tag, and the user was never told why it would not sweep.
+	 *
+	 * term_exists() checks the taxonomy as well as the ID, so an option left
+	 * pointing at a term that has since moved taxonomies no longer protects
+	 * an unrelated one.
+	 *
 	 * @since 1.0.3
 	 *
 	 * @access private
@@ -1073,7 +1086,7 @@ class Sweep {
 			if ( $tax ) {
 				foreach ( $tax as $t ) {
 					$term_id = (int) get_option( 'default_' . $t );
-					if ( $term_id > 0 ) {
+					if ( $term_id > 0 && null !== term_exists( $term_id, $t ) ) {
 						$default_term_ids[] = $term_id;
 					}
 				}

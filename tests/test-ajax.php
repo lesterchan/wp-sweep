@@ -285,4 +285,135 @@ class Test_WP_Sweep_Ajax extends WP_Ajax_UnitTestCase {
 		$this->assertFalse( has_action( 'wp_ajax_nopriv_sweep' ) );
 		$this->assertFalse( has_action( 'wp_ajax_nopriv_sweep_details' ) );
 	}
+
+	/**
+	 * Each sweep type reports the totals for its own group of tables.
+	 *
+	 * The screen writes these back into the "There are a total of ..." line
+	 * above each table, so a missing key leaves a stale number on screen.
+	 *
+	 * @dataProvider data_sweep_types
+	 *
+	 * @param string $sweep_name Sweep name to run.
+	 * @param string $sweep_type Sweep type to report on.
+	 * @param array  $expected   Stat keys the response must carry.
+	 */
+	public function test_stats_cover_the_whole_group( $sweep_name, $sweep_type, $expected ) {
+		wp_set_current_user( self::$admin );
+
+		$this->set_request( 'sweep', $sweep_name, $sweep_type );
+		$response = $this->run_ajax( 'sweep' );
+
+		$this->assertTrue( $response['success'] );
+		$this->assertSame( $expected, array_keys( $response['data']['stats'] ) );
+
+		foreach ( $response['data']['stats'] as $value ) {
+			$this->assertIsNumeric( $value );
+		}
+	}
+
+	/**
+	 * Every sweep type, with a sweep that uses it and the stats it owes.
+	 *
+	 * @return array
+	 */
+	public function data_sweep_types() {
+		$terms = array( 'term_relationships', 'term_taxonomy', 'terms', 'termmeta' );
+
+		return array(
+			'posts'              => array( 'revisions', 'posts', array( 'posts', 'postmeta' ) ),
+			'postmeta'           => array( 'orphan_postmeta', 'postmeta', array( 'posts', 'postmeta' ) ),
+			'comments'           => array( 'spam_comments', 'comments', array( 'comments', 'commentmeta' ) ),
+			'commentmeta'        => array( 'orphan_commentmeta', 'commentmeta', array( 'comments', 'commentmeta' ) ),
+			'usermeta'           => array( 'orphan_usermeta', 'usermeta', array( 'users', 'usermeta' ) ),
+			'term_relationships' => array( 'orphan_term_relationships', 'term_relationships', $terms ),
+			'terms'              => array( 'unused_terms', 'terms', $terms ),
+			'termmeta'           => array( 'orphan_termmeta', 'termmeta', $terms ),
+			'options'            => array( 'transient_options', 'options', array( 'options' ) ),
+			'tables'             => array( 'optimize_database', 'tables', array( 'tables' ) ),
+		);
+	}
+
+	/**
+	 * A sweep type the plugin does not recognise is refused.
+	 *
+	 * The total_count() switch would fall through and report 0, which the
+	 * screen would then render as a total of zero posts.
+	 */
+	public function test_unknown_sweep_type_is_refused() {
+		wp_set_current_user( self::$admin );
+		$revisions = $this->make_revisions( 1 );
+
+		$this->set_request( 'sweep', 'revisions', 'no_such_table' );
+		$response = $this->run_ajax( 'sweep' );
+
+		$this->assertFalse( $response['success'] );
+		$this->assertInstanceOf( WP_Post::class, get_post( $revisions[0] ) );
+	}
+
+	/**
+	 * A missing sweep type is refused too.
+	 */
+	public function test_missing_sweep_type_is_refused() {
+		wp_set_current_user( self::$admin );
+
+		$_GET     = array(
+			'action'     => 'sweep',
+			'sweep_name' => 'revisions',
+			'_wpnonce'   => wp_create_nonce( 'wp_sweep_revisions' ),
+		);
+		$_REQUEST = $_GET;
+
+		$this->assertFalse( $this->run_ajax( 'sweep' )['success'] );
+	}
+
+	/**
+	 * A sweep name carrying slashes or markup is rejected, not passed on.
+	 *
+	 * @dataProvider data_hostile_names
+	 *
+	 * @param string $name A name that must never reach the query builders.
+	 */
+	public function test_hostile_sweep_names_are_rejected( $name ) {
+		wp_set_current_user( self::$admin );
+		$revisions = $this->make_revisions( 1 );
+
+		$_GET     = array(
+			'action'     => 'sweep',
+			'sweep_name' => $name,
+			'sweep_type' => 'posts',
+			'_wpnonce'   => wp_create_nonce( 'wp_sweep_' . $name ),
+		);
+		$_REQUEST = $_GET;
+
+		$response = $this->run_ajax( 'sweep' );
+
+		// Refused either by the name check, which answers with a JSON error,
+		// or by the referer check, which dies and answers with nothing. What
+		// matters is that neither one deleted anything.
+		if ( null !== $response ) {
+			$this->assertFalse( $response['success'] );
+		}
+
+		$this->assertInstanceOf( WP_Post::class, get_post( $revisions[0] ) );
+	}
+
+	/**
+	 * Names that must never reach the query builders.
+	 *
+	 * 'revisions\\' is here because wp_unslash() reduces it to the valid
+	 * name 'revisions' — so it gets past validation and is stopped by the
+	 * nonce instead, which was generated for the slashed spelling.
+	 *
+	 * @return array
+	 */
+	public function data_hostile_names() {
+		return array(
+			'sql'     => array( "revisions'; DROP TABLE wp_posts; --" ),
+			'markup'  => array( '<script>alert(1)</script>' ),
+			'slashed' => array( 'revisions\\' ),
+			'empty'   => array( '' ),
+			'unknown' => array( 'no_such_sweep' ),
+		);
+	}
 }

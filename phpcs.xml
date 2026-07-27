@@ -82,6 +82,15 @@
 		<exclude-pattern>/includes/class-sweep.php</exclude-pattern>
 	</rule>
 
+	<!--
+	tests/helper-wp-cli.php declares stand-ins for WP_CLI and WP_CLI_Command,
+	which a PHPUnit run does not load and which the command file extends. A
+	stub file necessarily declares more than one class.
+	-->
+	<rule ref="Generic.Files.OneObjectStructurePerFile">
+		<exclude-pattern>/tests/helper-wp-cli.php</exclude-pattern>
+	</rule>
+
 	<rule ref="WordPress.WP.I18n">
 		<properties>
 			<property name="text_domain" type="array">

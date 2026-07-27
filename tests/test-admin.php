@@ -487,4 +487,91 @@ class Test_WP_Sweep_Admin extends WP_Sweep_TestCase {
 
 		$this->assertStringNotContainsString( 'load_plugin_textdomain(', $code );
 	}
+
+	/**
+	 * The no-JavaScript path sweeps and says what it did.
+	 *
+	 * Before 2.0.0 the result was assigned to $message and then discarded, so
+	 * this path deleted data and rendered nothing at all.
+	 */
+	public function test_no_javascript_sweep_runs_and_reports() {
+		$revisions = $this->make_revisions( 2 );
+
+		$html = $this->render_admin_page(
+			array(
+				'sweep'    => 'revisions',
+				'_wpnonce' => wp_create_nonce( 'wp_sweep_revisions' ),
+			)
+		);
+
+		$this->assertNull( get_post( $revisions[0] ) );
+		$this->assertStringContainsString( '2 Revisions Processed', $html );
+		$this->assertStringContainsString( 'notice notice-success', $html );
+		$this->assertSame( array(), $this->admin_page_notices );
+	}
+
+	/**
+	 * With no sweep requested, no success notice is rendered.
+	 */
+	public function test_no_success_notice_without_a_sweep() {
+		$html = $this->render_admin_page();
+
+		$this->assertStringNotContainsString( 'notice notice-success', $html );
+	}
+
+	/**
+	 * A sweep name that is not on the plugin's list is ignored outright, and
+	 * never reaches check_admin_referer() or sweep().
+	 */
+	public function test_no_javascript_path_ignores_an_unknown_name() {
+		$revisions = $this->make_revisions( 1 );
+
+		$html = $this->render_admin_page(
+			array(
+				'sweep'    => 'no_such_sweep',
+				'_wpnonce' => wp_create_nonce( 'wp_sweep_no_such_sweep' ),
+			)
+		);
+
+		$this->assertInstanceOf( WP_Post::class, get_post( $revisions[0] ) );
+		$this->assertStringNotContainsString( 'notice notice-success', $html );
+		$this->assertSame( array(), $this->admin_page_notices );
+	}
+
+	/**
+	 * The result message is escaped on its way to the screen.
+	 */
+	public function test_no_javascript_message_is_escaped() {
+		$this->make_revisions( 1 );
+
+		add_filter(
+			'wp_sweep_sweep',
+			static function () {
+				return '<script>window.pwned = 1</script>';
+			}
+		);
+
+		$html = $this->render_admin_page(
+			array(
+				'sweep'    => 'revisions',
+				'_wpnonce' => wp_create_nonce( 'wp_sweep_revisions' ),
+			)
+		);
+
+		$this->assertStringNotContainsString( '<script>window.pwned', $html );
+		$this->assertStringContainsString( '&lt;script&gt;', $html );
+	}
+
+	/**
+	 * Sweep::admin_page() is the callback add_management_page() registers,
+	 * and it renders the same screen.
+	 */
+	public function test_admin_page_callback_renders_the_screen() {
+		ob_start();
+		$this->sweep()->admin_page();
+		$html = ob_get_clean();
+
+		$this->assertStringContainsString( 'Post Sweep', $html );
+		$this->assertStringContainsString( 'table-sweep', $html );
+	}
 }
