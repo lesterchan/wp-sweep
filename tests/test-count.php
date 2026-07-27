@@ -157,7 +157,7 @@ class Test_WP_Sweep_Count extends WP_Sweep_TestCase {
 	}
 
 	/**
-	 * link_category is excluded from orphaned term relationships by default,
+	 * The link_category taxonomy is excluded from orphaned term relationships,
 	 * which is the documented behaviour of wp_sweep_excluded_taxonomies.
 	 */
 	public function test_excludes_link_category_from_orphan_term_relationships() {
@@ -206,7 +206,7 @@ class Test_WP_Sweep_Count extends WP_Sweep_TestCase {
 	}
 
 	/**
-	 * oEmbed caches are matched on the meta key prefix.
+	 * Cached oEmbed responses are matched on the meta key prefix.
 	 */
 	public function test_counts_oembed_postmeta() {
 		$this->baseline( 'oembed_postmeta' );
@@ -216,7 +216,7 @@ class Test_WP_Sweep_Count extends WP_Sweep_TestCase {
 	}
 
 	/**
-	 * optimize_database reports the number of tables, not a row count.
+	 * The optimize_database sweep reports tables, not a row count.
 	 */
 	public function test_counts_tables_for_optimize_database() {
 		$this->assertSame(
@@ -235,7 +235,7 @@ class Test_WP_Sweep_Count extends WP_Sweep_TestCase {
 	}
 
 	/**
-	 * total_count() answers for every table it knows about.
+	 * Totals are answered for every table total_count() knows about.
 	 *
 	 * A fresh install legitimately has zero posts, so the assertion is that
 	 * the shorthand is recognised and returns a countable number — not that
@@ -282,7 +282,7 @@ class Test_WP_Sweep_Count extends WP_Sweep_TestCase {
 	}
 
 	/**
-	 * total_count() follows the posts table as rows are added.
+	 * Totals follow the posts table as rows are added.
 	 */
 	public function test_total_count_tracks_the_posts_table() {
 		$before = (int) $this->sweep()->total_count( 'posts' );

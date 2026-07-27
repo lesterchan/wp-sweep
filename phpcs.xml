@@ -33,7 +33,7 @@
 	to the sniff.
 	-->
 	<rule ref="WordPress.DB.DirectDatabaseQuery.SchemaChange">
-		<exclude-pattern>/includes/class-sweep.php</exclude-pattern>
+		<exclude-pattern>/inc/class-wpsweep.php</exclude-pattern>
 	</rule>
 
 	<!--
@@ -41,14 +41,38 @@
 	path was requested. The name is validated against the plugin's own list and
 	then check_admin_referer() runs before anything is deleted, which the sniff
 	cannot see because the two are separate statements.
+
+	The AJAX tests populate $_GET to stand in for a request; there is no form
+	to nonce.
 	-->
 	<rule ref="WordPress.Security.NonceVerification">
-		<exclude-pattern>/includes/admin.php</exclude-pattern>
+		<exclude-pattern>/admin.php</exclude-pattern>
+		<exclude-pattern>/tests/*</exclude-pattern>
+	</rule>
+
+	<!--
+	The four orphaned meta sweeps build their WHERE clause in two pieces:
+	get_meta_key_exclude_clause() returns a template containing only literal
+	%s placeholders, plus the matching args array, and the caller resolves
+	both in a single $wpdb->prepare() call. Every value that originates
+	outside the plugin — the meta keys from the wp_sweep_*_whitelist filters —
+	is bound. Only $wpdb table properties are interpolated.
+
+	The sniff sees $wpdb->get_var( $sql ) and cannot follow the template back
+	to its placeholders, so it reports all eight call sites. The unprepared
+	branch of each ternary runs only when the args array is empty, because
+	prepare() emits a _doing_it_wrong notice when handed a query with no
+	placeholders to fill.
+	-->
+	<rule ref="WordPress.DB.PreparedSQL.NotPrepared">
+		<exclude-pattern>/inc/class-wpsweep.php</exclude-pattern>
 	</rule>
 
 	<rule ref="WordPress.WP.I18n">
 		<properties>
-			<property name="text_domain" type="array" value="wp-sweep"/>
+			<property name="text_domain" type="array">
+				<element value="wp-sweep"/>
+			</property>
 		</properties>
 	</rule>
 
@@ -65,8 +89,45 @@
 		<exclude-pattern>/tests/*</exclude-pattern>
 	</rule>
 
-	<!-- The tests reach into private state to prove the lists are not copies. -->
-	<rule ref="WordPress.PHP.DevelopmentFunctions.error_log_trigger_error">
+	<!--
+	Several tests assert against the plugin's own source: that the sweep name
+	lists are not copies of each other, that the script contains no innerHTML,
+	that nothing writes an option. These read files on disk, not remote URLs,
+	so wp_remote_get() is not the alternative the sniff thinks it is — and
+	WP_Filesystem is not loaded in a PHPUnit run.
+	-->
+	<rule ref="WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents">
+		<exclude-pattern>/tests/*</exclude-pattern>
+	</rule>
+
+	<!--
+	render_admin_page() installs an error handler so a diagnostic raised while
+	the admin screen renders becomes a failed assertion instead of vanishing.
+	Collecting them is the point of that helper.
+	-->
+	<rule ref="WordPress.PHP.DevelopmentFunctions">
+		<exclude-pattern>/tests/*</exclude-pattern>
+	</rule>
+
+	<!--
+	$submenu and $wp_scripts are the globals under test. WP_Scripts in
+	particular survives the transaction rollback between tests, so a handle
+	enqueued by one test is still enqueued in the next unless it is reset.
+	-->
+	<rule ref="WordPress.WP.GlobalVariablesOverride">
+		<exclude-pattern>/tests/*</exclude-pattern>
+	</rule>
+
+	<!--
+	The fixtures insert deliberately orphaned meta rows, which the WordPress
+	meta API will not do, and count them back by key afterwards. meta_key and
+	meta_value here are column names in a direct insert, not query arguments,
+	and the table name comes from a fixed map of $wpdb properties.
+	-->
+	<rule ref="WordPress.DB.SlowDBQuery">
+		<exclude-pattern>/tests/*</exclude-pattern>
+	</rule>
+	<rule ref="WordPress.DB.PreparedSQL.NotPrepared">
 		<exclude-pattern>/tests/*</exclude-pattern>
 	</rule>
 </ruleset>

@@ -32,7 +32,7 @@ class Test_WP_Sweep_Regressions extends WP_Sweep_TestCase {
 	// -- An empty excluded term ID list built invalid SQL. --
 
 	/**
-	 * wp_sweep_excluded_termids is public API, so a site is entitled to
+	 * The wp_sweep_excluded_termids filter is public API, so a site may
 	 * filter it down to nothing. The IDs were interpolated straight into
 	 * `NOT IN (...)`, so an empty list produced `NOT IN ()` — a syntax error.
 	 * The count came back NULL and the admin screen rendered a blank cell.
@@ -190,7 +190,7 @@ class Test_WP_Sweep_Regressions extends WP_Sweep_TestCase {
 	/**
 	 * Any surviving switch_to_blog() restores the blog in the same breath.
 	 *
-	 * switch_to_blog() pushes onto a stack, so a restore placed after the
+	 * A switch_to_blog() call pushes onto a stack, so a restore placed after the
 	 * loop rather than inside it leaves the stack unwound by exactly one.
 	 * Counting the two calls is not enough to catch that — the check is that
 	 * no block closes between the switch and its restore.
@@ -211,7 +211,7 @@ class Test_WP_Sweep_Regressions extends WP_Sweep_TestCase {
 	}
 
 	/**
-	 * uninstall.php refuses to run outside the uninstall request.
+	 * The uninstall file refuses to run outside the uninstall request.
 	 */
 	public function test_uninstall_guards_against_direct_access() {
 		$source = file_get_contents( dirname( __DIR__ ) . '/uninstall.php' );
@@ -226,12 +226,17 @@ class Test_WP_Sweep_Regressions extends WP_Sweep_TestCase {
 	 */
 	protected function plugin_sources() {
 		$root  = dirname( __DIR__ );
-		$files = array_merge(
-			array( $root . '/wp-sweep.php', $root . '/uninstall.php' ),
-			glob( $root . '/inc/*.php' ) ?: array(),
-			glob( $root . '/includes/*.php' ) ?: array(),
-			glob( $root . '/admin.php' ) ?: array()
-		);
+		$files = array( $root . '/wp-sweep.php', $root . '/uninstall.php' );
+
+		// The class files and the admin screen move to includes/ in 2.0.0;
+		// both locations are globbed so this keeps working across the move.
+		foreach ( array( '/inc/*.php', '/includes/*.php', '/admin.php' ) as $pattern ) {
+			$matches = glob( $root . $pattern );
+
+			if ( is_array( $matches ) ) {
+				$files = array_merge( $files, $matches );
+			}
+		}
 
 		$sources = array();
 		foreach ( $files as $file ) {

@@ -13,7 +13,7 @@
 class Test_WP_Sweep_Filters extends WP_Sweep_TestCase {
 
 	/**
-	 * wp_sweep_count can override any count, and is passed the sweep name.
+	 * The wp_sweep_count filter overrides a count and is passed the name.
 	 */
 	public function test_wp_sweep_count_filter_receives_the_name() {
 		$seen = array();
@@ -33,7 +33,7 @@ class Test_WP_Sweep_Filters extends WP_Sweep_TestCase {
 	}
 
 	/**
-	 * wp_sweep_total_count can override a table total.
+	 * The wp_sweep_total_count filter overrides a table total.
 	 */
 	public function test_wp_sweep_total_count_filter() {
 		add_filter(
@@ -49,7 +49,7 @@ class Test_WP_Sweep_Filters extends WP_Sweep_TestCase {
 	}
 
 	/**
-	 * wp_sweep_details can replace the sample list.
+	 * The wp_sweep_details filter replaces the sample list.
 	 */
 	public function test_wp_sweep_details_filter() {
 		add_filter(
@@ -65,7 +65,7 @@ class Test_WP_Sweep_Filters extends WP_Sweep_TestCase {
 	}
 
 	/**
-	 * wp_sweep_sweep can rewrite the result message.
+	 * The wp_sweep_sweep filter rewrites the result message.
 	 */
 	public function test_wp_sweep_sweep_filter() {
 		$this->make_revisions( 1 );
@@ -83,7 +83,7 @@ class Test_WP_Sweep_Filters extends WP_Sweep_TestCase {
 	}
 
 	/**
-	 * wp_sweep_excluded_taxonomies keeps a taxonomy out of the orphaned
+	 * The wp_sweep_excluded_taxonomies filter keeps a taxonomy out of the
 	 * term relationships sweep.
 	 */
 	public function test_wp_sweep_excluded_taxonomies_filter() {
@@ -104,7 +104,7 @@ class Test_WP_Sweep_Filters extends WP_Sweep_TestCase {
 	}
 
 	/**
-	 * link_category is the documented default for that filter.
+	 * The link_category taxonomy is that filter's documented default.
 	 */
 	public function test_excluded_taxonomies_defaults_to_link_category() {
 		$seen = null;
@@ -123,7 +123,7 @@ class Test_WP_Sweep_Filters extends WP_Sweep_TestCase {
 	}
 
 	/**
-	 * wp_sweep_excluded_termids protects a term from the unused terms sweep.
+	 * The wp_sweep_excluded_termids filter protects a term from that sweep.
 	 */
 	public function test_wp_sweep_excluded_termids_filter() {
 		$this->baseline( 'unused_terms' );

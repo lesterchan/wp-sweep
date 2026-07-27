@@ -208,7 +208,7 @@ class Test_WP_Sweep_Sweep extends WP_Sweep_TestCase {
 
 		$this->sweep()->sweep( 'duplicated_postmeta' );
 
-		$this->assertSame( array( 'same' ), get_post_meta( $post_id, 'sweep_dupe' ) );
+		$this->assertSame( array( 'same' ), get_post_meta( $post_id, 'sweep_dupe', false ) );
 	}
 
 	/**
@@ -300,7 +300,7 @@ class Test_WP_Sweep_Sweep extends WP_Sweep_TestCase {
 	}
 
 	/**
-	 * oEmbed caches are removed and ordinary meta on the same post is not.
+	 * Cached oEmbed responses go; ordinary meta on the same post does not.
 	 */
 	public function test_sweeps_oembed_postmeta_only() {
 		$this->baseline( 'oembed_postmeta' );

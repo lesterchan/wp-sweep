@@ -960,8 +960,8 @@ class WPSweep {
 	/**
 	 * Build the SQL fragment that keeps excluded terms out of the unused terms sweep
 	 *
-	 * wp_sweep_excluded_termids is public API, so a site is entitled to filter
-	 * it down to nothing. Interpolating an empty list produced `NOT IN ()`,
+	 * The wp_sweep_excluded_termids filter is public API, so a site is entitled
+	 * to filter it down to nothing. Interpolating an empty list produced `NOT IN ()`,
 	 * which is a syntax error rather than a clause that matches everything —
 	 * the count came back NULL and the admin screen rendered a blank cell.
 	 * Returning an empty fragment is the correct reading of "exclude nothing".

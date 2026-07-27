@@ -80,7 +80,7 @@ class Test_WP_Sweep_Details extends WP_Sweep_TestCase {
 	}
 
 	/**
-	 * optimize_database details list the table names.
+	 * The optimize_database details list the table names.
 	 */
 	public function test_details_lists_tables_for_optimize_database() {
 		global $wpdb;
