@@ -152,7 +152,21 @@ Notes that will save time:
 - `$wp_scripts` survives the transaction rollback between tests and has to be
   reset, or a handle enqueued by one test is still enqueued in the next.
 - The AJAX tests go through `_handleAjax()`, not the handler directly: the test
-  case's die handler is what closes the buffer `_handleAjax()` opened.
+  case's die handler is what closes the buffer `_handleAjax()` opened. Catch
+  `WPDieException`, the parent — `wp_die()` only throws the `WPAjaxDie*`
+  subclasses while `wp_doing_ajax()` is true, and the plain parent escapes a
+  catch list naming only the subclasses.
+- **`_handleAjax()` fires `admin_init`, and core hangs its update checks off
+  that hook.** They call api.wordpress.org, which the container cannot reach,
+  and `convertWarningsToExceptions` turns core's complaint into a test error.
+  `Test_WP_Sweep_Ajax::set_up()` removes `_maybe_update_core`,
+  `_maybe_update_plugins` and `_maybe_update_themes` for this reason. Without
+  it the suite fails perhaps one run in four, always in a different AJAX test,
+  never the same one twice.
+- **Run the suite in random order when chasing an intermittent failure.** It is
+  what turned that one into a reproducible bug:
+  `bin/test.sh --order-by=random --random-order-seed=5714`. PHPUnit prints the
+  seed on every run, so a failure can be replayed exactly.
 - Playground is not used here. It is SQLite, and this plugin is almost entirely
   `SHOW TABLES`, `OPTIMIZE TABLE`, `GROUP_CONCAT`, `HAVING` and correlated
   `NOT IN` subqueries.

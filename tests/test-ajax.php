@@ -39,6 +39,29 @@ class Test_WP_Sweep_Ajax extends WP_Ajax_UnitTestCase {
 	}
 
 	/**
+	 * Stops core's update checks from reaching out to the network.
+	 *
+	 * _handleAjax() fires admin_init as part of standing in for a real
+	 * admin-ajax.php request, and core hangs _maybe_update_core,
+	 * _maybe_update_plugins and _maybe_update_themes off that hook. Those call
+	 * api.wordpress.org, which a test container cannot reach; core raises a
+	 * warning about it, and convertWarningsToExceptions in phpunit.xml.dist
+	 * turns that warning into an error.
+	 *
+	 * The result was an intermittent error in whichever AJAX test happened to
+	 * run first after the update transients expired — nothing to do with the
+	 * test that reported it, and nothing to do with the plugin, which is why
+	 * it looked unreproducible until the suite was run in random order.
+	 */
+	public function set_up() {
+		parent::set_up();
+
+		remove_action( 'admin_init', '_maybe_update_core' );
+		remove_action( 'admin_init', '_maybe_update_plugins' );
+		remove_action( 'admin_init', '_maybe_update_themes' );
+	}
+
+	/**
 	 * Clears request state between tests.
 	 */
 	public function tear_down() {
@@ -108,6 +131,13 @@ class Test_WP_Sweep_Ajax extends WP_Ajax_UnitTestCase {
 	}
 
 	/**
+	 * The exception class the last dispatch died with, for diagnostics.
+	 *
+	 * @var string
+	 */
+	protected $last_die_exception = '';
+
+	/**
 	 * Dispatches an AJAX action the way admin-ajax.php would and returns the
 	 * decoded JSON it emitted.
 	 *
@@ -116,16 +146,40 @@ class Test_WP_Sweep_Ajax extends WP_Ajax_UnitTestCase {
 	 * what closes the output buffer _handleAjax() opened. Calling the handler
 	 * on its own leaves that handler closing PHPUnit's buffer instead.
 	 *
+	 * The catch is on WPDieException, the parent, rather than on the two AJAX
+	 * subclasses. wp_die() only routes to the handler that throws
+	 * WPAjaxDieStopException while wp_doing_ajax() is true; when it is not,
+	 * the same failed referer check throws a plain WPDieException instead.
+	 * Catching only the subclasses let that one escape and surface as a
+	 * PHPUnit error rather than a handled death — which is what an
+	 * unreproducible one-off error in this class looked like. Reproduced by
+	 * filtering wp_doing_ajax to false, which turns
+	 * WPAjaxDieStopException into WPDieException on the identical request.
+	 *
 	 * @param string $action AJAX action name.
 	 * @return array|null Decoded response, or null if nothing was emitted.
 	 */
 	protected function run_ajax( $action ) {
+		$this->last_die_exception = '';
+
+		$buffer_depth = ob_get_level();
+
 		try {
 			$this->_handleAjax( $action );
-		} catch ( WPAjaxDieContinueException $e ) {
-			unset( $e );
-		} catch ( WPAjaxDieStopException $e ) {
-			unset( $e );
+		} catch ( WPDieException $e ) {
+			// Covers WPAjaxDieContinueException and WPAjaxDieStopException too.
+			$this->last_die_exception = get_class( $e );
+		}
+
+		/*
+		 * _handleAjax() opens an output buffer. The AJAX die handler closes it
+		 * on the way past; the plain one does not, and PHPUnit then reports the
+		 * test as risky for not closing what it opened — or worse, a later
+		 * ob_get_clean() elsewhere closes PHPUnit's buffer instead of ours.
+		 * Unwind to exactly the depth we started at, whatever happened.
+		 */
+		while ( ob_get_level() > $buffer_depth ) {
+			$this->_last_response .= ob_get_clean();
 		}
 
 		return json_decode( $this->_last_response, true );
@@ -415,5 +469,59 @@ class Test_WP_Sweep_Ajax extends WP_Ajax_UnitTestCase {
 			'empty'   => array( '' ),
 			'unknown' => array( 'no_such_sweep' ),
 		);
+	}
+
+	/**
+	 * A failed referer check is handled in either context.
+	 *
+	 * The wp_die() function picks its handler from wp_doing_ajax(). While that is true the
+	 * test case throws WPAjaxDieStopException; while it is false the very
+	 * same request throws a plain WPDieException. The helper has to survive
+	 * both, because the difference is invisible from the test and shows up
+	 * only as an intermittent error.
+	 *
+	 * @dataProvider data_ajax_contexts
+	 *
+	 * @param bool   $doing_ajax Whether to report an AJAX context.
+	 * @param string $expected   Exception class wp_die() should throw.
+	 */
+	public function test_a_failed_referer_check_is_handled_in_either_context( $doing_ajax, $expected ) {
+		wp_set_current_user( self::$admin );
+		$revisions = $this->make_revisions( 1 );
+
+		if ( ! $doing_ajax ) {
+			add_filter( 'wp_doing_ajax', '__return_false' );
+		}
+
+		$this->set_request( 'sweep', 'revisions', 'posts', 'not-a-real-nonce' );
+
+		// The assertion is that this does not escape as an error.
+		$this->run_ajax( 'sweep' );
+
+		remove_filter( 'wp_doing_ajax', '__return_false' );
+
+		$this->assertSame( $expected, $this->last_die_exception );
+		$this->assertInstanceOf( WP_Post::class, get_post( $revisions[0] ) );
+	}
+
+	/**
+	 * The two contexts wp_die() distinguishes, and what each throws.
+	 *
+	 * @return array
+	 */
+	public function data_ajax_contexts() {
+		return array(
+			'ajax'     => array( true, 'WPAjaxDieStopException' ),
+			'not ajax' => array( false, 'WPDieException' ),
+		);
+	}
+
+	/**
+	 * Every exception the AJAX test case throws descends from WPDieException,
+	 * so catching the parent really does cover all of them.
+	 */
+	public function test_die_exceptions_share_a_parent() {
+		$this->assertTrue( is_subclass_of( 'WPAjaxDieStopException', 'WPDieException' ) );
+		$this->assertTrue( is_subclass_of( 'WPAjaxDieContinueException', 'WPDieException' ) );
 	}
 }
