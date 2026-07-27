@@ -1,13 +1,13 @@
 # WP-Sweep
 Contributors: GamerZ  
 Donate link: https://lesterchan.net/site/donation/  
-Tags: sweep, clean, cleanup, clean up, optimize, orphan, unused, duplicated, posts, post meta, comments, comment meta, users, user meta, terms, term meta, term relationships, revisions, auto drafts, transient, database, tables, oembed
+Tags: sweep, cleanup, optimize, database, revisions  
 Requires at least: 6.0  
 Tested up to: 7.0  
 Stable tag: 2.0.0  
 Requires PHP: 7.4  
 License: GPLv2 or later  
-License URI: https://www.gnu.org/licenses/gpl-2.0.html  
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 WP-Sweep allows you to clean up unused, orphaned and duplicated data in your WordPress. It also optimizes your database tables.
 
