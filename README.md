@@ -148,7 +148,7 @@ I spent most of my free time creating, updating, maintaining and supporting thes
 * NEW: Rewrote the admin script in vanilla JavaScript. jQuery is no longer loaded, and `js/wp-sweep.min.js` is gone.
 * NEW: Request parameters are sanitized and validated against the plugin's own list of sweeps.
 * NEW: Restructured into `includes/`, following the Plugin Handbook.
-* NEW: 296 PHPUnit tests, 27 script tests and GitHub Actions CI.
+* NEW: 299 PHPUnit tests, 27 script tests and GitHub Actions CI.
 
 ### 1.2.0
 * NEW: Per-type meta key filters (`wp_sweep_postmeta_whitelist`, `wp_sweep_commentmeta_whitelist`, `wp_sweep_usermeta_whitelist`, `wp_sweep_termmeta_whitelist`) to protect metadata from accidental deletion
@@ -311,4 +311,5 @@ out at the moment you ask for it, which is why `uninstall.php` has nothing to
 do.
 
 ## Upgrade Notice
-N/A
+### 2.0.0
+Major release. The classes are renamed, so any code calling `WPSweep::get_instance()` must be updated to `Sweep::get_instance()`. The Tools -> Sweep screen has a new URL. Requires WordPress 6.0 and PHP 7.4. Also fixes a stored XSS on the admin screen.

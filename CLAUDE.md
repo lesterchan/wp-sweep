@@ -134,7 +134,7 @@ with string concatenation is how the stored XSS fixed in 2.0.0 got there.
 
 ## Testing
 
-`tests/` holds 296 PHPUnit tests against a real MySQL database via wp-env, plus 27
+`tests/` holds 299 PHPUnit tests against a real MySQL database via wp-env, plus 27
 vitest/jsdom tests for the script. Line coverage of `includes/` is ~95%; the
 remainder is `__construct`, `get_instance`, `init` and `add_hooks`, which all run
 during bootstrap before the coverage driver starts. CI runs phpcs, eslint, vitest and PHPUnit on
