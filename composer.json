@@ -1,26 +1,34 @@
 {
-  "name": "lesterchan/wp-sweep",
-  "description": "WP-Sweep allows you to clean up unused, orphaned and duplicated data in your WordPress. It also optimizes your database tables.",
-  "keywords": ["wordpress", "plugin", "wp-sweep", "sweep"],
-  "type": "wordpress-plugin",
-  "homepage": "https://wordpress.org/plugins/wp-sweep/",
-  "authors": [
-    {
-      "name": "Lester Chan",
-      "email": "lesterchan@gmail.com"
+    "name": "lesterchan/wp-sweep",
+    "description": "WP-Sweep allows you to clean up unused, orphaned and duplicated data in your WordPress. It also optimizes your database tables.",
+    "type": "wordpress-plugin",
+    "keywords": [
+        "wordpress",
+        "plugin",
+        "wp-sweep",
+        "sweep"
+    ],
+    "homepage": "https://wordpress.org/plugins/wp-sweep/",
+    "license": [
+        "GPL-2.0-only"
+    ],
+    "authors": [
+        {
+            "name": "Lester Chan",
+            "email": "lesterchan@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.4"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.6",
+        "yoast/phpunit-polyfills": "^2.0"
+    },
+    "scripts": {
+        "test": "phpunit"
+    },
+    "config": {
+        "allow-plugins": false
     }
-  ],
-  "license" : "GPL-2.0+",
-  "repositories": [
-    {
-      "type": "vcs",
-      "url": "git@github.com:lesterchan/WordPress-Coding-Standards.git"
-    }
-  ],
-  "require": {
-    "php": ">=5.6"
-  },
-  "require-dev": {
-    "wp-coding-standards/wpcs": "dev-develop"
-  }
 }

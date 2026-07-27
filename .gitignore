@@ -14,3 +14,9 @@ sftp-config.json
 # VCS
 .svn
 .diff
+
+# Node
+/node_modules
+
+# PHPUnit
+.phpunit.result.cache
