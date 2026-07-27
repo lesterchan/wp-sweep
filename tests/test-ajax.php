@@ -52,10 +52,10 @@ class Test_WP_Sweep_Ajax extends WP_Ajax_UnitTestCase {
 	/**
 	 * Returns the plugin singleton.
 	 *
-	 * @return WPSweep The plugin instance.
+	 * @return Sweep The plugin instance.
 	 */
 	protected function sweep() {
-		return WPSweep::get_instance();
+		return Sweep::get_instance();
 	}
 
 	/**

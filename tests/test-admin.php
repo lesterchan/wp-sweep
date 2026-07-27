@@ -267,7 +267,7 @@ class Test_WP_Sweep_Admin extends WP_Sweep_TestCase {
 	 * The admin script loads on the plugin's own screen.
 	 */
 	public function test_script_is_enqueued_on_the_sweep_screen() {
-		$this->sweep()->admin_enqueue_scripts( $this->admin_hook_suffix );
+		$this->sweep()->admin_enqueue_scripts( $this->register_admin_menu() );
 
 		$this->assertTrue( wp_script_is( 'wp-sweep', 'enqueued' ) );
 	}
@@ -305,7 +305,7 @@ class Test_WP_Sweep_Admin extends WP_Sweep_TestCase {
 	 * 2.0.0, and jQuery was the only reason this screen loaded it at all.
 	 */
 	public function test_script_has_no_dependencies() {
-		$this->sweep()->admin_enqueue_scripts( $this->admin_hook_suffix );
+		$this->sweep()->admin_enqueue_scripts( $this->register_admin_menu() );
 
 		$script = wp_scripts()->registered['wp-sweep'];
 
@@ -318,7 +318,7 @@ class Test_WP_Sweep_Admin extends WP_Sweep_TestCase {
 	 * drifts out of sync with it.
 	 */
 	public function test_script_is_the_unminified_source() {
-		$this->sweep()->admin_enqueue_scripts( $this->admin_hook_suffix );
+		$this->sweep()->admin_enqueue_scripts( $this->register_admin_menu() );
 
 		$script = wp_scripts()->registered['wp-sweep'];
 
@@ -353,7 +353,7 @@ class Test_WP_Sweep_Admin extends WP_Sweep_TestCase {
 	 * Every string the script shows the user is localised.
 	 */
 	public function test_script_is_localised() {
-		$this->sweep()->admin_enqueue_scripts( $this->admin_hook_suffix );
+		$this->sweep()->admin_enqueue_scripts( $this->register_admin_menu() );
 
 		$data = wp_scripts()->registered['wp-sweep']->extra['data'];
 
@@ -377,5 +377,114 @@ class Test_WP_Sweep_Admin extends WP_Sweep_TestCase {
 
 		$capabilities = wp_list_pluck( $submenu['tools.php'], 1 );
 		$this->assertContains( 'activate_plugins', $capabilities );
+	}
+
+	/**
+	 * The screen is registered under a plain menu slug.
+	 *
+	 * Until 2.0.0 it used the legacy "plugin file as menu slug" form,
+	 * 'wp-sweep/admin.php', which put the installation directory name into
+	 * the page URL.
+	 */
+	public function test_menu_uses_a_plain_slug() {
+		global $submenu;
+
+		$submenu = array();
+		do_action( 'admin_menu' );
+
+		$slugs = wp_list_pluck( $submenu['tools.php'], 2 );
+
+		$this->assertContains( Sweep::MENU_SLUG, $slugs );
+		$this->assertSame( 'wp-sweep', Sweep::MENU_SLUG );
+		$this->assertNotContains( 'wp-sweep/admin.php', $slugs );
+	}
+
+	/**
+	 * The hook suffix constant really is what add_management_page() returns.
+	 *
+	 * Getting this wrong is silent: the script simply never loads, and the
+	 * screen renders with dead buttons.
+	 */
+	public function test_hook_suffix_is_recorded_not_guessed() {
+		// No assertion about the value before admin_menu() runs: the plugin is
+		// a singleton, so an earlier test in this class has already set it.
+		$hook = $this->register_admin_menu();
+
+		$this->assertNotSame( '', $hook );
+		$this->assertStringEndsWith( '_page_' . Sweep::MENU_SLUG, $hook );
+		$this->assertSame( $hook, $this->sweep()->get_hook_suffix() );
+	}
+
+	/**
+	 * Nothing compares the hook against a hardcoded suffix.
+	 */
+	public function test_hook_suffix_is_not_hardcoded() {
+		$code = $this->source_without_comments( '/includes/class-sweep.php' );
+
+		$this->assertStringNotContainsString( 'tools_page_', $code );
+		$this->assertStringNotContainsString( 'admin_page_wp-sweep', $code );
+	}
+
+	/**
+	 * Nothing builds a path or URL out of the literal directory name.
+	 *
+	 * The plugin used to assemble 'wp-sweep/js/wp-sweep.js' by hand, so the
+	 * script 404ed for anyone who installed it under any other directory
+	 * name — renamed by hand, or unzipped as wp-sweep-2.0.0. Asserting on
+	 * the rendered markup cannot catch this, because a 404 URL is still
+	 * well-formed markup.
+	 */
+	public function test_no_php_file_hardcodes_the_directory_name() {
+		$root  = dirname( __DIR__ );
+		$files = array_merge(
+			array( $root . '/wp-sweep.php', $root . '/uninstall.php' ),
+			glob( $root . '/includes/*.php' )
+		);
+
+		foreach ( $files as $file ) {
+			$code = $this->source_without_comments( str_replace( $root, '', $file ) );
+
+			$this->assertStringNotContainsString(
+				"'wp-sweep/",
+				$code,
+				basename( $file ) . ' builds a path from the literal directory name.'
+			);
+		}
+	}
+
+	/**
+	 * The script URL is derived from the main file, so it follows the plugin
+	 * wherever it is installed.
+	 */
+	public function test_script_url_is_derived_from_the_main_file() {
+		$this->sweep()->admin_enqueue_scripts( $this->register_admin_menu() );
+
+		$this->assertSame(
+			plugins_url( 'js/wp-sweep.js', WP_SWEEP_MAIN_FILE ),
+			wp_scripts()->registered['wp-sweep']->src
+		);
+	}
+
+	/**
+	 * The path constants point at the real plugin directory.
+	 */
+	public function test_path_constants_are_consistent() {
+		$this->assertSame( dirname( __DIR__ ) . '/', WP_SWEEP_DIR );
+		$this->assertSame( basename( dirname( __DIR__ ) ), WP_SWEEP_SLUG );
+		$this->assertStringEndsWith( '/', WP_SWEEP_URL );
+		$this->assertFileExists( WP_SWEEP_DIR . 'includes/admin.php' );
+	}
+
+	/**
+	 * Translations are left to WordPress.
+	 *
+	 * Since WordPress 6.7 an early load_plugin_textdomain() call triggers
+	 * _doing_it_wrong, and core loads translations for WordPress.org-hosted
+	 * plugins by itself at the right moment.
+	 */
+	public function test_plugin_does_not_load_its_own_textdomain() {
+		$code = $this->source_without_comments( '/includes/class-sweep.php' );
+
+		$this->assertStringNotContainsString( 'load_plugin_textdomain(', $code );
 	}
 }

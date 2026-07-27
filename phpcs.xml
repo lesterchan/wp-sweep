@@ -33,7 +33,7 @@
 	to the sniff.
 	-->
 	<rule ref="WordPress.DB.DirectDatabaseQuery.SchemaChange">
-		<exclude-pattern>/inc/class-wpsweep.php</exclude-pattern>
+		<exclude-pattern>/includes/class-sweep.php</exclude-pattern>
 	</rule>
 
 	<!--
@@ -46,7 +46,7 @@
 	to nonce.
 	-->
 	<rule ref="WordPress.Security.NonceVerification">
-		<exclude-pattern>/admin.php</exclude-pattern>
+		<exclude-pattern>/includes/admin.php</exclude-pattern>
 		<exclude-pattern>/tests/*</exclude-pattern>
 	</rule>
 
@@ -65,7 +65,21 @@
 	placeholders to fill.
 	-->
 	<rule ref="WordPress.DB.PreparedSQL.NotPrepared">
-		<exclude-pattern>/inc/class-wpsweep.php</exclude-pattern>
+		<exclude-pattern>/includes/class-sweep.php</exclude-pattern>
+	</rule>
+
+	<!--
+	The class is Sweep and its main method is sweep(), which the sniff reads
+	as a PHP 4 style constructor returning a value. It is not one: the class
+	declares a real __construct(), so PHP treats the same-named method as an
+	ordinary method and raises nothing. Verified on 7.4.33, the declared
+	floor, and on 8.5. PHP 4 constructors were removed outright in PHP 8.
+
+	Renaming either half would be worse — sweep() is the method the REST
+	route, the WP-CLI command and the admin screen all call.
+	-->
+	<rule ref="Universal.CodeAnalysis.ConstructorDestructorReturn.ReturnValueFound">
+		<exclude-pattern>/includes/class-sweep.php</exclude-pattern>
 	</rule>
 
 	<rule ref="WordPress.WP.I18n">

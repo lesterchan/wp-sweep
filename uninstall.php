@@ -22,7 +22,7 @@
  * restore_current_blog() inside the loop body. Test_WP_Sweep_Regressions
  * fails the moment the plugin writes an option, as a reminder.
  *
- * @package wp-sweep
+ * @package WP-Sweep
  */
 
 // Exit if WordPress did not initiate this uninstall.

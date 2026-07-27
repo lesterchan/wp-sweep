@@ -1,14 +1,16 @@
 <?php
 /**
- * WP-Sweep WP-CLI
+ * WP-Sweep WP-CLI command.
  *
- * @package wp-sweep
+ * @package WP-Sweep
  */
 
+defined( 'ABSPATH' ) || exit;
+
 /**
- * Class WPSweep_Command
+ * Class Sweep_Command
  */
-class WPSweep_Command extends WP_CLI_Command {
+class Sweep_Command extends WP_CLI_Command {
 	/**
 	 * Clean up unused, orphaned and duplicated data in your WordPress
 	 *
@@ -60,7 +62,7 @@ class WPSweep_Command extends WP_CLI_Command {
 
 		$items = array();
 
-		$default_items = WPSweep::get_instance()->get_sweep_names();
+		$default_items = Sweep::get_instance()->get_sweep_names();
 
 		if ( isset( $assoc_args['all'] ) && true === $assoc_args['all'] ) {
 			$this->run_sweep( $default_items );
@@ -93,7 +95,7 @@ class WPSweep_Command extends WP_CLI_Command {
 	 */
 	public function run_sweep( $items ) {
 
-		$sweep = WPSweep::get_instance();
+		$sweep = Sweep::get_instance();
 
 		foreach ( $items as $key => $value ) {
 			$count = $sweep->count( $value );

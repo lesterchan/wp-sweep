@@ -1,16 +1,50 @@
 <?php
 /**
- * WP-Sweep class-wpsweep.php
+ * WP-Sweep core class.
  *
- * @package wp-sweep
+ * @package WP-Sweep
  */
+
+defined( 'ABSPATH' ) || exit;
 
 /**
  * WP-Sweep class
  *
  * @since 1.0.0
  */
-class WPSweep {
+class Sweep {
+	/**
+	 * Menu slug for the Tools -> Sweep screen.
+	 *
+	 * Until 2.0.0 the screen was registered with 'wp-sweep/admin.php' — the
+	 * legacy "plugin file as menu slug" form. That put the installation
+	 * directory name into the page URL and into the hook suffix handed back
+	 * to admin_enqueue_scripts, so both broke for anyone who installed the
+	 * plugin under a different directory name.
+	 *
+	 * @since 2.0.0
+	 *
+	 * @var string
+	 */
+	const MENU_SLUG = 'wp-sweep';
+
+	/**
+	 * The hook suffix WordPress handed back when the menu was registered.
+	 *
+	 * Recorded rather than assumed. get_plugin_page_hookname() derives the
+	 * prefix from $admin_page_hooks, so the suffix is 'tools_page_wp-sweep'
+	 * on a real admin request but 'admin_page_wp-sweep' anywhere the admin
+	 * menu has not been built. Comparing against a hardcoded string means the
+	 * script silently fails to load in the cases that do not match, and the
+	 * screen renders with dead buttons.
+	 *
+	 * @since 2.0.0
+	 *
+	 * @access private
+	 * @var string
+	 */
+	private $hook_suffix = '';
+
 	/**
 	 * Limit the number of items to show for sweep details
 	 *
@@ -27,7 +61,7 @@ class WPSweep {
 	 * @since 1.0.0
 	 *
 	 * @access private
-	 * @var WPSweep|null
+	 * @var Sweep|null
 	 */
 	private static $instance;
 
@@ -42,8 +76,12 @@ class WPSweep {
 		// Add Plugin Hooks.
 		add_action( 'plugins_loaded', array( $this, 'add_hooks' ) );
 
-		// Load Translation.
-		load_plugin_textdomain( 'wp-sweep' );
+		/*
+		 * There is no load_plugin_textdomain() call. Since WordPress 6.7,
+		 * loading a text domain this early triggers _doing_it_wrong; core
+		 * loads translations for plugins hosted on WordPress.org by itself,
+		 * at the right moment.
+		 */
 
 		/*
 		 * There are no activation or deactivation hooks. WP-Sweep cleans up
@@ -80,8 +118,8 @@ class WPSweep {
 	public function init() {
 		// include class for WP CLI command.
 		if ( defined( 'WP_CLI' ) ) {
-			require __DIR__ . '/class-wpsweep-command.php';
-			WP_CLI::add_command( 'sweep', 'WPSweep_Command' );
+			require __DIR__ . '/class-sweep-command.php';
+			WP_CLI::add_command( 'sweep', 'Sweep_Command' );
 		}
 	}
 
@@ -112,7 +150,7 @@ class WPSweep {
 	 * @return void
 	 */
 	public function admin_enqueue_scripts( $hook ) {
-		if ( 'wp-sweep/admin.php' !== $hook ) {
+		if ( '' === $this->hook_suffix || $this->hook_suffix !== $hook ) {
 			return;
 		}
 
@@ -121,8 +159,13 @@ class WPSweep {
 		 * plugin, so a hand-minified twin drifts out of sync with the source
 		 * it is supposed to mirror — and under a kilobyte gzipped the saving
 		 * was noise.
+		 *
+		 * The URL comes from WP_SWEEP_URL, which is derived from the main
+		 * file. Building it from the literal 'wp-sweep/js/wp-sweep.js' meant
+		 * the script 404ed for anyone who installed the plugin under a
+		 * different directory name.
 		 */
-		wp_enqueue_script( 'wp-sweep', plugins_url( 'wp-sweep/js/wp-sweep.js' ), array(), WP_SWEEP_VERSION, true );
+		wp_enqueue_script( 'wp-sweep', WP_SWEEP_URL . 'js/wp-sweep.js', array(), WP_SWEEP_VERSION, true );
 
 		wp_localize_script(
 			'wp-sweep',
@@ -146,7 +189,37 @@ class WPSweep {
 	 * @return void
 	 */
 	public function admin_menu() {
-		add_management_page( _x( 'Sweep', 'Page title', 'wp-sweep' ), _x( 'Sweep', 'Menu title', 'wp-sweep' ), 'activate_plugins', 'wp-sweep/admin.php' );
+		$this->hook_suffix = add_management_page(
+			_x( 'Sweep', 'Page title', 'wp-sweep' ),
+			_x( 'Sweep', 'Menu title', 'wp-sweep' ),
+			'activate_plugins',
+			self::MENU_SLUG,
+			array( $this, 'admin_page' )
+		);
+	}
+
+	/**
+	 * The hook suffix WordPress gave the Tools -> Sweep screen
+	 *
+	 * @since 2.0.0
+	 *
+	 * @access public
+	 * @return string Hook suffix, or an empty string before admin_menu runs.
+	 */
+	public function get_hook_suffix() {
+		return $this->hook_suffix;
+	}
+
+	/**
+	 * Render the Tools -> Sweep screen
+	 *
+	 * @since 2.0.0
+	 *
+	 * @access public
+	 * @return void
+	 */
+	public function admin_page() {
+		require WP_SWEEP_DIR . 'includes/admin.php';
 	}
 
 

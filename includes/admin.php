@@ -1,14 +1,14 @@
 <?php
 /**
- * WP-Sweep admin.php
+ * WP-Sweep Tools -> Sweep screen.
  *
- * @package wp-sweep
+ * Rendered by Sweep::admin_page(), which is the callback registered with
+ * add_management_page(). Never requested directly.
+ *
+ * @package WP-Sweep
  */
 
-// Exit if accessed directly.
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
-}
+defined( 'ABSPATH' ) || exit;
 
 // Variables.
 $message = '';
@@ -23,49 +23,49 @@ $message = '';
  */
 $requested_sweep = isset( $_GET['sweep'] ) ? sanitize_key( wp_unslash( $_GET['sweep'] ) ) : '';
 
-if ( '' !== $requested_sweep && WPSweep::get_instance()->is_sweep_name_valid( $requested_sweep ) ) {
+if ( '' !== $requested_sweep && Sweep::get_instance()->is_sweep_name_valid( $requested_sweep ) ) {
 	check_admin_referer( 'wp_sweep_' . $requested_sweep );
 
-	$message = WPSweep::get_instance()->sweep( $requested_sweep );
+	$message = Sweep::get_instance()->sweep( $requested_sweep );
 }
 
 // Database Table Status.
-$total_posts              = WPSweep::get_instance()->total_count( 'posts' );
-$total_postmeta           = WPSweep::get_instance()->total_count( 'postmeta' );
-$total_comments           = WPSweep::get_instance()->total_count( 'comments' );
-$total_commentmeta        = WPSweep::get_instance()->total_count( 'commentmeta' );
-$total_users              = WPSweep::get_instance()->total_count( 'users' );
-$total_usermeta           = WPSweep::get_instance()->total_count( 'usermeta' );
-$total_term_relationships = WPSweep::get_instance()->total_count( 'term_relationships' );
-$total_term_taxonomy      = WPSweep::get_instance()->total_count( 'term_taxonomy' );
-$total_terms              = WPSweep::get_instance()->total_count( 'terms' );
-$total_termmeta           = WPSweep::get_instance()->total_count( 'termmeta' );
-$total_options            = WPSweep::get_instance()->total_count( 'options' );
-$total_tables             = WPSweep::get_instance()->total_count( 'tables' );
+$total_posts              = Sweep::get_instance()->total_count( 'posts' );
+$total_postmeta           = Sweep::get_instance()->total_count( 'postmeta' );
+$total_comments           = Sweep::get_instance()->total_count( 'comments' );
+$total_commentmeta        = Sweep::get_instance()->total_count( 'commentmeta' );
+$total_users              = Sweep::get_instance()->total_count( 'users' );
+$total_usermeta           = Sweep::get_instance()->total_count( 'usermeta' );
+$total_term_relationships = Sweep::get_instance()->total_count( 'term_relationships' );
+$total_term_taxonomy      = Sweep::get_instance()->total_count( 'term_taxonomy' );
+$total_terms              = Sweep::get_instance()->total_count( 'terms' );
+$total_termmeta           = Sweep::get_instance()->total_count( 'termmeta' );
+$total_options            = Sweep::get_instance()->total_count( 'options' );
+$total_tables             = Sweep::get_instance()->total_count( 'tables' );
 
 // Count.
-$revisions           = WPSweep::get_instance()->count( 'revisions' );
-$auto_drafts         = WPSweep::get_instance()->count( 'auto_drafts' );
-$deleted_posts       = WPSweep::get_instance()->count( 'deleted_posts' );
-$orphan_postmeta     = WPSweep::get_instance()->count( 'orphan_postmeta' );
-$duplicated_postmeta = WPSweep::get_instance()->count( 'duplicated_postmeta' );
-$oembed_postmeta     = WPSweep::get_instance()->count( 'oembed_postmeta' );
+$revisions           = Sweep::get_instance()->count( 'revisions' );
+$auto_drafts         = Sweep::get_instance()->count( 'auto_drafts' );
+$deleted_posts       = Sweep::get_instance()->count( 'deleted_posts' );
+$orphan_postmeta     = Sweep::get_instance()->count( 'orphan_postmeta' );
+$duplicated_postmeta = Sweep::get_instance()->count( 'duplicated_postmeta' );
+$oembed_postmeta     = Sweep::get_instance()->count( 'oembed_postmeta' );
 
-$unapproved_comments    = WPSweep::get_instance()->count( 'unapproved_comments' );
-$spam_comments          = WPSweep::get_instance()->count( 'spam_comments' );
-$deleted_comments       = WPSweep::get_instance()->count( 'deleted_comments' );
-$orphan_commentmeta     = WPSweep::get_instance()->count( 'orphan_commentmeta' );
-$duplicated_commentmeta = WPSweep::get_instance()->count( 'duplicated_commentmeta' );
+$unapproved_comments    = Sweep::get_instance()->count( 'unapproved_comments' );
+$spam_comments          = Sweep::get_instance()->count( 'spam_comments' );
+$deleted_comments       = Sweep::get_instance()->count( 'deleted_comments' );
+$orphan_commentmeta     = Sweep::get_instance()->count( 'orphan_commentmeta' );
+$duplicated_commentmeta = Sweep::get_instance()->count( 'duplicated_commentmeta' );
 
-$orphan_usermeta     = WPSweep::get_instance()->count( 'orphan_usermeta' );
-$duplicated_usermeta = WPSweep::get_instance()->count( 'duplicated_usermeta' );
+$orphan_usermeta     = Sweep::get_instance()->count( 'orphan_usermeta' );
+$duplicated_usermeta = Sweep::get_instance()->count( 'duplicated_usermeta' );
 
-$orphan_term_relationships = WPSweep::get_instance()->count( 'orphan_term_relationships' );
-$unused_terms              = WPSweep::get_instance()->count( 'unused_terms' );
-$orphan_termmeta           = WPSweep::get_instance()->count( 'orphan_termmeta' );
-$duplicated_termmeta       = WPSweep::get_instance()->count( 'duplicated_termmeta' );
+$orphan_term_relationships = Sweep::get_instance()->count( 'orphan_term_relationships' );
+$unused_terms              = Sweep::get_instance()->count( 'unused_terms' );
+$orphan_termmeta           = Sweep::get_instance()->count( 'orphan_termmeta' );
+$duplicated_termmeta       = Sweep::get_instance()->count( 'duplicated_termmeta' );
 
-$transient_options = WPSweep::get_instance()->count( 'transient_options' );
+$transient_options = Sweep::get_instance()->count( 'transient_options' );
 
 ?>
 <style type="text/css">
@@ -94,7 +94,7 @@ $transient_options = WPSweep::get_instance()->count( 'transient_options' );
 	</div>
 	<p>
 		<?php /* translators: %s maximum number of results */ ?>
-		<?php echo esc_html( sprintf( __( 'For performance reasons, only %s items will be shown if you click Details.', 'wp-sweep' ), number_format_i18n( WPSweep::get_instance()->limit_details ) ) ); ?>
+		<?php echo esc_html( sprintf( __( 'For performance reasons, only %s items will be shown if you click Details.', 'wp-sweep' ), number_format_i18n( Sweep::get_instance()->limit_details ) ) ); ?>
 	</p>
 	<h3><?php esc_html_e( 'Post Sweep', 'wp-sweep' ); ?></h3>
 	<?php /* translators: %1 is the number of posts, %2 is the number of post meta */ ?>
@@ -119,7 +119,7 @@ $transient_options = WPSweep::get_instance()->count( 'transient_options' );
 					<span class="sweep-count"><?php echo esc_html( number_format_i18n( $revisions ) ); ?></span>
 				</td>
 				<td>
-					<span class="sweep-percentage"><?php echo esc_html( WPSweep::get_instance()->format_percentage( $revisions, $total_posts ) ); ?></span>
+					<span class="sweep-percentage"><?php echo esc_html( Sweep::get_instance()->format_percentage( $revisions, $total_posts ) ); ?></span>
 				</td>
 				<td>
 					<?php if ( ! empty( $revisions ) ) : ?>
@@ -139,7 +139,7 @@ $transient_options = WPSweep::get_instance()->count( 'transient_options' );
 					<span class="sweep-count"><?php echo esc_html( number_format_i18n( $auto_drafts ) ); ?></span>
 				</td>
 				<td>
-					<span class="sweep-percentage"><?php echo esc_html( WPSweep::get_instance()->format_percentage( $auto_drafts, $total_posts ) ); ?></span>
+					<span class="sweep-percentage"><?php echo esc_html( Sweep::get_instance()->format_percentage( $auto_drafts, $total_posts ) ); ?></span>
 				</td>
 				<td>
 					<?php if ( ! empty( $auto_drafts ) ) : ?>
@@ -159,7 +159,7 @@ $transient_options = WPSweep::get_instance()->count( 'transient_options' );
 					<span class="sweep-count"><?php echo esc_html( number_format_i18n( $deleted_posts ) ); ?></span>
 				</td>
 				<td>
-					<span class="sweep-percentage"><?php echo esc_html( WPSweep::get_instance()->format_percentage( $deleted_posts, $total_posts ) ); ?></span>
+					<span class="sweep-percentage"><?php echo esc_html( Sweep::get_instance()->format_percentage( $deleted_posts, $total_posts ) ); ?></span>
 				</td>
 				<td>
 					<?php if ( ! empty( $deleted_posts ) ) : ?>
@@ -179,7 +179,7 @@ $transient_options = WPSweep::get_instance()->count( 'transient_options' );
 					<span class="sweep-count"><?php echo esc_html( number_format_i18n( $orphan_postmeta ) ); ?></span>
 				</td>
 				<td>
-					<span class="sweep-percentage"><?php echo esc_html( WPSweep::get_instance()->format_percentage( $orphan_postmeta, $total_postmeta ) ); ?></span>
+					<span class="sweep-percentage"><?php echo esc_html( Sweep::get_instance()->format_percentage( $orphan_postmeta, $total_postmeta ) ); ?></span>
 				</td>
 				<td>
 					<?php if ( ! empty( $orphan_postmeta ) ) : ?>
@@ -199,7 +199,7 @@ $transient_options = WPSweep::get_instance()->count( 'transient_options' );
 					<span class="sweep-count"><?php echo esc_html( number_format_i18n( $duplicated_postmeta ) ); ?></span>
 				</td>
 				<td>
-					<span class="sweep-percentage"><?php echo esc_html( WPSweep::get_instance()->format_percentage( $duplicated_postmeta, $total_postmeta ) ); ?></span>
+					<span class="sweep-percentage"><?php echo esc_html( Sweep::get_instance()->format_percentage( $duplicated_postmeta, $total_postmeta ) ); ?></span>
 				</td>
 				<td>
 					<?php if ( ! empty( $duplicated_postmeta ) ) : ?>
@@ -219,7 +219,7 @@ $transient_options = WPSweep::get_instance()->count( 'transient_options' );
 					<span class="sweep-count"><?php echo esc_html( number_format_i18n( $oembed_postmeta ) ); ?></span>
 				</td>
 				<td>
-					<span class="sweep-percentage"><?php echo esc_html( WPSweep::get_instance()->format_percentage( $oembed_postmeta, $total_postmeta ) ); ?></span>
+					<span class="sweep-percentage"><?php echo esc_html( Sweep::get_instance()->format_percentage( $oembed_postmeta, $total_postmeta ) ); ?></span>
 				</td>
 				<td>
 					<?php if ( ! empty( $oembed_postmeta ) ) : ?>
@@ -257,7 +257,7 @@ $transient_options = WPSweep::get_instance()->count( 'transient_options' );
 					<span class="sweep-count"><?php echo esc_html( number_format_i18n( $unapproved_comments ) ); ?></span>
 				</td>
 				<td>
-					<span class="sweep-percentage"><?php echo esc_html( WPSweep::get_instance()->format_percentage( $unapproved_comments, $total_comments ) ); ?></span>
+					<span class="sweep-percentage"><?php echo esc_html( Sweep::get_instance()->format_percentage( $unapproved_comments, $total_comments ) ); ?></span>
 				</td>
 				<td>
 					<?php if ( ! empty( $unapproved_comments ) ) : ?>
@@ -277,7 +277,7 @@ $transient_options = WPSweep::get_instance()->count( 'transient_options' );
 					<span class="sweep-count"><?php echo esc_html( number_format_i18n( $spam_comments ) ); ?></span>
 				</td>
 				<td>
-					<span class="sweep-percentage"><?php echo esc_html( WPSweep::get_instance()->format_percentage( $spam_comments, $total_comments ) ); ?></span>
+					<span class="sweep-percentage"><?php echo esc_html( Sweep::get_instance()->format_percentage( $spam_comments, $total_comments ) ); ?></span>
 				</td>
 				<td>
 					<?php if ( ! empty( $spam_comments ) ) : ?>
@@ -297,7 +297,7 @@ $transient_options = WPSweep::get_instance()->count( 'transient_options' );
 					<span class="sweep-count"><?php echo esc_html( number_format_i18n( $deleted_comments ) ); ?></span>
 				</td>
 				<td>
-					<span class="sweep-percentage"><?php echo esc_html( WPSweep::get_instance()->format_percentage( $deleted_comments, $total_comments ) ); ?></span>
+					<span class="sweep-percentage"><?php echo esc_html( Sweep::get_instance()->format_percentage( $deleted_comments, $total_comments ) ); ?></span>
 				</td>
 				<td>
 					<?php if ( ! empty( $deleted_comments ) ) : ?>
@@ -317,7 +317,7 @@ $transient_options = WPSweep::get_instance()->count( 'transient_options' );
 					<span class="sweep-count"><?php echo esc_html( number_format_i18n( $orphan_commentmeta ) ); ?></span>
 				</td>
 				<td>
-					<span class="sweep-percentage"><?php echo esc_html( WPSweep::get_instance()->format_percentage( $orphan_commentmeta, $total_commentmeta ) ); ?></span>
+					<span class="sweep-percentage"><?php echo esc_html( Sweep::get_instance()->format_percentage( $orphan_commentmeta, $total_commentmeta ) ); ?></span>
 				</td>
 				<td>
 					<?php if ( ! empty( $orphan_commentmeta ) ) : ?>
@@ -337,7 +337,7 @@ $transient_options = WPSweep::get_instance()->count( 'transient_options' );
 					<span class="sweep-count"><?php echo esc_html( number_format_i18n( $duplicated_commentmeta ) ); ?></span>
 				</td>
 				<td>
-					<span class="sweep-percentage"><?php echo esc_html( WPSweep::get_instance()->format_percentage( $duplicated_commentmeta, $total_commentmeta ) ); ?></span>
+					<span class="sweep-percentage"><?php echo esc_html( Sweep::get_instance()->format_percentage( $duplicated_commentmeta, $total_commentmeta ) ); ?></span>
 				</td>
 				<td>
 					<?php if ( ! empty( $duplicated_commentmeta ) ) : ?>
@@ -375,7 +375,7 @@ $transient_options = WPSweep::get_instance()->count( 'transient_options' );
 					<span class="sweep-count"><?php echo esc_html( number_format_i18n( $orphan_usermeta ) ); ?></span>
 				</td>
 				<td>
-					<span class="sweep-percentage"><?php echo esc_html( WPSweep::get_instance()->format_percentage( $orphan_usermeta, $total_usermeta ) ); ?></span>
+					<span class="sweep-percentage"><?php echo esc_html( Sweep::get_instance()->format_percentage( $orphan_usermeta, $total_usermeta ) ); ?></span>
 				</td>
 				<td>
 					<?php if ( ! empty( $orphan_usermeta ) ) : ?>
@@ -395,7 +395,7 @@ $transient_options = WPSweep::get_instance()->count( 'transient_options' );
 					<span class="sweep-count"><?php echo esc_html( number_format_i18n( $duplicated_usermeta ) ); ?></span>
 				</td>
 				<td>
-					<span class="sweep-percentage"><?php echo esc_html( WPSweep::get_instance()->format_percentage( $duplicated_usermeta, $total_usermeta ) ); ?></span>
+					<span class="sweep-percentage"><?php echo esc_html( Sweep::get_instance()->format_percentage( $duplicated_usermeta, $total_usermeta ) ); ?></span>
 				</td>
 				<td>
 					<?php if ( ! empty( $duplicated_usermeta ) ) : ?>
@@ -433,7 +433,7 @@ $transient_options = WPSweep::get_instance()->count( 'transient_options' );
 				<span class="sweep-count"><?php echo esc_html( number_format_i18n( $orphan_termmeta ) ); ?></span>
 			</td>
 			<td>
-				<span class="sweep-percentage"><?php echo esc_html( WPSweep::get_instance()->format_percentage( $orphan_termmeta, $total_termmeta ) ); ?></span>
+				<span class="sweep-percentage"><?php echo esc_html( Sweep::get_instance()->format_percentage( $orphan_termmeta, $total_termmeta ) ); ?></span>
 			</td>
 			<td>
 				<?php if ( ! empty( $orphan_termmeta ) ) : ?>
@@ -453,7 +453,7 @@ $transient_options = WPSweep::get_instance()->count( 'transient_options' );
 				<span class="sweep-count"><?php echo esc_html( number_format_i18n( $duplicated_termmeta ) ); ?></span>
 			</td>
 			<td>
-				<span class="sweep-percentage"><?php echo esc_html( WPSweep::get_instance()->format_percentage( $duplicated_termmeta, $total_termmeta ) ); ?></span>
+				<span class="sweep-percentage"><?php echo esc_html( Sweep::get_instance()->format_percentage( $duplicated_termmeta, $total_termmeta ) ); ?></span>
 			</td>
 			<td>
 				<?php if ( ! empty( $duplicated_termmeta ) ) : ?>
@@ -473,7 +473,7 @@ $transient_options = WPSweep::get_instance()->count( 'transient_options' );
 					<span class="sweep-count"><?php echo esc_html( number_format_i18n( $orphan_term_relationships ) ); ?></span>
 				</td>
 				<td>
-					<span class="sweep-percentage"><?php echo esc_html( WPSweep::get_instance()->format_percentage( $orphan_term_relationships, $total_term_relationships ) ); ?></span>
+					<span class="sweep-percentage"><?php echo esc_html( Sweep::get_instance()->format_percentage( $orphan_term_relationships, $total_term_relationships ) ); ?></span>
 				</td>
 				<td>
 					<?php if ( ! empty( $orphan_term_relationships ) ) : ?>
@@ -494,7 +494,7 @@ $transient_options = WPSweep::get_instance()->count( 'transient_options' );
 					<span class="sweep-count"><?php echo esc_html( number_format_i18n( $unused_terms ) ); ?></span>
 				</td>
 				<td>
-					<span class="sweep-percentage"><?php echo esc_html( WPSweep::get_instance()->format_percentage( $unused_terms, $total_terms ) ); ?></span>
+					<span class="sweep-percentage"><?php echo esc_html( Sweep::get_instance()->format_percentage( $unused_terms, $total_terms ) ); ?></span>
 				</td>
 				<td>
 					<?php if ( ! empty( $unused_terms ) ) : ?>
@@ -532,7 +532,7 @@ $transient_options = WPSweep::get_instance()->count( 'transient_options' );
 					<span class="sweep-count"><?php echo esc_html( number_format_i18n( $transient_options ) ); ?></span>
 				</td>
 				<td>
-					<span class="sweep-percentage"><?php echo esc_html( WPSweep::get_instance()->format_percentage( $transient_options, $total_options ) ); ?></span>
+					<span class="sweep-percentage"><?php echo esc_html( Sweep::get_instance()->format_percentage( $transient_options, $total_options ) ); ?></span>
 				</td>
 				<td>
 					<?php if ( ! empty( $transient_options ) ) : ?>

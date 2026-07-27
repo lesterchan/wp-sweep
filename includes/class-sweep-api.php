@@ -1,14 +1,16 @@
 <?php
 /**
- * WP-Sweep WP-API
+ * WP-Sweep REST API routes.
  *
- * @package wp-sweep
+ * @package WP-Sweep
  */
 
+defined( 'ABSPATH' ) || exit;
+
 /**
- * Class WPSweep_Api
+ * Class Sweep_Api
  */
-class WPSweep_Api {
+class Sweep_Api {
 	/**
 	 * WP-Sweep WP Rest API namespace
 	 *
@@ -88,7 +90,7 @@ class WPSweep_Api {
 	public function count( $request ) {
 		$params = $request->get_params();
 
-		$sweep = WPSweep::get_instance();
+		$sweep = Sweep::get_instance();
 		$count = (int) $sweep->count( $params['name'] );
 
 		return new WP_REST_Response(
@@ -111,7 +113,7 @@ class WPSweep_Api {
 	public function details( $request ) {
 		$params = $request->get_params();
 
-		$sweep   = WPSweep::get_instance();
+		$sweep   = Sweep::get_instance();
 		$details = $sweep->details( $params['name'] );
 
 		return new WP_REST_Response(
@@ -135,7 +137,7 @@ class WPSweep_Api {
 	public function sweep( $request ) {
 		$params = $request->get_params();
 
-		$sweep   = WPSweep::get_instance();
+		$sweep   = Sweep::get_instance();
 		$results = $sweep->sweep( $params['name'] );
 
 		return new WP_REST_Response(
@@ -157,7 +159,7 @@ class WPSweep_Api {
 	 * @return bool Is the sweep name valid?
 	 */
 	public function is_sweep_name_valid( $name ) {
-		return WPSweep::get_instance()->is_sweep_name_valid( $name );
+		return Sweep::get_instance()->is_sweep_name_valid( $name );
 	}
 
 	/**

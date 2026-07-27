@@ -1,6 +1,6 @@
 <?php
 /**
- * Tests for WPSweep::details().
+ * Tests for Sweep::details().
  *
  * @package wp-sweep
  */

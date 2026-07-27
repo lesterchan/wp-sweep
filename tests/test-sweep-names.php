@@ -57,7 +57,7 @@ class Test_WP_Sweep_Sweep_Names extends WP_Sweep_TestCase {
 	 * nineteen names.
 	 */
 	public function test_rest_api_defers_to_the_canonical_list() {
-		$source = file_get_contents( dirname( __DIR__ ) . '/inc/class-wpsweep-api.php' );
+		$source = file_get_contents( dirname( __DIR__ ) . '/includes/class-sweep-api.php' );
 
 		$this->assertStringNotContainsString(
 			"'oembed_postmeta'",
@@ -65,7 +65,7 @@ class Test_WP_Sweep_Sweep_Names extends WP_Sweep_TestCase {
 			'The REST API keeps its own copy of the sweep names again.'
 		);
 
-		$api = new WPSweep_Api();
+		$api = new Sweep_Api();
 		foreach ( self::$expected as $name ) {
 			$this->assertTrue( $api->is_sweep_name_valid( $name ) );
 		}
@@ -79,10 +79,10 @@ class Test_WP_Sweep_Sweep_Names extends WP_Sweep_TestCase {
 	 * test run, so this is read from the source.
 	 */
 	public function test_cli_command_defers_to_the_canonical_list() {
-		$source = file_get_contents( dirname( __DIR__ ) . '/inc/class-wpsweep-command.php' );
+		$source = file_get_contents( dirname( __DIR__ ) . '/includes/class-sweep-command.php' );
 
 		$this->assertMatchesRegularExpression(
-			'/\$default_items\s*=\s*WPSweep::get_instance\(\)->get_sweep_names\(\);/',
+			'/\$default_items\s*=\s*Sweep::get_instance\(\)->get_sweep_names\(\);/',
 			$source,
 			'The WP-CLI command keeps its own copy of the sweep names again.'
 		);
@@ -101,7 +101,7 @@ class Test_WP_Sweep_Sweep_Names extends WP_Sweep_TestCase {
 	 * @param string $name Sweep name.
 	 */
 	public function test_every_listed_name_is_implemented( $name ) {
-		$source = file_get_contents( dirname( __DIR__ ) . '/inc/class-wpsweep.php' );
+		$source = file_get_contents( dirname( __DIR__ ) . '/includes/class-sweep.php' );
 
 		$occurrences = substr_count( $source, "case '{$name}':" );
 

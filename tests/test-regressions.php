@@ -119,7 +119,7 @@ class Test_WP_Sweep_Regressions extends WP_Sweep_TestCase {
 	 * The REST allow list is that same list rather than a second copy.
 	 */
 	public function test_rest_api_uses_the_canonical_list() {
-		$api        = new WPSweep_Api();
+		$api        = new Sweep_Api();
 		$reflection = new ReflectionMethod( $api, 'is_sweep_name_valid' );
 		$reflection->setAccessible( true );
 

@@ -1,6 +1,6 @@
 <?php
 /**
- * Tests for WPSweep::sweep() — the half that actually deletes things.
+ * Tests for Sweep::sweep() — the half that actually deletes things.
  *
  * @package wp-sweep
  */

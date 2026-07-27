@@ -1,6 +1,6 @@
 <?php
 /**
- * WP-Sweep index.php
+ * WP-Sweep includes/index.php
  *
  * @package WP-Sweep
  */

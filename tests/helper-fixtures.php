@@ -25,10 +25,10 @@ abstract class WP_Sweep_TestCase extends WP_UnitTestCase {
 	 * so renaming the class is a one-line change here instead of a hundred
 	 * call sites that a missed reference could hide in.
 	 *
-	 * @return WPSweep The plugin instance.
+	 * @return Sweep The plugin instance.
 	 */
 	protected function sweep() {
-		return WPSweep::get_instance();
+		return Sweep::get_instance();
 	}
 
 	/**
@@ -73,7 +73,7 @@ abstract class WP_Sweep_TestCase extends WP_UnitTestCase {
 	 *
 	 * @var string
 	 */
-	protected $admin_page = '/admin.php';
+	protected $admin_page = '/includes/admin.php';
 
 	/**
 	 * The hook suffix WordPress hands the admin screen.
@@ -83,7 +83,55 @@ abstract class WP_Sweep_TestCase extends WP_UnitTestCase {
 	 *
 	 * @var string
 	 */
-	protected $admin_hook_suffix = 'wp-sweep/admin.php';
+	protected $admin_hook_suffix = '';
+
+	/**
+	 * Registers the admin menu and returns the hook suffix WordPress gave it.
+	 *
+	 * Always ask rather than hardcode: get_plugin_page_hookname() builds the
+	 * prefix from $admin_page_hooks, so the same menu slug yields
+	 * 'tools_page_wp-sweep' on a real admin request and 'admin_page_wp-sweep'
+	 * where the admin menu has not been built, as in this test run.
+	 *
+	 * @return string The hook suffix.
+	 */
+	protected function register_admin_menu() {
+		$GLOBALS['submenu'] = array();
+
+		$this->sweep()->admin_menu();
+
+		$this->admin_hook_suffix = $this->sweep()->get_hook_suffix();
+
+		return $this->admin_hook_suffix;
+	}
+
+	/**
+	 * Reads a plugin source file with its comments removed.
+	 *
+	 * Assertions about what the code does must not be satisfied — or broken —
+	 * by a comment that merely mentions the thing. A docblock explaining why
+	 * load_plugin_textdomain() is gone otherwise reads as a call to it.
+	 *
+	 * @param string $file Plugin-relative path.
+	 * @return string The source, comments stripped.
+	 */
+	protected function source_without_comments( $file ) {
+		$source = file_get_contents( dirname( __DIR__ ) . $file );
+
+		$code = '';
+		foreach ( token_get_all( $source ) as $token ) {
+			if ( is_array( $token ) ) {
+				if ( T_COMMENT === $token[0] || T_DOC_COMMENT === $token[0] ) {
+					continue;
+				}
+				$code .= $token[1];
+			} else {
+				$code .= $token;
+			}
+		}
+
+		return $code;
+	}
 
 	/**
 	 * Renders the admin screen and captures anything PHP complained about.
