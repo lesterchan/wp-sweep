@@ -2,11 +2,12 @@
 Contributors: GamerZ  
 Donate link: https://lesterchan.net/site/donation/  
 Tags: sweep, clean, cleanup, clean up, optimize, orphan, unused, duplicated, posts, post meta, comments, comment meta, users, user meta, terms, term meta, term relationships, revisions, auto drafts, transient, database, tables, oembed
-Requires at least: 4.6  
+Requires at least: 6.0  
 Tested up to: 7.0  
-Stable tag: 1.2.0  
+Stable tag: 2.0.0  
+Requires PHP: 7.4  
 License: GPLv2 or later  
-License URI: http://www.gnu.org/licenses/gpl-2.0.html  
+License URI: https://www.gnu.org/licenses/gpl-2.0.html  
 
 WP-Sweep allows you to clean up unused, orphaned and duplicated data in your WordPress. It also optimizes your database tables.
 
@@ -128,12 +129,26 @@ WP-Sweep is not compatible with the following plugins:
 * [https://github.com/lesterchan/wp-sweep](https://github.com/lesterchan/wp-sweep "https://github.com/lesterchan/wp-sweep")
 
 ### Credits
-* Plugin icon by [Freepik](http://www.freepik.com) from [Flaticon](http://www.flaticon.com)
+* Plugin icon by [Freepik](https://www.freepik.com) from [Flaticon](https://www.flaticon.com)
 
 ### Donations
 I spent most of my free time creating, updating, maintaining and supporting these plugins, if you really love my plugins and could spare me a couple of bucks, I will really appreciate it. If not feel free to use it without any obligations.
 
 ## Changelog
+### 2.0.0
+* IMPORTANT: The admin screen moved from `tools.php?page=wp-sweep/admin.php` to `tools.php?page=wp-sweep`. The Tools -> Sweep menu link is unaffected; update any bookmark you have. See the FAQ.
+* IMPORTANT: The classes are renamed `WPSweep` -> `Sweep`, `WPSweep_Api` -> `Sweep_Api` and `WPSweep_Command` -> `Sweep_Command`. Code calling `WPSweep::get_instance()` must be updated. Every filter, action, REST route and WP-CLI command is unchanged. See the FAQ.
+* IMPORTANT: Requires WordPress 6.0 and PHP 7.4.
+* SECURITY: Fixed a stored XSS on the admin screen. The Details list was built by string concatenation and injected as HTML, so a comment author name containing markup ran as script in the administrator's browser.
+* FIXED: The plugin no longer builds paths from its own directory name, so the admin script loads when it is installed under a directory other than `wp-sweep`.
+* FIXED: Filtering `wp_sweep_excluded_termids` to an empty array produced invalid SQL, leaving the Unused Terms count blank.
+* FIXED: Sweeping without JavaScript deleted data and displayed nothing; the result is now shown.
+* FIXED: Removed activation, deactivation and uninstall routines that looped over a multisite network to call empty functions, capped at 100 sites and leaving the switch stack unwound.
+* NEW: Rewrote the admin script in vanilla JavaScript. jQuery is no longer loaded, and `js/wp-sweep.min.js` is gone.
+* NEW: Request parameters are sanitized and validated against the plugin's own list of sweeps.
+* NEW: Restructured into `includes/`, following the Plugin Handbook.
+* NEW: 250 PHPUnit tests, 22 script tests and GitHub Actions CI.
+
 ### 1.2.0
 * NEW: Per-type meta key filters (`wp_sweep_postmeta_whitelist`, `wp_sweep_commentmeta_whitelist`, `wp_sweep_usermeta_whitelist`, `wp_sweep_termmeta_whitelist`) to protect metadata from accidental deletion
 * NEW: Documented all available filters in README
@@ -226,7 +241,7 @@ I spent most of my free time creating, updating, maintaining and supporting thes
 * Initial release
 
 ## Installation
-1. Upload `wp-sweep` folder to the `/wp-content/plugins/` directory
+1. Upload the plugin folder to the `/wp-content/plugins/` directory
 2. Activate the `WP-Sweep` plugin through the 'Plugins' menu in WordPress
 3. You can access `WP-Sweep` via `WP-Admin -> Tools -> Sweep`
 
@@ -235,7 +250,64 @@ I spent most of my free time creating, updating, maintaining and supporting thes
 2. WP-Sweep Administrator Page (Swept)
 
 ## Frequently Asked Questions
-Coming soon ...
+
+### My bookmark to the sweep screen is a 404
+
+The admin screen moved in 2.0.0, from `tools.php?page=wp-sweep/admin.php` to
+`tools.php?page=wp-sweep`. Update the bookmark, or reach it from Tools ->
+Sweep as usual.
+
+The old address was the legacy "plugin file as menu slug" form, which put the
+plugin's installation directory name into the page URL. That is also why the
+screen broke for anyone who installed WP-Sweep under a different directory
+name — renamed by hand, or unzipped as `wp-sweep-2.0.0`. Neither happens now.
+
+### My snippet calling WPSweep::get_instance() stopped working
+
+The classes are renamed in 2.0.0:
+
+* `WPSweep` is now `Sweep`
+* `WPSweep_Api` is now `Sweep_Api`
+* `WPSweep_Command` is now `Sweep_Command`
+
+So `WPSweep::get_instance()->sweep( 'revisions' )` becomes
+`Sweep::get_instance()->sweep( 'revisions' )`. There is no compatibility
+alias, so the old name raises a fatal error rather than failing quietly.
+
+Nothing else moved. Every filter, every `wp_sweep_admin_*_sweep` action, all
+three REST routes and all the WP-CLI commands keep the names they had.
+
+### The Sweep and Details buttons do nothing when I click them
+
+The admin script is not loading. In 2.0.0 the most common cause of this was
+fixed: the plugin used to build the script URL from the literal directory
+name `wp-sweep`, so it returned a 404 for any other directory name.
+
+If it still happens, check the browser console. The script has no
+dependencies and does not use jQuery, so a jQuery conflict is not the cause.
+
+### Which filters can I use to protect data from being swept?
+
+Four per-type filters take a list of meta keys that must never be deleted, and
+each supports `*` as a wildcard:
+
+    add_filter( 'wp_sweep_postmeta_whitelist', function ( $keys ) {
+        $keys[] = '_my_plugin_setting';
+        $keys[] = '_acme_*';
+        return $keys;
+    } );
+
+The same applies to `wp_sweep_commentmeta_whitelist`,
+`wp_sweep_usermeta_whitelist` and `wp_sweep_termmeta_whitelist`. Terms are
+protected with `wp_sweep_excluded_termids`, and taxonomies are kept out of the
+orphaned term relationships sweep with `wp_sweep_excluded_taxonomies`.
+
+### Does WP-Sweep leave anything behind when I delete it?
+
+No. It stores no options, creates no database tables, registers no
+capabilities and schedules no events. Everything it does is a deletion carried
+out at the moment you ask for it, which is why `uninstall.php` has nothing to
+do.
 
 ## Upgrade Notice
 N/A

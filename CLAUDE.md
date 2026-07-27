@@ -4,20 +4,29 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Commands
 
-**Install dev dependencies (PHP coding standards):**
+**Run the PHP test suite (Docker is the only prerequisite):**
 ```bash
-composer install
+bin/test.sh                     # starts wp-env, installs deps in the container, runs PHPUnit
+bin/test.sh --filter Test_WP_Sweep_Sweep
+```
+
+**Run the script tests and linters:**
+```bash
+npm install
+npm run test:js                 # vitest + jsdom
+npm run lint:js                 # eslint
+npm run lint:js:fix
+npm test                        # JS tests, then the PHP suite
 ```
 
 **Lint PHP against WordPress Coding Standards:**
 ```bash
-./vendor/bin/phpcs --standard=WordPress-Core,WordPress-Docs,WordPress-Extra wp-sweep.php inc/ admin.php
+phpcs                           # phpcs.xml covers the whole tree; must exit 0
+phpcbf                          # auto-fix, formatting only
 ```
 
-**Fix auto-fixable coding standards violations:**
-```bash
-./vendor/bin/phpcbf --standard=WordPress-Core,WordPress-Docs,WordPress-Extra wp-sweep.php inc/ admin.php
-```
+`phpcs.xml` records the reason for every exclusion. Add the reason there rather
+than scattering `phpcs:ignore` comments.
 
 **WP-CLI sweep commands (requires a running WordPress install):**
 ```bash
@@ -32,46 +41,109 @@ GET    /wp-json/sweep/v1/details/<name>
 DELETE /wp-json/sweep/v1/sweep/<name>
 ```
 
-There is no automated test suite. The JS minified file (`js/wp-sweep.min.js`) must be updated manually when `js/wp-sweep.js` changes.
+wp-env runs on ports 8898 (dev) and 8899 (tests); every other plugin in the
+collection has its own pair.
 
 ## Architecture
 
 ### Entry point and bootstrapping
 
-`wp-sweep.php` defines `WP_SWEEP_VERSION` and `WP_SWEEP_MAIN_FILE`, then requires the two core class files and instantiates them. `WPSweep` is a singleton; `WPSweep_Api` is instantiated directly in the entry point.
+`wp-sweep.php` carries the plugin header, defines `WP_SWEEP_VERSION`,
+`WP_SWEEP_MAIN_FILE`, `WP_SWEEP_DIR`, `WP_SWEEP_URL` and `WP_SWEEP_SLUG`, then
+requires the two core class files and instantiates them. `Sweep` is a singleton;
+`Sweep_Api` is instantiated directly. There is no logic in the main file.
 
-### Core class: `inc/class-wpsweep.php`
+**Never build a path or URL from the literal string `wp-sweep`.** Use the
+constants. The plugin has to keep working when it is installed under a different
+directory name, and a hardcoded slug fails silently — the script 404s while the
+markup still looks perfectly well-formed. `Test_WP_Sweep_Admin` asserts on this.
 
-`WPSweep` is a singleton accessed via `WPSweep::get_instance()`. All sweep logic lives in three parallel `switch` statements keyed on a string sweep name:
+### Core class: `includes/class-sweep.php`
+
+`Sweep` is a singleton accessed via `Sweep::get_instance()`. All sweep logic lives
+in three parallel `switch` statements keyed on a string sweep name:
 
 - `count($name)` — returns how many items would be swept
 - `details($name)` — returns up to `$limit_details` (500) sample items
 - `sweep($name)` — performs the deletion and returns a translated result message
 - `total_count($name)` — counts total rows in a given table (used for the "% of" column)
 
-When `post_id`, `comment_id`, `user_id`, or `term_id` is `0` in orphaned meta, a direct SQL `DELETE` is used instead of the WordPress API functions, because the API functions won't act on ID 0.
+`get_sweep_names()` is the single canonical list of the nineteen sweeps. The REST
+API and the WP-CLI command both defer to it — do not add a second copy.
 
-Two filters control what gets excluded from certain sweeps:
-- `wp_sweep_excluded_taxonomies` — taxonomies excluded from orphaned term relationships check (default: `link_category`)
-- `wp_sweep_excluded_termids` — term IDs excluded from unused terms sweep (default: default taxonomy terms + terms that are parents of other terms)
+When `post_id`, `comment_id`, `user_id`, or `term_id` is `0` in orphaned meta, a
+direct SQL `DELETE` is used instead of the WordPress API functions, because the
+API functions won't act on ID 0.
 
-### REST API: `inc/class-wpsweep-api.php`
+The hook suffix for the admin screen is recorded from what `add_management_page()`
+returns, never hardcoded: `get_plugin_page_hookname()` derives the prefix from
+`$admin_page_hooks`, so the same slug produces `tools_page_wp-sweep` on a real
+admin request and `admin_page_wp-sweep` where the admin menu has not been built.
 
-Registers three routes under the `sweep/v1` namespace. All routes require `activate_plugins` capability. The `name` parameter is validated against the hardcoded `$sweeps` array. All routes delegate to the `WPSweep` singleton.
+Filters that control what gets excluded:
+- `wp_sweep_excluded_taxonomies` — taxonomies excluded from orphaned term relationships (default: `link_category`)
+- `wp_sweep_excluded_termids` — term IDs excluded from unused terms sweep (default: default taxonomy terms + parent terms)
+- `wp_sweep_postmeta_whitelist`, `wp_sweep_commentmeta_whitelist`, `wp_sweep_usermeta_whitelist`, `wp_sweep_termmeta_whitelist` — meta keys never deleted, `*` wildcard supported
 
-### WP-CLI: `inc/class-wpsweep-command.php`
+An empty exclusion list must produce no SQL clause at all. Interpolating one into
+`NOT IN ()` is a syntax error, not a match-nothing clause.
 
-Loaded and registered only when `WP_CLI` is defined. Iterates the same hardcoded list of sweep names in order, skipping items with a count of 0.
+### REST API: `includes/class-sweep-api.php`
 
-### Admin UI: `admin.php` + `js/wp-sweep.js`
+Registers three routes under the `sweep/v1` namespace. All routes require
+`activate_plugins`. The `name` parameter is validated against
+`Sweep::get_sweep_names()`.
 
-`admin.php` is a template file loaded by `add_management_page` (Tools → Sweep). It calls `count()` and `total_count()` on page load to populate counts. Buttons carry `data-sweep_name`, `data-sweep_type`, and `data-nonce` attributes.
+### WP-CLI: `includes/class-sweep-command.php`
 
-`wp-sweep.js` uses jQuery AJAX against `wp-admin/admin-ajax.php` with actions `sweep` and `sweep_details`. Nonces follow the pattern `wp_sweep_{name}` (sweep) and `wp_sweep_details_{name}` (details). "Sweep All" chains individual sweep promises sequentially using `.reduce()`.
+Loaded and registered only when `WP_CLI` is defined. Iterates
+`Sweep::get_sweep_names()` in order, skipping items with a count of 0. The order
+matters: posts are deleted before the sweeps that hunt for the meta that deletion
+just orphaned.
+
+### Admin UI: `includes/admin.php` + `js/wp-sweep.js`
+
+`includes/admin.php` is a template rendered by `Sweep::admin_page()`, the callback
+registered with `add_management_page()` under the menu slug `wp-sweep`. It calls
+`count()` and `total_count()` on page load. Buttons carry `data-sweep_name`,
+`data-sweep_type`, and `data-nonce`.
+
+`js/wp-sweep.js` is vanilla JavaScript — no jQuery, no minified twin, no build
+step. It uses `fetch` against `admin-ajax.php` with actions `sweep` and
+`sweep_details`. Nonces follow `wp_sweep_{name}` and `wp_sweep_details_{name}`.
+Strings are localised as `wpSweepL10n`.
+
+**Details entries are database values and must be written with `textContent`.**
+Comment author names are supplied by whoever left the comment. Building that list
+with string concatenation is how the stored XSS fixed in 2.0.0 got there.
 
 ### Adding a new sweep type
 
-1. Add the name string to the `$sweeps` array in `WPSweep_Api` and `$default_items` in `WPSweep_Command`.
-2. Add a `case` for the name in `WPSweep::count()`, `details()`, and `sweep()`.
-3. Add a `case` for the related table type in `WPSweep::total_count()` if needed.
-4. Add the corresponding row to `admin.php` with the correct `data-sweep_type` matching a `total_count()` key.
+1. Add the name to `Sweep::get_sweep_names()`.
+2. Add a `case` for it in `count()`, `details()`, and `sweep()`.
+3. Add a `case` for the related table type in `total_count()` if needed.
+4. Add the row to `includes/admin.php` with a `data-sweep_type` matching a `total_count()` key.
+5. `Test_WP_Sweep_Sweep_Names` fails until all three switches handle it.
+
+## Testing
+
+`tests/` holds 250 PHPUnit tests against a real MySQL database via wp-env, plus 22
+vitest/jsdom tests for the script. CI runs phpcs, eslint, vitest and PHPUnit on
+WP 6.0/PHP 7.4 and WP latest/PHP 8.3.
+
+Notes that will save time:
+
+- Tests reach the plugin through the `sweep()` accessor on `WP_Sweep_TestCase`
+  rather than naming the class, so a rename is one line.
+- Counts are asserted as deltas against a baseline captured per test, because the
+  database is shared and may already hold a stray orphan row.
+- `source_without_comments()` strips comments before any assertion about the
+  source. A docblock explaining why something was removed otherwise reads as the
+  thing itself.
+- `$wp_scripts` survives the transaction rollback between tests and has to be
+  reset, or a handle enqueued by one test is still enqueued in the next.
+- The AJAX tests go through `_handleAjax()`, not the handler directly: the test
+  case's die handler is what closes the buffer `_handleAjax()` opened.
+- Playground is not used here. It is SQLite, and this plugin is almost entirely
+  `SHOW TABLES`, `OPTIMIZE TABLE`, `GROUP_CONCAT`, `HAVING` and correlated
+  `NOT IN` subqueries.

@@ -1,0 +1,94 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  phpcs:
+    name: PHP coding standards
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4'
+          coverage: none
+          tools: cs2pr
+
+      - name: Install PHPCS + WPCS
+        run: |
+          composer global config --no-plugins allow-plugins.dealerdirect/phpcodesniffer-composer-installer true
+          composer global require --no-interaction --no-progress \
+            squizlabs/php_codesniffer wp-coding-standards/wpcs
+
+      # phpcs.xml pins extensions to php, so this never wanders into .js.
+      - name: Run PHPCS
+        run: $(composer global config bin-dir --absolute)/phpcs -q --report=checkstyle . | cs2pr
+
+  eslint:
+    name: JS coding standards
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Install dev dependencies
+        run: npm ci --no-fund --no-audit
+
+      - name: Run ESLint
+        run: npm run lint:js
+
+      - name: Run the script tests
+        run: npm run test:js
+
+  phpunit:
+    name: PHPUnit (WP ${{ matrix.wordpress }}, PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - php: '7.4'
+            wordpress: '6.0'
+          - php: '8.3'
+            wordpress: 'latest'
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+
+      # The runner already has Docker, which is all wp-env needs, so CI runs
+      # the same stack as `bin/test.sh` does locally.
+      - name: Start wp-env
+        env:
+          WP_ENV_PHP_VERSION: ${{ matrix.php }}
+          WP_ENV_CORE: ${{ matrix.wordpress == 'latest' && 'WordPress/WordPress' || format('WordPress/WordPress#{0}', matrix.wordpress) }}
+        run: npx --yes @wordpress/env start
+
+      - name: Install dev dependencies
+        run: |
+          npx --yes @wordpress/env run tests-cli --env-cwd=wp-content/plugins/wp-sweep \
+            composer install --no-interaction --no-progress
+
+      - name: Run PHPUnit
+        run: |
+          npx --yes @wordpress/env run tests-cli --env-cwd=wp-content/plugins/wp-sweep \
+            vendor/bin/phpunit
