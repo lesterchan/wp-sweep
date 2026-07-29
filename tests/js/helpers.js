@@ -148,16 +148,17 @@ export function sweepSection( {
 		<table class="widefat table-sweep">
 			<tbody>
 				<tr>
+					<th scope="row" class="check-column"><input type="checkbox" name="sweep[]" value="${ name }" /></th>
 					<td>
 						<strong>Revisions</strong>
 						<p class="sweep-details" hidden></p>
+						<div class="row-actions">
+							<span class="sweep"><a href="?sweep=${ name }" data-action="sweep" data-sweep-name="${ name }" data-sweep-type="${ type }" data-nonce="NONCE" class="btn-sweep">Sweep</a></span>
+							<span class="details"><a href="?sweep_details=${ name }" data-action="sweep_details" data-sweep-name="${ name }" data-sweep-type="${ type }" data-nonce="DNONCE" class="btn-sweep-details">Details</a></span>
+						</div>
 					</td>
 					<td><span class="sweep-count">${ count }</span></td>
 					<td><span class="sweep-percentage">${ percentage }</span></td>
-					<td>
-						<button data-action="sweep" data-sweep_name="${ name }" data-sweep_type="${ type }" data-nonce="NONCE" class="button button-primary btn-sweep">Sweep</button>
-						<button data-action="sweep_details" data-sweep_name="${ name }" data-sweep_type="${ type }" data-nonce="DNONCE" class="button btn-sweep-details">Details</button>
-					</td>
 				</tr>
 			</tbody>
 		</table>

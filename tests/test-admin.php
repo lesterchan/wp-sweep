@@ -54,6 +54,68 @@ class Test_WP_Sweep_Admin extends WP_Sweep_TestCase {
 	}
 
 	/**
+	 * Every row action is a real link, so the screen works without JavaScript.
+	 */
+	public function test_row_actions_are_real_nonced_links() {
+		$this->make_revisions( 2 );
+		$html = $this->render_admin_page();
+
+		$this->assertStringContainsString( 'row-actions', $html, 'The list table rendered no row actions.' );
+		$this->assertMatchesRegularExpression(
+			'/<a href="[^"]*sweep=revisions[^"]*_wpnonce=[a-f0-9]+"/',
+			$html,
+			'The Sweep row action is not a nonced link.'
+		);
+	}
+
+	/**
+	 * The screen offers a bulk action, because every row on it deletes data.
+	 */
+	public function test_the_screen_offers_a_bulk_sweep() {
+		$this->make_revisions( 2 );
+		$html = $this->render_admin_page();
+
+		$this->assertStringContainsString( 'name="action"', $html, 'There is no bulk action control.' );
+		$this->assertStringContainsString( 'value="sweep"', $html, 'The bulk action does not offer Sweep.' );
+		$this->assertStringContainsString( 'name="sweep[]"', $html, 'The rows carry no checkbox to act on.' );
+	}
+
+	/**
+	 * A group filter that matches nothing says so rather than rendering a void.
+	 */
+	public function test_an_empty_table_says_so() {
+		$html = $this->render_admin_page( array( 'group' => 'users' ) );
+
+		$this->assertStringContainsString( 'no-items', $html, 'An empty table did not render the no-items row.' );
+	}
+
+	/**
+	 * The group filters are rendered above the table.
+	 */
+	public function test_the_group_filters_are_rendered() {
+		$html = $this->render_admin_page();
+
+		$this->assertStringContainsString( 'subsubsub', $html, 'The list table rendered no views.' );
+		$this->assertStringContainsString( 'group=posts', $html, 'There is no filter for the post sweeps.' );
+	}
+
+	/**
+	 * The screen carries no inline style, width, valign or align attribute.
+	 */
+	public function test_the_markup_carries_no_presentational_attributes() {
+		$this->make_revisions( 2 );
+		$html = $this->render_admin_page();
+
+		foreach ( array( 'style=', 'valign=', 'align=', '<style' ) as $attribute ) {
+			$this->assertStringNotContainsString(
+				$attribute,
+				$html,
+				"The screen still renders a presentational {$attribute} attribute."
+			);
+		}
+	}
+
+	/**
 	 * The screen renders without raising a single diagnostic.
 	 */
 	public function test_admin_page_renders_cleanly() {
@@ -108,20 +170,20 @@ class Test_WP_Sweep_Admin extends WP_Sweep_TestCase {
 	}
 
 	/**
-	 * A sweep with items to clean renders both buttons, carrying the name,
+	 * A sweep with items to clean renders both row actions, carrying the name,
 	 * the type and a nonce. The script reads all three from the markup.
 	 */
-	public function test_populated_row_renders_both_buttons_with_a_nonce() {
+	public function test_populated_row_renders_both_row_actions_with_a_nonce() {
 		$this->make_revisions( 2 );
 		$html = $this->render_admin_page();
 
-		$this->assertStringContainsString( 'data-sweep_name="revisions"', $html );
-		$this->assertStringContainsString( 'data-sweep_type="posts"', $html );
+		$this->assertStringContainsString( 'data-sweep-name="revisions"', $html );
+		$this->assertStringContainsString( 'data-sweep-type="posts"', $html );
 		$this->assertStringContainsString( 'data-action="sweep"', $html );
 		$this->assertStringContainsString( 'data-action="sweep_details"', $html );
 
 		$this->assertMatchesRegularExpression(
-			'/data-action="sweep"[^>]*data-sweep_name="revisions"[^>]*data-nonce="[a-f0-9]{10}"/',
+			'/data-action="sweep"[^>]*data-sweep-name="revisions"[^>]*data-nonce="[a-f0-9]{10}"/',
 			$html
 		);
 	}
@@ -144,12 +206,12 @@ class Test_WP_Sweep_Admin extends WP_Sweep_TestCase {
 	}
 
 	/**
-	 * A sweep with nothing to clean offers no button at all.
+	 * A sweep with nothing to clean offers no row action at all.
 	 */
-	public function test_empty_row_offers_no_button() {
+	public function test_empty_row_offers_no_row_action() {
 		$html = $this->render_admin_page();
 
-		$this->assertStringNotContainsString( 'data-sweep_name="revisions"', $html );
+		$this->assertStringNotContainsString( 'data-sweep-name="revisions"', $html );
 	}
 
 	/**
@@ -490,6 +552,46 @@ class Test_WP_Sweep_Admin extends WP_Sweep_TestCase {
 		$code = $this->source_without_comments( '/includes/class-wp-sweep.php' );
 
 		$this->assertStringNotContainsString( 'load_plugin_textdomain(', $code );
+	}
+
+	/**
+	 * The bulk action sweeps everything that was checked.
+	 */
+	public function test_bulk_sweep_runs_every_checked_sweep() {
+		$revisions = $this->make_revisions( 2 );
+		$this->make_posts_with_status( 'trash', 1 );
+
+		$html = $this->render_admin_page(
+			array( 'page' => 'wp-sweep' ),
+			array(
+				'action'   => 'sweep',
+				'sweep'    => array( 'revisions', 'deleted_posts' ),
+				'_wpnonce' => wp_create_nonce( 'wp_sweep_bulk' ),
+			)
+		);
+
+		$this->assertNull( get_post( $revisions[0] ), 'The bulk action did not sweep the revisions.' );
+		$this->assertStringContainsString( 'Revisions Processed', $html );
+		$this->assertStringContainsString( 'Deleted Posts Processed', $html );
+	}
+
+	/**
+	 * The bulk action refuses a name that is not one of the plugin's own.
+	 */
+	public function test_bulk_sweep_ignores_an_unknown_name() {
+		$revisions = $this->make_revisions( 1 );
+
+		$html = $this->render_admin_page(
+			array( 'page' => 'wp-sweep' ),
+			array(
+				'action'   => 'sweep',
+				'sweep'    => array( 'no_such_sweep' ),
+				'_wpnonce' => wp_create_nonce( 'wp_sweep_bulk' ),
+			)
+		);
+
+		$this->assertInstanceOf( WP_Post::class, get_post( $revisions[0] ), 'An unknown bulk name deleted something.' );
+		$this->assertStringContainsString( 'nothing was swept', $html );
 	}
 
 	/**

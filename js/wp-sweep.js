@@ -1,9 +1,13 @@
 /**
  * WP-Sweep admin screen.
  *
- * Drives the Sweep and Details buttons against admin-ajax.php, keeps the
- * running totals at the top of each section up to date, and warns before the
- * page is closed mid-sweep.
+ * Drives the Sweep and Details row actions against admin-ajax.php, keeps the
+ * running totals above the table up to date, and warns before the page is
+ * closed mid-sweep.
+ *
+ * The row actions are real, nonced links: with the script turned off they
+ * still sweep, they just reload the screen each time. Everything here is an
+ * enhancement over that, never a replacement for it.
  *
  * Listeners are delegated from `document`, so a row added by one of the
  * wp_sweep_admin_*_sweep actions works without re-binding anything.
@@ -16,22 +20,40 @@
 	/**
 	 * Ask admin-ajax.php to run a sweep or fetch its details.
 	 *
-	 * @param {HTMLElement} button The button that was clicked.
+	 * @param {HTMLElement} trigger The row action that was clicked.
 	 * @return {Promise<Object>} The decoded JSON response.
 	 */
-	function request( button ) {
-		const params = new URLSearchParams( {
-			action: button.dataset.action,
-			sweep_name: button.dataset.sweep_name,
-			sweep_type: button.dataset.sweep_type,
-			_wpnonce: button.dataset.nonce,
-		} );
+	function request( trigger ) {
+		const params = new URLSearchParams();
+
+		// Named on the PHP side, so these stay snake_case. Setting them rather
+		// than writing an object literal keeps that out of the identifiers.
+		params.set( 'action', trigger.dataset.action );
+		params.set( 'sweep_name', trigger.dataset.sweepName );
+		params.set( 'sweep_type', trigger.dataset.sweepType );
+		params.set( '_wpnonce', trigger.dataset.nonce );
 
 		return fetch( window.ajaxurl + '?' + params.toString(), {
 			credentials: 'same-origin',
 		} ).then( function( response ) {
 			return response.json();
 		} );
+	}
+
+	/**
+	 * Mark a row action as running, or let it go again.
+	 *
+	 * The triggers are anchors, so they have no disabled property to set --
+	 * they are real, nonced links that work with the script turned off. A
+	 * click on one that is already running is ignored instead.
+	 *
+	 * @param {HTMLElement} trigger The row action.
+	 * @param {boolean}     busy    Whether it is running.
+	 * @param {string}      label   The text to show.
+	 */
+	function setBusy( trigger, busy, label ) {
+		trigger.setAttribute( 'aria-disabled', busy ? 'true' : 'false' );
+		trigger.textContent = label;
 	}
 
 	/**
@@ -132,17 +154,16 @@
 	/**
 	 * Run one sweep and fold the result back into the page.
 	 *
-	 * @param {HTMLElement} button The Sweep button that was clicked.
+	 * @param {HTMLElement} trigger The Sweep row action that was clicked.
 	 * @return {Promise} Resolves once the row has been updated.
 	 */
-	function sweep( button ) {
-		const row = button.closest( 'tr' );
+	function sweep( trigger ) {
+		const row = trigger.closest( 'tr' );
 
 		document.body.classList.add( 'sweep-active' );
-		button.disabled = true;
-		button.textContent = l10n.text_sweeping;
+		setBusy( trigger, true, l10n.text_sweeping );
 
-		return request( button )
+		return request( trigger )
 			.then( function( response ) {
 				if ( ! response || ! response.success ) {
 					return;
@@ -177,42 +198,51 @@
 
 				document.body.classList.remove( 'sweep-active' );
 
-				// Nothing left to sweep, so the buttons go with it.
+				// Nothing left to sweep, so the row actions go with it.
 				if ( 0 === count ) {
-					button.closest( 'td' ).textContent = l10n.text_na;
+					const actions = row.querySelector( '.row-actions' );
+
+					if ( actions ) {
+						actions.remove();
+					}
+
+					const box = row.querySelector( 'input[type="checkbox"]' );
+
+					if ( box ) {
+						box.remove();
+					}
+
 					return;
 				}
 
-				button.disabled = false;
-				button.textContent = l10n.text_sweep;
+				setBusy( trigger, false, l10n.text_sweep );
 			} )
 			.catch( function() {
 				document.body.classList.remove( 'sweep-active' );
-				button.disabled = false;
-				button.textContent = l10n.text_sweep;
+				setBusy( trigger, false, l10n.text_sweep );
 			} );
 	}
 
 	document.addEventListener( 'click', function( event ) {
-		const button = event.target.closest(
+		const trigger = event.target.closest(
 			'.btn-sweep, .btn-sweep-details, .btn-sweep-all',
 		);
 
-		if ( ! button ) {
+		if ( ! trigger || 'true' === trigger.getAttribute( 'aria-disabled' ) ) {
 			return;
 		}
 
 		event.preventDefault();
 
-		if ( button.classList.contains( 'btn-sweep' ) ) {
-			sweep( button );
+		if ( trigger.classList.contains( 'btn-sweep' ) ) {
+			sweep( trigger );
 			return;
 		}
 
-		if ( button.classList.contains( 'btn-sweep-details' ) ) {
-			request( button ).then( function( response ) {
+		if ( trigger.classList.contains( 'btn-sweep-details' ) ) {
+			request( trigger ).then( function( response ) {
 				if ( response && response.success && response.data.length > 0 ) {
-					renderDetails( button.closest( 'tr' ), response.data );
+					renderDetails( trigger.closest( 'tr' ), response.data );
 				}
 			} );
 			return;
@@ -220,14 +250,14 @@
 
 		// Sweep All: one at a time, so the server is never asked to run
 		// nineteen deletions at once.
-		button.disabled = true;
-		button.textContent = l10n.text_sweeping;
+		trigger.disabled = true;
+		trigger.textContent = l10n.text_sweeping;
 
-		const buttons = Array.prototype.slice.call(
+		const triggers = Array.prototype.slice.call(
 			document.querySelectorAll( '.btn-sweep' ),
 		);
 
-		buttons
+		triggers
 			.reduce( function( chain, next ) {
 				return chain.then( function() {
 					return sweep( next );
@@ -235,8 +265,8 @@
 			}, Promise.resolve() )
 			.then( function() {
 				document.body.classList.remove( 'sweep-active' );
-				button.disabled = false;
-				button.textContent = l10n.text_sweep_all;
+				trigger.disabled = false;
+				trigger.textContent = l10n.text_sweep_all;
 			} );
 	} );
 

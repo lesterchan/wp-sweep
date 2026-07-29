@@ -189,7 +189,7 @@ describe( 'the result of a sweep', () => {
 		expect( window.pwned ).toBeUndefined();
 	} );
 
-	it( 'replaces the buttons with N/A once the count reaches zero', async () => {
+	it( 'takes the row actions away once the count reaches zero', async () => {
 		document.body.innerHTML = sweepSection();
 		stubFetch( sweepResponse( { count: 0 } ) );
 
@@ -197,19 +197,28 @@ describe( 'the result of a sweep', () => {
 
 		expect( document.querySelector( '.btn-sweep' ) ).toBeNull();
 		expect( document.querySelector( '.btn-sweep-details' ) ).toBeNull();
-		expect( document.body.textContent ).toContain( l10n.text_na );
+		expect( document.querySelector( '.row-actions' ) ).toBeNull();
 	} );
 
-	it( 'leaves the buttons in place when items remain', async () => {
+	it( 'takes the checkbox away too, so a bulk sweep cannot queue a no-op', async () => {
+		document.body.innerHTML = sweepSection();
+		stubFetch( sweepResponse( { count: 0 } ) );
+
+		await clickAndSettle( document.querySelector( '.btn-sweep' ) );
+
+		expect( document.querySelector( 'input[type="checkbox"]' ) ).toBeNull();
+	} );
+
+	it( 'leaves the row actions in place when items remain', async () => {
 		document.body.innerHTML = sweepSection();
 		stubFetch( sweepResponse( { count: 5 } ) );
 
 		await clickAndSettle( document.querySelector( '.btn-sweep' ) );
 
-		const button = document.querySelector( '.btn-sweep' );
-		expect( button ).not.toBeNull();
-		expect( button.disabled ).toBe( false );
-		expect( button.textContent ).toBe( l10n.text_sweep );
+		const trigger = document.querySelector( '.btn-sweep' );
+		expect( trigger ).not.toBeNull();
+		expect( trigger.getAttribute( 'aria-disabled' ) ).toBe( 'false' );
+		expect( trigger.textContent ).toBe( l10n.text_sweep );
 	} );
 
 	it( 'clears any details that were on screen', async () => {
@@ -256,7 +265,7 @@ describe( 'the close warning', () => {
 		button.dispatchEvent( new window.MouseEvent( 'click', { bubbles: true } ) );
 
 		expect( document.body.classList.contains( 'sweep-active' ) ).toBe( true );
-		expect( button.disabled ).toBe( true );
+		expect( button.getAttribute( 'aria-disabled' ) ).toBe( 'true' );
 		expect( button.textContent ).toBe( l10n.text_sweeping );
 
 		resolveFetch();
@@ -381,7 +390,7 @@ describe( 'when things go wrong', () => {
 		// Without the catch, the page stays flagged busy for ever and the
 		// beforeunload warning fires on every subsequent navigation.
 		expect( document.body.classList.contains( 'sweep-active' ) ).toBe( false );
-		expect( button.disabled ).toBe( false );
+		expect( button.getAttribute( 'aria-disabled' ) ).toBe( 'false' );
 		expect( button.textContent ).toBe( l10n.text_sweep );
 	} );
 

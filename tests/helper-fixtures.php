@@ -131,15 +131,21 @@ abstract class WP_Sweep_TestCase extends WP_UnitTestCase {
 	 * render is the actual assertion, and a screen that renders while quietly
 	 * raising a notice per row is exactly the failure this catches.
 	 *
-	 * @param array $get Query parameters for the request.
+	 * @param array $get  Query parameters for the request.
+	 * @param array $post  Posted fields, for the bulk action.
 	 * @return string The rendered HTML.
 	 */
-	protected function render_admin_page( $get = array() ) {
+	protected function render_admin_page( $get = array(), $post = array() ) {
 		$this->admin_page_notices = array();
 
+		// add_settings_error() writes into a global that outlives the request,
+		// so a message raised by one test would otherwise be rendered by the
+		// next one.
+		$GLOBALS['wp_settings_errors'] = array();
+
 		$_GET     = $get;
-		$_POST    = array();
-		$_REQUEST = $get;
+		$_POST    = $post;
+		$_REQUEST = array_merge( $get, $post );
 
 		set_error_handler(
 			function ( $errno, $errstr, $errfile, $errline ) {

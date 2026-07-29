@@ -86,8 +86,10 @@ class WP_Sweep {
 		 * registers simply never fire on a front end request.
 		 */
 		require_once WP_SWEEP_DIR . 'includes/class-wp-sweep-admin.php';
+		require_once WP_SWEEP_DIR . 'includes/class-wp-sweep-settings.php';
 
 		WP_Sweep_Admin::init();
+		WP_Sweep_Settings::init();
 
 		// Activation hooks do not fire when a plugin is updated, so the upgrade
 		// routine is also run on every admin load.

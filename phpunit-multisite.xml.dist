@@ -2,7 +2,7 @@
 <!--
 	Identical to phpunit.xml.dist apart from WP_MULTISITE. The WordPress test
 	bootstrap reads that variable from the environment, so setting it here means
-	`vendor/bin/phpunit -c phpunit-multisite.xml.dist` is the whole command --
+	`vendor/bin/phpunit -c phpunit-multisite.xml.dist` is the whole command -
 	no wrapper shell needed locally or in CI.
 -->
 <phpunit

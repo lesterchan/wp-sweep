@@ -45,11 +45,11 @@ class WP_Sweep_Admin {
 	private static $hook_suffix = '';
 
 	/**
-	 * The message the no-JavaScript sweep left behind, if any.
+	 * The details a row action asked for, keyed by sweep name.
 	 *
-	 * @var string
+	 * @var array
 	 */
-	private static $message = '';
+	private static $details = array();
 
 	/**
 	 * Hook the screen into WordPress.
@@ -61,6 +61,17 @@ class WP_Sweep_Admin {
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'admin_enqueue_scripts' ) );
 		add_action( 'wp_ajax_sweep', array( __CLASS__, 'ajax_sweep' ) );
 		add_action( 'wp_ajax_sweep_details', array( __CLASS__, 'ajax_sweep_details' ) );
+	}
+
+	/**
+	 * The list table, built once the screen is being rendered.
+	 *
+	 * @return WP_Sweep_List_Table
+	 */
+	private static function list_table() {
+		require_once WP_SWEEP_DIR . 'includes/class-wp-sweep-list-table.php';
+
+		return new WP_Sweep_List_Table();
 	}
 
 	/**
@@ -76,6 +87,25 @@ class WP_Sweep_Admin {
 			self::PAGE,
 			array( __CLASS__, 'render_page' ),
 			'dashicons-editor-removeformatting'
+		);
+
+		// The data screen first, Settings last.
+		add_submenu_page(
+			self::PAGE,
+			_x( 'Sweep', 'Page title', 'wp-sweep' ),
+			_x( 'Sweep', 'Menu title', 'wp-sweep' ),
+			WP_Sweep::capability( 'sweep' ),
+			self::PAGE,
+			array( __CLASS__, 'render_page' )
+		);
+
+		add_submenu_page(
+			self::PAGE,
+			__( 'Sweep Settings', 'wp-sweep' ),
+			__( 'Settings', 'wp-sweep' ),
+			WP_Sweep_Settings::capability( 'settings' ),
+			WP_Sweep_Settings::PAGE,
+			array( 'WP_Sweep_Settings', 'render_page' )
 		);
 	}
 
@@ -130,19 +160,22 @@ class WP_Sweep_Admin {
 	 * @return void
 	 */
 	public static function render_page() {
+		if ( ! current_user_can( WP_Sweep::capability( 'sweep' ) ) ) {
+			wp_die( esc_html__( 'You do not have permission to sweep this site.', 'wp-sweep' ) );
+		}
+
 		$sweep = WP_Sweep::get_instance();
 
-		self::maybe_sweep();
+		self::handle_request();
+
+		$table = self::list_table();
+		$table->prepare_items();
 
 		?>
 		<div class="wrap">
 			<h1><?php echo esc_html_x( 'Sweep', 'Page title', 'wp-sweep' ); ?></h1>
 
-			<?php if ( '' !== self::$message ) : ?>
-				<div class="notice notice-success">
-					<p><?php echo esc_html( self::$message ); ?></p>
-				</div>
-			<?php endif; ?>
+			<?php settings_errors( 'wp_sweep' ); ?>
 
 			<div class="notice notice-warning">
 				<p>
@@ -174,7 +207,14 @@ class WP_Sweep_Admin {
 
 			<div class="sweep-message"></div>
 
-			<?php self::render_table(); ?>
+			<?php $table->views(); ?>
+
+			<form method="post" action="<?php echo esc_url( self::page_url() ); ?>">
+				<?php
+				wp_nonce_field( 'wp_sweep_bulk' );
+				$table->display();
+				?>
+			</form>
 
 			<p>
 				<button type="button" class="button button-primary btn-sweep-all"><?php esc_html_e( 'Sweep All', 'wp-sweep' ); ?></button>
@@ -183,6 +223,21 @@ class WP_Sweep_Admin {
 			<?php self::fire_group_actions(); ?>
 		</div>
 		<?php
+	}
+
+	/**
+	 * The screen's own URL, carrying the group currently being shown.
+	 *
+	 * @return string
+	 */
+	private static function page_url() {
+		return add_query_arg(
+			array(
+				'page'  => self::PAGE,
+				'group' => WP_Sweep_List_Table::current_group(),
+			),
+			admin_url( 'admin.php' )
+		);
 	}
 
 	/**
@@ -257,76 +312,6 @@ class WP_Sweep_Admin {
 	}
 
 	/**
-	 * Render the list of sweeps.
-	 *
-	 * @return void
-	 */
-	private static function render_table() {
-		$sweep  = WP_Sweep::get_instance();
-		$groups = $sweep->get_sweep_groups();
-
-		?>
-		<table class="widefat striped table-sweep">
-			<thead>
-				<tr>
-					<th scope="col"><?php esc_html_e( 'Sweep', 'wp-sweep' ); ?></th>
-					<th scope="col"><?php esc_html_e( 'Group', 'wp-sweep' ); ?></th>
-					<th scope="col"><?php esc_html_e( 'Count', 'wp-sweep' ); ?></th>
-					<th scope="col"><?php esc_html_e( '% Of', 'wp-sweep' ); ?></th>
-					<th scope="col"><?php esc_html_e( 'Action', 'wp-sweep' ); ?></th>
-				</tr>
-			</thead>
-			<tbody>
-				<?php foreach ( $sweep->get_sweeps() as $name => $args ) : ?>
-					<?php $count = (int) $sweep->count( $name ); ?>
-					<tr>
-						<td>
-							<strong><?php echo esc_html( $args['label'] ); ?></strong>
-							<p class="sweep-details" hidden></p>
-						</td>
-						<td><?php echo esc_html( $groups[ $args['group'] ] ); ?></td>
-						<td><span class="sweep-count"><?php echo esc_html( number_format_i18n( $count ) ); ?></span></td>
-						<td><span class="sweep-percentage"><?php echo esc_html( $sweep->format_percentage( $count, $sweep->total_count( $args['type'] ) ) ); ?></span></td>
-						<td>
-							<?php if ( $count > 0 ) : ?>
-								<?php self::render_buttons( $name, $args['type'] ); ?>
-							<?php else : ?>
-								<?php esc_html_e( 'N/A', 'wp-sweep' ); ?>
-							<?php endif; ?>
-						</td>
-					</tr>
-				<?php endforeach; ?>
-			</tbody>
-		</table>
-		<?php
-	}
-
-	/**
-	 * Render the Sweep and Details buttons for one row.
-	 *
-	 * @param string $name Sweep name.
-	 * @param string $type Sweep type.
-	 * @return void
-	 */
-	private static function render_buttons( $name, $type ) {
-		printf(
-			'<button type="button" class="button button-primary btn-sweep" data-action="sweep" data-sweep_name="%1$s" data-sweep_type="%2$s" data-nonce="%3$s">%4$s</button> ',
-			esc_attr( $name ),
-			esc_attr( $type ),
-			esc_attr( wp_create_nonce( 'wp_sweep_' . $name ) ),
-			esc_html__( 'Sweep', 'wp-sweep' )
-		);
-
-		printf(
-			'<button type="button" class="button btn-sweep-details" data-action="sweep_details" data-sweep_name="%1$s" data-sweep_type="%2$s" data-nonce="%3$s">%4$s</button>',
-			esc_attr( $name ),
-			esc_attr( $type ),
-			esc_attr( wp_create_nonce( 'wp_sweep_details_' . $name ) ),
-			esc_html__( 'Details', 'wp-sweep' )
-		);
-	}
-
-	/**
 	 * Fire the extension points other plugins hang their own rows off.
 	 *
 	 * @return void
@@ -376,7 +361,68 @@ class WP_Sweep_Admin {
 	}
 
 	/**
-	 * Run the sweep a request without JavaScript asked for.
+	 * Act on whatever the request asked for, before anything is rendered.
+	 *
+	 * Every one of these paths works with JavaScript turned off: the row
+	 * actions are real nonced links and the bulk action is a real form post.
+	 * The script intercepts the links so the screen does not reload nineteen
+	 * times, but nothing depends on it being there.
+	 *
+	 * @return void
+	 */
+	private static function handle_request() {
+		self::$details = array();
+
+		self::handle_bulk_sweep();
+		self::handle_single_sweep();
+		self::handle_details();
+	}
+
+	/**
+	 * Sweep everything that was checked.
+	 *
+	 * @return void
+	 */
+	private static function handle_bulk_sweep() {
+		$table = self::list_table();
+
+		if ( 'sweep' !== $table->current_action() ) {
+			return;
+		}
+
+		check_admin_referer( 'wp_sweep_bulk' );
+
+		$sweep    = WP_Sweep::get_instance();
+		$posted   = isset( $_POST['sweep'] ) ? array_map( 'sanitize_key', (array) wp_unslash( $_POST['sweep'] ) ) : array();
+		$messages = array();
+
+		// Filtered from the canonical list rather than taken as given, so the
+		// sweeps run in the order they have to and an unknown name is dropped
+		// rather than passed on.
+		foreach ( array_intersect( $sweep->get_sweep_names(), $posted ) as $name ) {
+			$message = $sweep->sweep( $name );
+
+			if ( '' !== $message ) {
+				$messages[] = $message;
+			}
+		}
+
+		if ( empty( $messages ) ) {
+			add_settings_error( 'wp_sweep', 'wp_sweep_nothing', __( 'Nothing was selected, so nothing was swept.', 'wp-sweep' ), 'warning' );
+
+			return;
+		}
+
+		/*
+		 * Escaped here, not by settings_errors(), which prints the message
+		 * straight into the page. Every one of these comes back through the
+		 * wp_sweep_sweep filter, which is public API and can return anything.
+		 */
+		add_settings_error( 'wp_sweep', 'wp_sweep_swept', esc_html( implode( ' ', $messages ) ), 'success' );
+	}
+
+	/**
+	 * Run the one sweep a row action asked for.
 	 *
 	 * The name is validated against the plugin's own list before the referer is
 	 * checked, so a crafted value never reaches sweep(). The resulting message
@@ -386,24 +432,70 @@ class WP_Sweep_Admin {
 	 *
 	 * @return void
 	 */
-	private static function maybe_sweep() {
-		self::$message = '';
-
+	private static function handle_single_sweep() {
 		$sweep = WP_Sweep::get_instance();
-
-		$name = isset( $_GET['sweep'] ) ? sanitize_key( wp_unslash( $_GET['sweep'] ) ) : '';
+		$name  = self::requested( 'sweep' );
 
 		if ( '' === $name || ! $sweep->is_sweep_name_valid( $name ) ) {
 			return;
 		}
 
-		if ( ! current_user_can( WP_Sweep::capability( 'sweep' ) ) ) {
+		check_admin_referer( 'wp_sweep_' . $name );
+
+		$message = $sweep->sweep( $name );
+
+		if ( '' === $message ) {
+			add_settings_error( 'wp_sweep', 'wp_sweep_nothing', __( 'There was nothing left to sweep.', 'wp-sweep' ), 'warning' );
+
 			return;
 		}
 
-		check_admin_referer( 'wp_sweep_' . $name );
+		// Escaped for the reason given in handle_bulk_sweep().
+		add_settings_error( 'wp_sweep', 'wp_sweep_swept', esc_html( $message ), 'success' );
+	}
 
-		self::$message = $sweep->sweep( $name );
+	/**
+	 * Collect the details a row action asked for.
+	 *
+	 * @return void
+	 */
+	private static function handle_details() {
+		$sweep = WP_Sweep::get_instance();
+		$name  = self::requested( 'sweep_details' );
+
+		if ( '' === $name || ! $sweep->is_sweep_name_valid( $name ) ) {
+			return;
+		}
+
+		check_admin_referer( 'wp_sweep_details_' . $name );
+
+		self::$details = array( $name => (array) $sweep->details( $name ) );
+	}
+
+	/**
+	 * The sweep name a given request parameter names, if any.
+	 *
+	 * The referer is checked by the caller the moment the name turns out to be
+	 * one this plugin implements, which is why reading it here needs no nonce
+	 * of its own.
+	 *
+	 * @param string $key Request parameter to read.
+	 * @return string A sanitised sweep name, or an empty string.
+	 */
+	private static function requested( $key ) {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Only used to decide which nonce to check; check_admin_referer() runs before the value is acted on.
+		$query = wp_unslash( $_GET );
+
+		return isset( $query[ $key ] ) ? sanitize_key( $query[ $key ] ) : '';
+	}
+
+	/**
+	 * The details a row action asked for, keyed by sweep name.
+	 *
+	 * @return array
+	 */
+	public static function requested_details() {
+		return self::$details;
 	}
 
 	/**
