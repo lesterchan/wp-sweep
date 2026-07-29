@@ -218,7 +218,7 @@ describe( 'the result of a sweep', () => {
 		const trigger = document.querySelector( '.btn-sweep' );
 		expect( trigger ).not.toBeNull();
 		expect( trigger.getAttribute( 'aria-disabled' ) ).toBe( 'false' );
-		expect( trigger.textContent ).toBe( l10n.text_sweep );
+		expect( trigger.textContent ).toBe( l10n.textSweep );
 	} );
 
 	it( 'clears any details that were on screen', async () => {
@@ -266,7 +266,7 @@ describe( 'the close warning', () => {
 
 		expect( document.body.classList.contains( 'sweep-active' ) ).toBe( true );
 		expect( button.getAttribute( 'aria-disabled' ) ).toBe( 'true' );
-		expect( button.textContent ).toBe( l10n.text_sweeping );
+		expect( button.textContent ).toBe( l10n.textSweeping );
 
 		resolveFetch();
 		await new Promise( ( resolve ) => setTimeout( resolve, 0 ) );
@@ -294,7 +294,7 @@ describe( 'the close warning', () => {
 	it( 'supplies the warning text for browsers that still show one', () => {
 		// The legacy string is returned from the handler, so a browser that
 		// reads it gets the translated sentence rather than a blank dialog.
-		expect( l10n.text_close_warning ).toContain( 'Sweeping is in progress' );
+		expect( l10n.textCloseWarning ).toContain( 'Sweeping is in progress' );
 
 		let captured;
 		const handler = ( event ) => {
@@ -364,7 +364,7 @@ describe( 'Sweep All', () => {
 		}
 
 		expect( all.disabled ).toBe( false );
-		expect( all.textContent ).toBe( l10n.text_sweep_all );
+		expect( all.textContent ).toBe( l10n.textSweepAll );
 		expect( document.body.classList.contains( 'sweep-active' ) ).toBe( false );
 	} );
 } );
@@ -391,7 +391,7 @@ describe( 'when things go wrong', () => {
 		// beforeunload warning fires on every subsequent navigation.
 		expect( document.body.classList.contains( 'sweep-active' ) ).toBe( false );
 		expect( button.getAttribute( 'aria-disabled' ) ).toBe( 'false' );
-		expect( button.textContent ).toBe( l10n.text_sweep );
+		expect( button.textContent ).toBe( l10n.textSweep );
 	} );
 
 	it( 'does not throw when a row has no details container', async () => {

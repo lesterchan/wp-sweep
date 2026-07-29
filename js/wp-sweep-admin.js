@@ -161,7 +161,7 @@
 		const row = trigger.closest( 'tr' );
 
 		document.body.classList.add( 'sweep-active' );
-		setBusy( trigger, true, l10n.text_sweeping );
+		setBusy( trigger, true, l10n.textSweeping );
 
 		return request( trigger )
 			.then( function( response ) {
@@ -215,11 +215,11 @@
 					return;
 				}
 
-				setBusy( trigger, false, l10n.text_sweep );
+				setBusy( trigger, false, l10n.textSweep );
 			} )
 			.catch( function() {
 				document.body.classList.remove( 'sweep-active' );
-				setBusy( trigger, false, l10n.text_sweep );
+				setBusy( trigger, false, l10n.textSweep );
 			} );
 	}
 
@@ -251,7 +251,7 @@
 		// Sweep All: one at a time, so the server is never asked to run
 		// nineteen deletions at once.
 		trigger.disabled = true;
-		trigger.textContent = l10n.text_sweeping;
+		trigger.textContent = l10n.textSweeping;
 
 		const triggers = Array.prototype.slice.call(
 			document.querySelectorAll( '.btn-sweep' ),
@@ -266,7 +266,7 @@
 			.then( function() {
 				document.body.classList.remove( 'sweep-active' );
 				trigger.disabled = false;
-				trigger.textContent = l10n.text_sweep_all;
+				trigger.textContent = l10n.textSweepAll;
 			} );
 	} );
 
@@ -280,8 +280,8 @@
 		}
 
 		event.preventDefault();
-		event.returnValue = l10n.text_close_warning;
+		event.returnValue = l10n.textCloseWarning;
 
-		return l10n.text_close_warning;
+		return l10n.textCloseWarning;
 	} );
 }() );

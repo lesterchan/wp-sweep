@@ -139,17 +139,17 @@ class WP_Sweep_Admin {
 		 * Building it from the literal 'wp-sweep/js/...' meant the script 404ed
 		 * for anyone who installed the plugin under a different directory name.
 		 */
-		wp_enqueue_script( 'wp-sweep', WP_SWEEP_URL . 'js/wp-sweep.js', array(), WP_SWEEP_VERSION, true );
+		wp_enqueue_script( 'wp-sweep-admin', WP_SWEEP_URL . 'js/wp-sweep-admin.js', array(), WP_SWEEP_VERSION, true );
 
 		wp_localize_script(
-			'wp-sweep',
+			'wp-sweep-admin',
 			'wpSweepL10n',
 			array(
-				'text_close_warning' => __( 'Sweeping is in progress. If you leave now, the process won\'t be completed.', 'wp-sweep' ),
-				'text_sweep'         => __( 'Sweep', 'wp-sweep' ),
-				'text_sweep_all'     => __( 'Sweep All', 'wp-sweep' ),
-				'text_sweeping'      => __( 'Sweeping...', 'wp-sweep' ),
-				'text_na'            => __( 'N/A', 'wp-sweep' ),
+				'textCloseWarning' => __( 'Sweeping is in progress. If you leave now, the process won\'t be completed.', 'wp-sweep' ),
+				'textSweep'        => __( 'Sweep', 'wp-sweep' ),
+				'textSweepAll'     => __( 'Sweep All', 'wp-sweep' ),
+				'textSweeping'     => __( 'Sweeping...', 'wp-sweep' ),
+				'textNa'           => __( 'N/A', 'wp-sweep' ),
 			)
 		);
 	}

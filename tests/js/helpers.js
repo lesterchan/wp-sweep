@@ -13,12 +13,12 @@ import { vi } from 'vitest';
  * The strings wp_localize_script() puts on the page.
  */
 export const l10n = {
-	text_close_warning:
+	textCloseWarning:
 		"Sweeping is in progress. If you leave now, the process won't be completed.",
-	text_sweep: 'Sweep',
-	text_sweep_all: 'Sweep All',
-	text_sweeping: 'Sweeping...',
-	text_na: 'N/A',
+	textSweep: 'Sweep',
+	textSweepAll: 'Sweep All',
+	textSweeping: 'Sweeping...',
+	textNa: 'N/A',
 };
 
 /**
@@ -39,7 +39,7 @@ export function bootScript() {
 	window.wpSweepL10n = l10n;
 	window.ajaxurl = '/wp-admin/admin-ajax.php';
 
-	loadScript( 'js/wp-sweep.js' );
+	loadScript( 'js/wp-sweep-admin.js' );
 }
 
 /**

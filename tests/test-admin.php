@@ -331,7 +331,7 @@ class Test_WP_Sweep_Admin extends WP_Sweep_TestCase {
 	public function test_script_is_enqueued_on_the_sweep_screen() {
 		WP_Sweep_Admin::admin_enqueue_scripts( $this->register_admin_menu() );
 
-		$this->assertTrue( wp_script_is( 'wp-sweep', 'enqueued' ) );
+		$this->assertTrue( wp_script_is( 'wp-sweep-admin', 'enqueued' ) );
 	}
 
 	/**
@@ -344,7 +344,7 @@ class Test_WP_Sweep_Admin extends WP_Sweep_TestCase {
 	public function test_script_is_not_enqueued_elsewhere( $hook ) {
 		WP_Sweep_Admin::admin_enqueue_scripts( $hook );
 
-		$this->assertFalse( wp_script_is( 'wp-sweep', 'enqueued' ) );
+		$this->assertFalse( wp_script_is( 'wp-sweep-admin', 'enqueued' ) );
 	}
 
 	/**
@@ -369,7 +369,7 @@ class Test_WP_Sweep_Admin extends WP_Sweep_TestCase {
 	public function test_script_has_no_dependencies() {
 		WP_Sweep_Admin::admin_enqueue_scripts( $this->register_admin_menu() );
 
-		$script = wp_scripts()->registered['wp-sweep'];
+		$script = wp_scripts()->registered['wp-sweep-admin'];
 
 		$this->assertSame( array(), $script->deps );
 		$this->assertNotContains( 'jquery', $script->deps );
@@ -382,18 +382,18 @@ class Test_WP_Sweep_Admin extends WP_Sweep_TestCase {
 	public function test_script_is_the_unminified_source() {
 		WP_Sweep_Admin::admin_enqueue_scripts( $this->register_admin_menu() );
 
-		$script = wp_scripts()->registered['wp-sweep'];
+		$script = wp_scripts()->registered['wp-sweep-admin'];
 
-		$this->assertStringEndsWith( '/js/wp-sweep.js', $script->src );
+		$this->assertStringEndsWith( '/js/wp-sweep-admin.js', $script->src );
 		$this->assertStringNotContainsString( '.min.js', $script->src );
-		$this->assertFileDoesNotExist( dirname( __DIR__ ) . '/js/wp-sweep.min.js' );
+		$this->assertFileDoesNotExist( dirname( __DIR__ ) . '/js/wp-sweep-admin.min.js' );
 	}
 
 	/**
 	 * The script carries no jQuery in its source either.
 	 */
 	public function test_script_source_uses_no_jquery() {
-		$source = file_get_contents( dirname( __DIR__ ) . '/js/wp-sweep.js' );
+		$source = file_get_contents( dirname( __DIR__ ) . '/js/wp-sweep-admin.js' );
 
 		$this->assertStringNotContainsString( 'jQuery', $source );
 		$this->assertStringNotContainsString( '$(', $source );
@@ -405,7 +405,7 @@ class Test_WP_Sweep_Admin extends WP_Sweep_TestCase {
 	 * browser; the JS suite covers the behaviour, this guards the source.
 	 */
 	public function test_script_never_assigns_innerhtml() {
-		$source = file_get_contents( dirname( __DIR__ ) . '/js/wp-sweep.js' );
+		$source = file_get_contents( dirname( __DIR__ ) . '/js/wp-sweep-admin.js' );
 
 		$this->assertStringNotContainsString( 'innerHTML', $source );
 		$this->assertStringContainsString( 'textContent', $source );
@@ -417,11 +417,11 @@ class Test_WP_Sweep_Admin extends WP_Sweep_TestCase {
 	public function test_script_is_localised() {
 		WP_Sweep_Admin::admin_enqueue_scripts( $this->register_admin_menu() );
 
-		$data = wp_scripts()->registered['wp-sweep']->extra['data'];
+		$data = wp_scripts()->registered['wp-sweep-admin']->extra['data'];
 
 		$this->assertStringContainsString( 'wpSweepL10n', $data );
 
-		foreach ( array( 'text_close_warning', 'text_sweep', 'text_sweep_all', 'text_sweeping', 'text_na' ) as $key ) {
+		foreach ( array( 'textCloseWarning', 'textSweep', 'textSweepAll', 'textSweeping', 'textNa' ) as $key ) {
 			$this->assertStringContainsString( $key, $data );
 		}
 	}
@@ -526,8 +526,8 @@ class Test_WP_Sweep_Admin extends WP_Sweep_TestCase {
 		WP_Sweep_Admin::admin_enqueue_scripts( $this->register_admin_menu() );
 
 		$this->assertSame(
-			plugins_url( 'js/wp-sweep.js', WP_SWEEP_MAIN_FILE ),
-			wp_scripts()->registered['wp-sweep']->src
+			plugins_url( 'js/wp-sweep-admin.js', WP_SWEEP_MAIN_FILE ),
+			wp_scripts()->registered['wp-sweep-admin']->src
 		);
 	}
 
