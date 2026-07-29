@@ -408,7 +408,7 @@ class WP_Sweep {
 		/**
 		 * Filters the total number of rows a sweep's percentage is measured against.
 		 *
-		 * @since 1.0.0
+		 * @since 1.0.4
 		 *
 		 * @param int    $count The row count.
 		 * @param string $name  The sweep type.
@@ -485,7 +485,7 @@ class WP_Sweep {
 		/**
 		 * Filters the number of items a sweep would remove.
 		 *
-		 * @since 1.0.0
+		 * @since 1.0.4
 		 *
 		 * @param int    $count The item count.
 		 * @param string $name  The sweep name.
@@ -795,7 +795,7 @@ class WP_Sweep {
 		/**
 		 * Filters the message returned after a sweep has run.
 		 *
-		 * @since 1.0.0
+		 * @since 1.0.4
 		 *
 		 * @param string $message The result message.
 		 * @param string $name    The sweep name.

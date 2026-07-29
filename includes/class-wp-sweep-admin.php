@@ -335,42 +335,42 @@ class WP_Sweep_Admin {
 		/**
 		 * Fires below the sweep table, where the post sweeps used to end.
 		 *
-		 * @since 1.0.3
+		 * @since 1.0.4
 		 */
 		do_action( 'wp_sweep_admin_post_sweep' );
 
 		/**
 		 * Fires below the sweep table, where the comment sweeps used to end.
 		 *
-		 * @since 1.0.3
+		 * @since 1.0.4
 		 */
 		do_action( 'wp_sweep_admin_comment_sweep' );
 
 		/**
 		 * Fires below the sweep table, where the user sweeps used to end.
 		 *
-		 * @since 1.0.3
+		 * @since 1.0.4
 		 */
 		do_action( 'wp_sweep_admin_user_sweep' );
 
 		/**
 		 * Fires below the sweep table, where the term sweeps used to end.
 		 *
-		 * @since 1.0.3
+		 * @since 1.0.4
 		 */
 		do_action( 'wp_sweep_admin_term_sweep' );
 
 		/**
 		 * Fires below the sweep table, where the option sweeps used to end.
 		 *
-		 * @since 1.0.3
+		 * @since 1.0.4
 		 */
 		do_action( 'wp_sweep_admin_option_sweep' );
 
 		/**
 		 * Fires below the sweep table, where the database sweeps used to end.
 		 *
-		 * @since 1.0.3
+		 * @since 1.0.4
 		 */
 		do_action( 'wp_sweep_admin_database_sweep' );
 	}

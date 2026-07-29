@@ -303,4 +303,117 @@ class Test_WP_Sweep_Filters extends WP_Sweep_TestCase {
 
 		$this->assertSame( array(), $seen );
 	}
+	// -- The hooks as a published interface. --
+
+	/**
+	 * Every hook the plugin fires, and nothing else.
+	 *
+	 * These names are the plugin's public API: they appear in the readme, and
+	 * third-party code is hooked to them on sites this plugin will never see.
+	 * Renaming one is a silent break -- the old hook simply stops firing and
+	 * nothing anywhere reports it -- so the list is pinned here rather than
+	 * left to be noticed.
+	 */
+	public function test_the_fired_hooks_are_exactly_the_documented_set() {
+		$expected = array(
+			'wp_sweep_admin_comment_sweep',
+			'wp_sweep_admin_database_sweep',
+			'wp_sweep_admin_option_sweep',
+			'wp_sweep_admin_post_sweep',
+			'wp_sweep_admin_term_sweep',
+			'wp_sweep_admin_user_sweep',
+			'wp_sweep_capability',
+			'wp_sweep_commentmeta_whitelist',
+			'wp_sweep_count',
+			'wp_sweep_details',
+			'wp_sweep_excluded_taxonomies',
+			'wp_sweep_excluded_termids',
+			'wp_sweep_limit_details',
+			'wp_sweep_postmeta_whitelist',
+			'wp_sweep_sweep',
+			'wp_sweep_termmeta_whitelist',
+			'wp_sweep_total_count',
+			'wp_sweep_usermeta_whitelist',
+		);
+
+		$found = array();
+
+		foreach ( $this->plugin_source_files() as $file ) {
+			preg_match_all(
+				"/(?:apply_filters|do_action)\(\s*'([a-z0-9_]+)'/",
+				file_get_contents( $file ),
+				$matches
+			);
+
+			$found = array_merge( $found, $matches[1] );
+		}
+
+		$found = array_values( array_unique( $found ) );
+		sort( $found );
+
+		$this->assertSame( $expected, $found, 'The set of hooks the plugin fires has changed.' );
+	}
+
+	/**
+	 * Every hook is prefixed with the plugin slug.
+	 */
+	public function test_every_fired_hook_carries_the_plugin_prefix() {
+		foreach ( $this->plugin_source_files() as $file ) {
+			preg_match_all(
+				"/(?:apply_filters|do_action)\(\s*'([a-z0-9_]+)'/",
+				file_get_contents( $file ),
+				$matches
+			);
+
+			foreach ( $matches[1] as $hook ) {
+				$this->assertStringStartsWith(
+					'wp_sweep_',
+					$hook,
+					"'{$hook}' in " . basename( $file ) . ' is not prefixed with the plugin slug.'
+				);
+			}
+		}
+	}
+
+	/**
+	 * Every hook carries a docblock recording the version it appeared in.
+	 *
+	 * A hook without a @since is a hook nobody can safely depend on, because
+	 * there is no way to tell which releases have it.
+	 */
+	public function test_every_fired_hook_documents_the_version_it_appeared_in() {
+		foreach ( $this->plugin_source_files() as $file ) {
+			$lines = explode( "\n", file_get_contents( $file ) );
+
+			foreach ( $lines as $number => $line ) {
+				if ( ! preg_match( "/(?:apply_filters|do_action)\(\s*'wp_sweep_/", $line ) ) {
+					continue;
+				}
+
+				$above = implode( "\n", array_slice( $lines, max( 0, $number - 12 ), min( 12, $number ) ) );
+				$opens = strrpos( $above, '/**' );
+
+				$this->assertNotFalse( $opens, basename( $file ) . " line {$number} fires a hook with no docblock above it." );
+				$this->assertStringContainsString(
+					'@since',
+					substr( $above, $opens ),
+					basename( $file ) . " line {$number} fires a hook whose docblock has no @since."
+				);
+			}
+		}
+	}
+
+	/**
+	 * Every PHP file the plugin ships.
+	 *
+	 * @return array Absolute paths.
+	 */
+	protected function plugin_source_files() {
+		$root = dirname( __DIR__ );
+
+		return array_merge(
+			array( $root . '/wp-sweep.php', $root . '/uninstall.php' ),
+			glob( $root . '/includes/*.php' )
+		);
+	}
 }
