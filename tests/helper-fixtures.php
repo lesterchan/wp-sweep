@@ -25,10 +25,10 @@ abstract class WP_Sweep_TestCase extends WP_UnitTestCase {
 	 * so renaming the class is a one-line change here instead of a hundred
 	 * call sites that a missed reference could hide in.
 	 *
-	 * @return Sweep The plugin instance.
+	 * @return WP_Sweep The plugin instance.
 	 */
 	protected function sweep() {
-		return Sweep::get_instance();
+		return WP_Sweep::get_instance();
 	}
 
 	/**
@@ -66,20 +66,10 @@ abstract class WP_Sweep_TestCase extends WP_UnitTestCase {
 	protected $admin_page_notices = array();
 
 	/**
-	 * Path to the admin screen template, relative to the plugin root.
-	 *
-	 * Kept in one place so moving the file is a one-line change here rather
-	 * than a rename that a missed reference could hide in.
-	 *
-	 * @var string
-	 */
-	protected $admin_page = '/includes/admin.php';
-
-	/**
 	 * The hook suffix WordPress hands the admin screen.
 	 *
-	 * Kept beside $admin_page for the same reason: it changes when the menu
-	 * registration changes, and once here is better than in every test.
+	 * Kept here rather than in every test: it changes when the menu
+	 * registration changes, and once is better than a dozen times.
 	 *
 	 * @var string
 	 */
@@ -96,11 +86,12 @@ abstract class WP_Sweep_TestCase extends WP_UnitTestCase {
 	 * @return string The hook suffix.
 	 */
 	protected function register_admin_menu() {
+		$GLOBALS['menu']    = array();
 		$GLOBALS['submenu'] = array();
 
-		$this->sweep()->admin_menu();
+		WP_Sweep_Admin::admin_menu();
 
-		$this->admin_hook_suffix = $this->sweep()->get_hook_suffix();
+		$this->admin_hook_suffix = WP_Sweep_Admin::get_hook_suffix();
 
 		return $this->admin_hook_suffix;
 	}
@@ -136,17 +127,14 @@ abstract class WP_Sweep_TestCase extends WP_UnitTestCase {
 	/**
 	 * Renders the admin screen and captures anything PHP complained about.
 	 *
-	 * The template runs at global scope under wp-admin and reaches for globals
-	 * it never declares, so they have to be pulled in here or it renders half
-	 * a page. Collecting diagnostics is what makes this more than a smoke
-	 * test: a clean render under PHP 8 is the actual assertion.
+	 * Collecting diagnostics is what makes this more than a smoke test: a clean
+	 * render is the actual assertion, and a screen that renders while quietly
+	 * raising a notice per row is exactly the failure this catches.
 	 *
 	 * @param array $get Query parameters for the request.
 	 * @return string The rendered HTML.
 	 */
 	protected function render_admin_page( $get = array() ) {
-		global $wpdb, $wp_locale, $hook_suffix;
-
 		$this->admin_page_notices = array();
 
 		$_GET     = $get;
@@ -162,7 +150,7 @@ abstract class WP_Sweep_TestCase extends WP_UnitTestCase {
 
 		try {
 			ob_start();
-			require dirname( __DIR__ ) . $this->admin_page;
+			WP_Sweep_Admin::render_page();
 			return ob_get_clean();
 		} finally {
 			restore_error_handler();
@@ -269,12 +257,14 @@ abstract class WP_Sweep_TestCase extends WP_UnitTestCase {
 
 		// 999999 is an object that was deleted; 0 is the row the meta API cannot reach.
 		foreach ( array( 999999, 0 ) as $object_id ) {
-			$wpdb->insert(
-				$table_name,
-				array(
-					$id_column   => $object_id,
-					'meta_key'   => $meta_key,
-					'meta_value' => 'orphaned',
+			$wpdb->query(
+				$wpdb->prepare(
+					'INSERT INTO %i ( %i, meta_key, meta_value ) VALUES ( %d, %s, %s )',
+					$table_name,
+					$id_column,
+					$object_id,
+					$meta_key,
+					'orphaned'
 				)
 			);
 		}
@@ -397,7 +387,8 @@ abstract class WP_Sweep_TestCase extends WP_UnitTestCase {
 
 		return (int) $wpdb->get_var(
 			$wpdb->prepare(
-				'SELECT COUNT(*) FROM `' . $tables[ $table ] . '` WHERE meta_key = %s',
+				'SELECT COUNT(*) FROM %i WHERE meta_key = %s',
+				$tables[ $table ],
 				$meta_key
 			)
 		);

@@ -104,14 +104,14 @@ describe( 'the details list', () => {
 		stubFetch( detailsResponse( [ 'first', 'second', 'third' ] ) );
 
 		const details = document.querySelector( '.sweep-details' );
-		expect( details.style.display ).toBe( 'none' );
+		expect( details.hidden ).toBe( true );
 
 		await clickAndSettle( document.querySelector( '.btn-sweep-details' ) );
 
 		expect(
 			[ ...details.querySelectorAll( 'li' ) ].map( ( li ) => li.textContent ),
 		).toEqual( [ 'first', 'second', 'third' ] );
-		expect( details.style.display ).not.toBe( 'none' );
+		expect( details.hidden ).toBe( false );
 	} );
 
 	it( 'stays hidden when there is nothing to list', async () => {
@@ -120,9 +120,7 @@ describe( 'the details list', () => {
 
 		await clickAndSettle( document.querySelector( '.btn-sweep-details' ) );
 
-		expect( document.querySelector( '.sweep-details' ).style.display ).toBe(
-			'none',
-		);
+		expect( document.querySelector( '.sweep-details' ).hidden ).toBe( true );
 	} );
 
 	it( 'replaces a previous list rather than appending to it', async () => {
@@ -225,7 +223,7 @@ describe( 'the result of a sweep', () => {
 
 		const details = document.querySelector( '.sweep-details' );
 		expect( details.textContent ).toBe( '' );
-		expect( details.style.display ).toBe( 'none' );
+		expect( details.hidden ).toBe( true );
 	} );
 
 	it( 'ignores a response the server marked unsuccessful', async () => {

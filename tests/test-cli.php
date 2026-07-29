@@ -30,7 +30,7 @@ class Test_WP_Sweep_Cli extends WP_Sweep_TestCase {
 	 * @return array The success messages it reported.
 	 */
 	protected function run_command( $args = array(), $assoc_args = array() ) {
-		$command = new Sweep_Command();
+		$command = new WP_Sweep_Command();
 		$command( $args, $assoc_args );
 
 		return WP_CLI::$successes;
@@ -153,7 +153,7 @@ class Test_WP_Sweep_Cli extends WP_Sweep_TestCase {
 	public function test_run_sweep_accepts_a_list() {
 		$revisions = $this->make_revisions( 1 );
 
-		$command = new Sweep_Command();
+		$command = new WP_Sweep_Command();
 		$command->run_sweep( array( 'revisions' ) );
 
 		$this->assertNull( get_post( $revisions[0] ) );
@@ -183,15 +183,16 @@ class Test_WP_Sweep_Cli extends WP_Sweep_TestCase {
 	/**
 	 * The plugin registers the command under the name the readme documents.
 	 *
-	 * Sweep::init() gates on the WP_CLI constant, which cannot be defined
+	 * WP_Sweep::init() gates on the WP_CLI constant, which cannot be defined
 	 * here without changing what every other test sees, so the registration
 	 * is asserted against the source.
 	 */
-	public function test_command_is_registered_as_sweep() {
-		$code = $this->source_without_comments( '/includes/class-sweep.php' );
+	public function test_command_is_registered_under_the_plugin_slug() {
+		$code = $this->source_without_comments( '/includes/class-wp-sweep.php' );
 
-		$this->assertStringContainsString( "require __DIR__ . '/class-sweep-command.php';", $code );
-		$this->assertStringContainsString( "WP_CLI::add_command( 'sweep', 'Sweep_Command' );", $code );
+		$this->assertStringContainsString( "require_once WP_SWEEP_DIR . 'includes/class-wp-sweep-command.php';", $code );
+		$this->assertStringContainsString( "WP_CLI::add_command( WP_SWEEP_SLUG, 'WP_Sweep_Command' );", $code );
 		$this->assertStringContainsString( "defined( 'WP_CLI' )", $code );
+		$this->assertSame( 'wp-sweep', WP_SWEEP_SLUG, 'The command name is the plugin slug.' );
 	}
 }

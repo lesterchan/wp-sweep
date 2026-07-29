@@ -78,7 +78,7 @@ class Test_WP_Sweep_Ajax extends WP_Ajax_UnitTestCase {
 	 * @return Sweep The plugin instance.
 	 */
 	protected function sweep() {
-		return Sweep::get_instance();
+		return WP_Sweep::get_instance();
 	}
 
 	/**

@@ -1,6 +1,6 @@
 <?php
 /**
- * Tests for the sweep/v1 REST routes.
+ * Tests for the wp-sweep/v1 REST routes.
  *
  * @package wp-sweep
  */
@@ -70,14 +70,14 @@ class Test_WP_Sweep_Rest_Api extends WP_Sweep_TestCase {
 	}
 
 	/**
-	 * All three documented routes are registered under sweep/v1.
+	 * All three documented routes are registered under wp-sweep/v1.
 	 */
 	public function test_routes_are_registered() {
 		$routes = rest_get_server()->get_routes();
 
-		$this->assertArrayHasKey( '/sweep/v1/count/(?P<name>\w+)', $routes );
-		$this->assertArrayHasKey( '/sweep/v1/details/(?P<name>\w+)', $routes );
-		$this->assertArrayHasKey( '/sweep/v1/sweep/(?P<name>\w+)', $routes );
+		$this->assertArrayHasKey( '/wp-sweep/v1/count/(?P<name>\w+)', $routes );
+		$this->assertArrayHasKey( '/wp-sweep/v1/details/(?P<name>\w+)', $routes );
+		$this->assertArrayHasKey( '/wp-sweep/v1/sweep/(?P<name>\w+)', $routes );
 	}
 
 	/**
@@ -85,7 +85,7 @@ class Test_WP_Sweep_Rest_Api extends WP_Sweep_TestCase {
 	 */
 	public function test_sweep_route_uses_delete() {
 		$routes = rest_get_server()->get_routes();
-		$route  = $routes['/sweep/v1/sweep/(?P<name>\w+)'];
+		$route  = $routes['/wp-sweep/v1/sweep/(?P<name>\w+)'];
 
 		$this->assertTrue( $route[0]['methods']['DELETE'] );
 		$this->assertArrayNotHasKey( 'GET', $route[0]['methods'] );
@@ -126,9 +126,9 @@ class Test_WP_Sweep_Rest_Api extends WP_Sweep_TestCase {
 	 */
 	public function data_all_routes() {
 		return array(
-			'count'   => array( 'GET', '/sweep/v1/count/revisions' ),
-			'details' => array( 'GET', '/sweep/v1/details/revisions' ),
-			'sweep'   => array( 'DELETE', '/sweep/v1/sweep/revisions' ),
+			'count'   => array( 'GET', '/wp-sweep/v1/count/revisions' ),
+			'details' => array( 'GET', '/wp-sweep/v1/details/revisions' ),
+			'sweep'   => array( 'DELETE', '/wp-sweep/v1/sweep/revisions' ),
 		);
 	}
 
@@ -139,7 +139,7 @@ class Test_WP_Sweep_Rest_Api extends WP_Sweep_TestCase {
 		$revisions = $this->make_revisions( 2 );
 
 		wp_set_current_user( self::$subscriber );
-		$this->dispatch( 'DELETE', '/sweep/v1/sweep/revisions' );
+		$this->dispatch( 'DELETE', '/wp-sweep/v1/sweep/revisions' );
 
 		$this->assertInstanceOf( WP_Post::class, get_post( $revisions[0] ) );
 	}
@@ -151,7 +151,7 @@ class Test_WP_Sweep_Rest_Api extends WP_Sweep_TestCase {
 		$this->make_revisions( 3 );
 		wp_set_current_user( self::$admin );
 
-		$response = $this->dispatch( 'GET', '/sweep/v1/count/revisions' );
+		$response = $this->dispatch( 'GET', '/wp-sweep/v1/count/revisions' );
 		$data     = $response->get_data();
 
 		$this->assertSame( 200, $response->get_status() );
@@ -167,7 +167,7 @@ class Test_WP_Sweep_Rest_Api extends WP_Sweep_TestCase {
 		$this->make_revisions( 2 );
 		wp_set_current_user( self::$admin );
 
-		$data = $this->dispatch( 'GET', '/sweep/v1/details/revisions' )->get_data();
+		$data = $this->dispatch( 'GET', '/wp-sweep/v1/details/revisions' )->get_data();
 
 		$this->assertSame( 'revisions', $data['name'] );
 		$this->assertSame( 2, $data['count'] );
@@ -181,7 +181,7 @@ class Test_WP_Sweep_Rest_Api extends WP_Sweep_TestCase {
 		$revisions = $this->make_revisions( 2 );
 		wp_set_current_user( self::$admin );
 
-		$data = $this->dispatch( 'DELETE', '/sweep/v1/sweep/revisions' )->get_data();
+		$data = $this->dispatch( 'DELETE', '/wp-sweep/v1/sweep/revisions' )->get_data();
 
 		$this->assertTrue( $data['success'] );
 		$this->assertSame( 'revisions', $data['name'] );
@@ -195,9 +195,9 @@ class Test_WP_Sweep_Rest_Api extends WP_Sweep_TestCase {
 	 */
 	public function test_sweep_route_reports_nothing_to_do() {
 		wp_set_current_user( self::$admin );
-		$this->dispatch( 'DELETE', '/sweep/v1/sweep/revisions' );
+		$this->dispatch( 'DELETE', '/wp-sweep/v1/sweep/revisions' );
 
-		$data = $this->dispatch( 'DELETE', '/sweep/v1/sweep/revisions' )->get_data();
+		$data = $this->dispatch( 'DELETE', '/wp-sweep/v1/sweep/revisions' )->get_data();
 
 		$this->assertFalse( $data['success'] );
 		$this->assertSame( 'No items left to sweep.', $data['message'] );
@@ -232,7 +232,7 @@ class Test_WP_Sweep_Rest_Api extends WP_Sweep_TestCase {
 	public function test_every_sweep_name_is_accepted( $name ) {
 		wp_set_current_user( self::$admin );
 
-		$response = $this->dispatch( 'GET', '/sweep/v1/count/' . $name );
+		$response = $this->dispatch( 'GET', '/wp-sweep/v1/count/' . $name );
 
 		$this->assertSame( 200, $response->get_status(), "'{$name}' is not exposed over REST." );
 	}

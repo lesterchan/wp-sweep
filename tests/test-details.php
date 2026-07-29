@@ -1,6 +1,6 @@
 <?php
 /**
- * Tests for Sweep::details().
+ * Tests for WP_Sweep::details().
  *
  * @package wp-sweep
  */
@@ -96,27 +96,25 @@ class Test_WP_Sweep_Details extends WP_Sweep_TestCase {
 	 * The admin screen promises this in so many words.
 	 */
 	public function test_details_are_capped_at_limit_details() {
-		$sweep = $this->sweep();
-
 		// Shrink the cap rather than seeding 500 rows.
-		$original             = $sweep->limit_details;
-		$sweep->limit_details = 3;
+		add_filter(
+			'wp_sweep_limit_details',
+			static function () {
+				return 3;
+			}
+		);
 
-		try {
-			$this->make_revisions( 5 );
+		$this->make_revisions( 5 );
 
-			$this->assertCount( 3, $sweep->details( 'revisions' ) );
-			$this->assertSame( 5, (int) $sweep->count( 'revisions' ) );
-		} finally {
-			$sweep->limit_details = $original;
-		}
+		$this->assertCount( 3, $this->sweep()->details( 'revisions' ), 'The details list ignored the cap.' );
+		$this->assertSame( 5, (int) $this->sweep()->count( 'revisions' ), 'The cap must not change the count.' );
 	}
 
 	/**
 	 * The documented default cap is 500.
 	 */
 	public function test_default_details_limit_is_500() {
-		$this->assertSame( 500, $this->sweep()->limit_details );
+		$this->assertSame( 500, $this->sweep()->limit_details() );
 	}
 
 	/**

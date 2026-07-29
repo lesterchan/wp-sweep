@@ -150,7 +150,7 @@ export function sweepSection( {
 				<tr>
 					<td>
 						<strong>Revisions</strong>
-						<p class="sweep-details" style="display: none;"></p>
+						<p class="sweep-details" hidden></p>
 					</td>
 					<td><span class="sweep-count">${ count }</span></td>
 					<td><span class="sweep-percentage">${ percentage }</span></td>

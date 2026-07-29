@@ -1,6 +1,6 @@
 <?php
 /**
- * Tests for Sweep::count() and Sweep::total_count().
+ * Tests for WP_Sweep::count() and WP_Sweep::total_count().
  *
  * @package wp-sweep
  */

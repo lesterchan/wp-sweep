@@ -37,7 +37,7 @@ class Test_WP_Sweep_Admin extends WP_Sweep_TestCase {
 		parent::set_up();
 
 		wp_set_current_user( self::$admin );
-		set_current_screen( 'tools' );
+		set_current_screen( 'toplevel_page_wp-sweep' );
 
 		// WP_Scripts is a global that survives the transaction rollback, so a
 		// handle enqueued by one test is still enqueued in the next one.
@@ -258,7 +258,7 @@ class Test_WP_Sweep_Admin extends WP_Sweep_TestCase {
 		$html = $this->render_admin_page();
 
 		$this->assertStringContainsString(
-			number_format_i18n( $this->sweep()->limit_details ),
+			number_format_i18n( $this->sweep()->limit_details() ),
 			$html
 		);
 	}
@@ -267,7 +267,7 @@ class Test_WP_Sweep_Admin extends WP_Sweep_TestCase {
 	 * The admin script loads on the plugin's own screen.
 	 */
 	public function test_script_is_enqueued_on_the_sweep_screen() {
-		$this->sweep()->admin_enqueue_scripts( $this->register_admin_menu() );
+		WP_Sweep_Admin::admin_enqueue_scripts( $this->register_admin_menu() );
 
 		$this->assertTrue( wp_script_is( 'wp-sweep', 'enqueued' ) );
 	}
@@ -280,7 +280,7 @@ class Test_WP_Sweep_Admin extends WP_Sweep_TestCase {
 	 * @param string $hook Hook suffix of some other screen.
 	 */
 	public function test_script_is_not_enqueued_elsewhere( $hook ) {
-		$this->sweep()->admin_enqueue_scripts( $hook );
+		WP_Sweep_Admin::admin_enqueue_scripts( $hook );
 
 		$this->assertFalse( wp_script_is( 'wp-sweep', 'enqueued' ) );
 	}
@@ -305,7 +305,7 @@ class Test_WP_Sweep_Admin extends WP_Sweep_TestCase {
 	 * 2.0.0, and jQuery was the only reason this screen loaded it at all.
 	 */
 	public function test_script_has_no_dependencies() {
-		$this->sweep()->admin_enqueue_scripts( $this->register_admin_menu() );
+		WP_Sweep_Admin::admin_enqueue_scripts( $this->register_admin_menu() );
 
 		$script = wp_scripts()->registered['wp-sweep'];
 
@@ -318,7 +318,7 @@ class Test_WP_Sweep_Admin extends WP_Sweep_TestCase {
 	 * drifts out of sync with it.
 	 */
 	public function test_script_is_the_unminified_source() {
-		$this->sweep()->admin_enqueue_scripts( $this->register_admin_menu() );
+		WP_Sweep_Admin::admin_enqueue_scripts( $this->register_admin_menu() );
 
 		$script = wp_scripts()->registered['wp-sweep'];
 
@@ -353,7 +353,7 @@ class Test_WP_Sweep_Admin extends WP_Sweep_TestCase {
 	 * Every string the script shows the user is localised.
 	 */
 	public function test_script_is_localised() {
-		$this->sweep()->admin_enqueue_scripts( $this->register_admin_menu() );
+		WP_Sweep_Admin::admin_enqueue_scripts( $this->register_admin_menu() );
 
 		$data = wp_scripts()->registered['wp-sweep']->extra['data'];
 
@@ -365,18 +365,22 @@ class Test_WP_Sweep_Admin extends WP_Sweep_TestCase {
 	}
 
 	/**
-	 * The Tools menu entry is registered and gated on activate_plugins.
+	 * The top level menu entry is registered and gated on activate_plugins.
 	 */
-	public function test_management_page_is_registered() {
-		global $submenu;
+	public function test_top_level_menu_is_registered() {
+		global $menu;
 
-		$submenu = array();
+		$menu = array();
 		do_action( 'admin_menu' );
 
-		$this->assertArrayHasKey( 'tools.php', $submenu );
+		$slugs = wp_list_pluck( $menu, 2 );
+		$this->assertContains( WP_Sweep_Admin::PAGE, $slugs, 'The Sweep menu was not registered.' );
 
-		$capabilities = wp_list_pluck( $submenu['tools.php'], 1 );
-		$this->assertContains( 'activate_plugins', $capabilities );
+		foreach ( $menu as $entry ) {
+			if ( WP_Sweep_Admin::PAGE === $entry[2] ) {
+				$this->assertSame( 'activate_plugins', $entry[1], 'The Sweep menu is gated on the wrong capability.' );
+			}
+		}
 	}
 
 	/**
@@ -387,15 +391,15 @@ class Test_WP_Sweep_Admin extends WP_Sweep_TestCase {
 	 * the page URL.
 	 */
 	public function test_menu_uses_a_plain_slug() {
-		global $submenu;
+		global $menu;
 
-		$submenu = array();
+		$menu = array();
 		do_action( 'admin_menu' );
 
-		$slugs = wp_list_pluck( $submenu['tools.php'], 2 );
+		$slugs = wp_list_pluck( $menu, 2 );
 
-		$this->assertContains( Sweep::MENU_SLUG, $slugs );
-		$this->assertSame( 'wp-sweep', Sweep::MENU_SLUG );
+		$this->assertContains( WP_Sweep_Admin::PAGE, $slugs );
+		$this->assertSame( 'wp-sweep', WP_Sweep_Admin::PAGE );
 		$this->assertNotContains( 'wp-sweep/admin.php', $slugs );
 	}
 
@@ -411,17 +415,17 @@ class Test_WP_Sweep_Admin extends WP_Sweep_TestCase {
 		$hook = $this->register_admin_menu();
 
 		$this->assertNotSame( '', $hook );
-		$this->assertStringEndsWith( '_page_' . Sweep::MENU_SLUG, $hook );
-		$this->assertSame( $hook, $this->sweep()->get_hook_suffix() );
+		$this->assertStringEndsWith( '_page_' . WP_Sweep_Admin::PAGE, $hook );
+		$this->assertSame( $hook, WP_Sweep_Admin::get_hook_suffix() );
 	}
 
 	/**
 	 * Nothing compares the hook against a hardcoded suffix.
 	 */
 	public function test_hook_suffix_is_not_hardcoded() {
-		$code = $this->source_without_comments( '/includes/class-sweep.php' );
+		$code = $this->source_without_comments( '/includes/class-wp-sweep-admin.php' );
 
-		$this->assertStringNotContainsString( 'tools_page_', $code );
+		$this->assertStringNotContainsString( 'toplevel_page_', $code );
 		$this->assertStringNotContainsString( 'admin_page_wp-sweep', $code );
 	}
 
@@ -457,7 +461,7 @@ class Test_WP_Sweep_Admin extends WP_Sweep_TestCase {
 	 * wherever it is installed.
 	 */
 	public function test_script_url_is_derived_from_the_main_file() {
-		$this->sweep()->admin_enqueue_scripts( $this->register_admin_menu() );
+		WP_Sweep_Admin::admin_enqueue_scripts( $this->register_admin_menu() );
 
 		$this->assertSame(
 			plugins_url( 'js/wp-sweep.js', WP_SWEEP_MAIN_FILE ),
@@ -470,9 +474,9 @@ class Test_WP_Sweep_Admin extends WP_Sweep_TestCase {
 	 */
 	public function test_path_constants_are_consistent() {
 		$this->assertSame( dirname( __DIR__ ) . '/', WP_SWEEP_DIR );
-		$this->assertSame( basename( dirname( __DIR__ ) ), WP_SWEEP_SLUG );
+		$this->assertSame( 'wp-sweep', WP_SWEEP_SLUG );
 		$this->assertStringEndsWith( '/', WP_SWEEP_URL );
-		$this->assertFileExists( WP_SWEEP_DIR . 'includes/admin.php' );
+		$this->assertFileExists( WP_SWEEP_DIR . 'includes/class-wp-sweep-admin.php' );
 	}
 
 	/**
@@ -483,7 +487,7 @@ class Test_WP_Sweep_Admin extends WP_Sweep_TestCase {
 	 * plugins by itself at the right moment.
 	 */
 	public function test_plugin_does_not_load_its_own_textdomain() {
-		$code = $this->source_without_comments( '/includes/class-sweep.php' );
+		$code = $this->source_without_comments( '/includes/class-wp-sweep.php' );
 
 		$this->assertStringNotContainsString( 'load_plugin_textdomain(', $code );
 	}
@@ -563,12 +567,12 @@ class Test_WP_Sweep_Admin extends WP_Sweep_TestCase {
 	}
 
 	/**
-	 * Sweep::admin_page() is the callback add_management_page() registers,
+	 * WP_Sweep_Admin::render_page() is the callback add_menu_page() registers,
 	 * and it renders the same screen.
 	 */
 	public function test_admin_page_callback_renders_the_screen() {
 		ob_start();
-		$this->sweep()->admin_page();
+		WP_Sweep_Admin::render_page();
 		$html = ob_get_clean();
 
 		$this->assertStringContainsString( 'Post Sweep', $html );

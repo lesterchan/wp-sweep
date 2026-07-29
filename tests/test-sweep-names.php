@@ -57,7 +57,7 @@ class Test_WP_Sweep_Sweep_Names extends WP_Sweep_TestCase {
 	 * nineteen names.
 	 */
 	public function test_rest_api_defers_to_the_canonical_list() {
-		$source = file_get_contents( dirname( __DIR__ ) . '/includes/class-sweep-api.php' );
+		$source = file_get_contents( dirname( __DIR__ ) . '/includes/class-wp-sweep-api.php' );
 
 		$this->assertStringNotContainsString(
 			"'oembed_postmeta'",
@@ -65,7 +65,7 @@ class Test_WP_Sweep_Sweep_Names extends WP_Sweep_TestCase {
 			'The REST API keeps its own copy of the sweep names again.'
 		);
 
-		$api = new Sweep_Api();
+		$api = new WP_Sweep_API();
 		foreach ( self::$expected as $name ) {
 			$this->assertTrue( $api->is_sweep_name_valid( $name ) );
 		}
@@ -79,10 +79,10 @@ class Test_WP_Sweep_Sweep_Names extends WP_Sweep_TestCase {
 	 * test run, so this is read from the source.
 	 */
 	public function test_cli_command_defers_to_the_canonical_list() {
-		$source = file_get_contents( dirname( __DIR__ ) . '/includes/class-sweep-command.php' );
+		$source = file_get_contents( dirname( __DIR__ ) . '/includes/class-wp-sweep-command.php' );
 
 		$this->assertMatchesRegularExpression(
-			'/\$default_items\s*=\s*Sweep::get_instance\(\)->get_sweep_names\(\);/',
+			'/\$sweeps\s*=\s*WP_Sweep::get_instance\(\)->get_sweep_names\(\);/',
 			$source,
 			'The WP-CLI command keeps its own copy of the sweep names again.'
 		);
@@ -101,7 +101,7 @@ class Test_WP_Sweep_Sweep_Names extends WP_Sweep_TestCase {
 	 * @param string $name Sweep name.
 	 */
 	public function test_every_listed_name_is_implemented( $name ) {
-		$source = file_get_contents( dirname( __DIR__ ) . '/includes/class-sweep.php' );
+		$source = file_get_contents( dirname( __DIR__ ) . '/includes/class-wp-sweep.php' );
 
 		$occurrences = substr_count( $source, "case '{$name}':" );
 
@@ -127,18 +127,23 @@ class Test_WP_Sweep_Sweep_Names extends WP_Sweep_TestCase {
 	}
 
 	/**
-	 * The admin screen offers a button for every sweep except the two it
-	 * deliberately leaves out of the tables it renders.
+	 * Every listed sweep carries the label, type and group the screen needs.
+	 *
+	 * The rows are generated from this descriptor rather than written out one
+	 * by one, so a sweep missing a key renders a row with a blank cell instead
+	 * of failing loudly.
 	 */
-	public function test_admin_screen_covers_every_sweep() {
-		$source = file_get_contents( dirname( __DIR__ ) . $this->admin_page );
+	public function test_every_sweep_is_described_for_the_screen() {
+		$sweeps = $this->sweep()->get_sweeps();
+		$types  = $this->sweep()->get_sweep_types();
+		$groups = array_keys( $this->sweep()->get_sweep_groups() );
 
-		foreach ( self::$expected as $name ) {
-			$this->assertStringContainsString(
-				'data-sweep_name="' . $name . '"',
-				$source,
-				"The admin screen has no row for '{$name}'."
-			);
+		$this->assertSame( self::$expected, array_keys( $sweeps ), 'The descriptor and the name list disagree.' );
+
+		foreach ( $sweeps as $name => $args ) {
+			$this->assertNotEmpty( $args['label'], "'{$name}' has no label." );
+			$this->assertContains( $args['type'], $types, "'{$name}' names a type total_count() does not count." );
+			$this->assertContains( $args['group'], $groups, "'{$name}' names a group the screen does not render." );
 		}
 	}
 }

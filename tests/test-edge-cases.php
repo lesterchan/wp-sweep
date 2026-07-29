@@ -138,12 +138,12 @@ class Test_WP_Sweep_Edge_Cases extends WP_Sweep_TestCase {
 
 		$this->baseline( 'oembed_postmeta' );
 
-		$wpdb->insert(
-			$wpdb->postmeta,
-			array(
-				'post_id'    => 0,
-				'meta_key'   => '_oembed_' . md5( 'sweep-zero' ),
-				'meta_value' => '<iframe></iframe>',
+		$wpdb->query(
+			$wpdb->prepare(
+				"INSERT INTO $wpdb->postmeta ( post_id, meta_key, meta_value ) VALUES ( %d, %s, %s )",
+				0,
+				'_oembed_' . md5( 'sweep-zero' ),
+				'<iframe></iframe>'
 			)
 		);
 

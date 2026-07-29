@@ -88,7 +88,7 @@
 
 		target.textContent = '';
 		target.appendChild( list );
-		target.style.display = '';
+		target.hidden = false;
 	}
 
 	/**
@@ -101,7 +101,7 @@
 
 		if ( target ) {
 			target.textContent = '';
-			target.style.display = 'none';
+			target.hidden = true;
 		}
 	}
 

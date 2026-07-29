@@ -17,7 +17,7 @@
  */
 
 /*
-	Copyright 2026 Lester Chan  (email : lesterchan@gmail.com)
+	Copyright 2026  Lester Chan  (email : lesterchan@gmail.com)
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -36,54 +36,13 @@
 
 defined( 'ABSPATH' ) || exit;
 
-/**
- * WP-Sweep version.
- *
- * @since 1.0.0
- */
 define( 'WP_SWEEP_VERSION', '2.0.0' );
-
-/**
- * WP-Sweep main file.
- *
- * @since 1.0.0
- */
+define( 'WP_SWEEP_DB_VERSION', '1' );
+define( 'WP_SWEEP_SLUG', 'wp-sweep' );
 define( 'WP_SWEEP_MAIN_FILE', __FILE__ );
-
-/**
- * Absolute path to the plugin directory, with a trailing slash.
- *
- * @since 2.0.0
- */
 define( 'WP_SWEEP_DIR', plugin_dir_path( __FILE__ ) );
-
-/**
- * URL of the plugin directory, with a trailing slash.
- *
- * Derived from the main file rather than assembled from a hardcoded slug, so
- * the script still resolves when the plugin is installed under a directory
- * name other than wp-sweep.
- *
- * @since 2.0.0
- */
 define( 'WP_SWEEP_URL', plugin_dir_url( __FILE__ ) );
 
-/**
- * The directory name the plugin is installed under.
- *
- * @since 2.0.0
- */
-define( 'WP_SWEEP_SLUG', dirname( plugin_basename( __FILE__ ) ) );
+require_once WP_SWEEP_DIR . 'includes/class-wp-sweep.php';
 
-require WP_SWEEP_DIR . 'includes/class-sweep.php';
-require WP_SWEEP_DIR . 'includes/class-sweep-api.php';
-
-/**
- * WP REST API.
- */
-new Sweep_Api();
-
-/**
- * Init WP-Sweep.
- */
-Sweep::get_instance();
+WP_Sweep::get_instance();

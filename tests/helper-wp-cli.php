@@ -1,25 +1,15 @@
 <?php
 /**
- * Stand-ins for the WP-CLI classes the command file extends and calls.
- *
- * WP-CLI is not loaded in a PHPUnit run, so `class Sweep_Command extends
- * WP_CLI_Command` is a fatal error without these. Defining them is safe: the
- * plugin gates on the WP_CLI *constant*, which is deliberately left undefined,
- * so nothing else in the suite changes behaviour because these classes exist.
+ * Stand-in for the WP_CLI facade, recording what the command reports.
  *
  * Kept out of the test files themselves so each of those declares exactly one
  * class, and loaded from bootstrap.php rather than from a test, so the order
- * does not depend on which test runs first.
+ * does not depend on which test runs first. The base class it extends lives in
+ * helper-wp-cli-command.php, because the coding standard allows one class per
+ * file and that rule is not relaxed for the suite.
  *
  * @package wp-sweep
  */
-
-if ( ! class_exists( 'WP_CLI_Command' ) ) {
-	/**
-	 * Stand-in for WP-CLI's base command class.
-	 */
-	class WP_CLI_Command {}
-}
 
 if ( ! class_exists( 'WP_CLI' ) ) {
 	/**
@@ -63,4 +53,4 @@ if ( ! class_exists( 'WP_CLI' ) ) {
 	}
 }
 
-require_once dirname( __DIR__ ) . '/includes/class-sweep-command.php';
+require_once dirname( __DIR__ ) . '/includes/class-wp-sweep-command.php';
