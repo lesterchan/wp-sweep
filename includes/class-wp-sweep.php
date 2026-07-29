@@ -45,9 +45,13 @@ class WP_Sweep {
 	 * for plugins hosted on WordPress.org by itself, at the right moment.
 	 */
 	public function __construct() {
+		require_once WP_SWEEP_DIR . 'includes/class-wp-sweep-options.php';
 		require_once WP_SWEEP_DIR . 'includes/class-wp-sweep-api.php';
 
 		new WP_Sweep_API();
+
+		// Must be registered at file-load time, which is when this runs.
+		register_activation_hook( WP_SWEEP_MAIN_FILE, array( 'WP_Sweep_Options', 'maybe_upgrade' ) );
 
 		add_action( 'plugins_loaded', array( $this, 'add_hooks' ) );
 	}
@@ -84,6 +88,10 @@ class WP_Sweep {
 		require_once WP_SWEEP_DIR . 'includes/class-wp-sweep-admin.php';
 
 		WP_Sweep_Admin::init();
+
+		// Activation hooks do not fire when a plugin is updated, so the upgrade
+		// routine is also run on every admin load.
+		add_action( 'admin_init', array( 'WP_Sweep_Options', 'maybe_upgrade' ) );
 	}
 
 	/**
@@ -335,6 +343,8 @@ class WP_Sweep {
 	 * @return int Maximum number of sample items.
 	 */
 	public function limit_details() {
+		$limit = (int) WP_Sweep_Options::get( 'limit_details' );
+
 		/**
 		 * Filters how many items a details list may show.
 		 *
@@ -342,7 +352,7 @@ class WP_Sweep {
 		 *
 		 * @param int $limit Maximum number of sample items.
 		 */
-		return max( 1, (int) apply_filters( 'wp_sweep_limit_details', 500 ) );
+		return max( 1, (int) apply_filters( 'wp_sweep_limit_details', $limit ) );
 	}
 
 	/**

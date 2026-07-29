@@ -140,30 +140,75 @@ class Test_WP_Sweep_Regressions extends WP_Sweep_TestCase {
 		$this->assertTrue( $this->sweep()->is_sweep_name_valid( 'revisions' ) );
 	}
 
-	// -- There is nothing to install, and therefore nothing to uninstall. --
+	// -- What the plugin stores, and what uninstall has to remove. --
 
 	/**
-	 * WP-Sweep cleans up after other plugins and stores nothing of its own.
+	 * Only WP_Sweep_Options writes an option row.
 	 *
-	 * That is what makes uninstall.php a legitimate no-op, so it is asserted
-	 * rather than assumed. Before 2.0.0 the plugin carried activation,
-	 * deactivation and uninstall routines that looped over a multisite
-	 * network — capped at 100 sites by get_sites(), and restoring the blog
-	 * once after the loop rather than once per switch — to call three empty
-	 * function bodies. The loops were deleted rather than fixed. If a future
-	 * change starts persisting something, this test fails and says so.
+	 * WP-Sweep stored nothing at all until 2.0.0, and it stores two rows now.
+	 * Keeping every write in one class is what lets uninstall.php name what it
+	 * deletes with confidence: a write that appears anywhere else is a row
+	 * nothing would ever clean up.
 	 */
-	public function test_plugin_persists_nothing_of_its_own() {
+	public function test_only_the_options_class_writes_an_option() {
 		$writes = array( 'add_option(', 'update_option(', 'add_site_option(', 'update_site_option(' );
 
 		foreach ( $this->plugin_sources() as $file => $source ) {
+			if ( 'class-wp-sweep-options.php' === $file ) {
+				continue;
+			}
+
 			foreach ( $writes as $write ) {
 				$this->assertStringNotContainsString(
 					$write,
 					$source,
-					"{$file} now writes an option, so uninstall.php can no longer be a no-op."
+					"{$file} writes an option row that uninstall.php does not know about."
 				);
 			}
+		}
+	}
+
+	/**
+	 * Every option row the plugin writes is one uninstall.php deletes.
+	 *
+	 * Read from the source rather than the database, because uninstall.php is
+	 * never loaded during a test run -- it guards on WP_UNINSTALL_PLUGIN, and
+	 * defining that would take the rest of the suite with it.
+	 */
+	public function test_uninstall_deletes_every_row_the_plugin_writes() {
+		$uninstall = file_get_contents( dirname( __DIR__ ) . '/uninstall.php' );
+
+		foreach ( array( WP_Sweep_Options::OPTION, WP_Sweep_Options::VERSION ) as $row ) {
+			$this->assertStringContainsString(
+				"delete_option( '{$row}' )",
+				$uninstall,
+				"uninstall.php leaves '{$row}' behind."
+			);
+		}
+	}
+
+	/**
+	 * No nonce action can ever be mistaken for one of the option rows.
+	 *
+	 * The nonce actions are built as 'wp_sweep_' . $name, so a sweep named
+	 * `options` or `version` would produce the string 'wp_sweep_options' or
+	 * 'wp_sweep_version' -- identical to an option row name, in a codebase
+	 * where both are just strings. Nothing in WordPress would notice.
+	 */
+	public function test_no_nonce_action_reads_as_an_option_row() {
+		$rows = array( WP_Sweep_Options::OPTION, WP_Sweep_Options::VERSION );
+
+		foreach ( $this->sweep()->get_sweep_names() as $name ) {
+			$this->assertNotContains(
+				'wp_sweep_' . $name,
+				$rows,
+				"The nonce action for '{$name}' is spelled the same as an option row."
+			);
+			$this->assertNotContains(
+				'wp_sweep_details_' . $name,
+				$rows,
+				"The details nonce action for '{$name}' is spelled the same as an option row."
+			);
 		}
 	}
 
