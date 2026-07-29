@@ -36,7 +36,6 @@ jobs:
       - name: Run PHPCS
         run: $(composer global config bin-dir --absolute)/phpcs -q --report=checkstyle . | cs2pr
 
-  # NO-JS PLUGINS: delete this job AND this comment, through to `phpunit:`.
   eslint:
     name: JS coding standards and tests
     runs-on: ubuntu-latest
