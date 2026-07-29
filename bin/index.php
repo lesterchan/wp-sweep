@@ -1,8 +1,6 @@
 <?php
 /**
- * WP-Sweep bin/index.php
+ * Silence is golden.
  *
  * @package WP-Sweep
  */
-
-// Silence is golden.
