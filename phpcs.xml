@@ -83,6 +83,39 @@
 	</rule>
 
 	<!--
+		WordPress.DB.DirectDatabaseQuery fires on every $wpdb call and has no
+		code-level answer for a plugin that owns a table: wp_ratings, wp_polls,
+		the email logs and the useronline table are this plugin family's own
+		schema, and core offers no API for them. Seven of the nineteen hit it.
+
+		Scoped to includes/ so it cannot cover a query in a test fixture, and
+		deliberately NOT paired with an exclusion for PreparedSQL: interpolating
+		into SQL stays an error everywhere, because that one does have an answer.
+	-->
+	<rule ref="WordPress.DB.DirectDatabaseQuery">
+		<exclude-pattern>/includes/*</exclude-pattern>
+	</rule>
+
+	<!--
+		A WP_List_Table has to read $_GET['orderby'] and $_GET['order'] to sort
+		itself. Core builds a sortable column header by swapping those two keys
+		on the current URL, so the link carries no nonce and there is nothing to
+		verify - every core list table reads them exactly this way.
+
+		The routes to silencing it in code are all worse: filter_input() reads
+		the original request rather than $_GET, so the table stops seeing
+		anything WordPress or a test has modified; nonce-decorating the sort
+		links is theatre; and a POSTed <select> instead of core's sortable
+		headers violates 4.3 and 4.4. Sorting changes no state, so this is the
+		sniff being wrong rather than the code.
+
+		Scoped to *-table.php so it cannot quietly cover a real handler.
+	-->
+	<rule ref="WordPress.Security.NonceVerification">
+		<exclude-pattern>*-table.php</exclude-pattern>
+	</rule>
+
+	<!--
 		The settings tests set $hook_suffix, which wp-admin would have set before
 		any page callback ran. WP_List_Table's constructor reaches
 		WP_Screen::get(), which reads that global, so the test bootstrap has to

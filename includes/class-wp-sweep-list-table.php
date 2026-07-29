@@ -163,15 +163,14 @@ class WP_Sweep_List_Table extends WP_List_Table {
 	 *
 	 * Every read of the query string is here, so there is one place to look.
 	 * None of them is form data: they choose which rows are shown and in what
-	 * order, they change nothing, and a nonce on them would only mean a
-	 * bookmarked, sorted URL stopped working. That is why the one suppression
-	 * in this plugin is on the line below rather than scattered over the four
-	 * methods that want these values.
+	 * order, and they change nothing. Core builds its own sortable column
+	 * headers by swapping orderby and order on the current URL, so the link
+	 * carries no nonce and there is nothing to verify -- which is why phpcs.xml
+	 * excuses the sniff for *-table.php across the whole collection.
 	 *
 	 * @return array The group, orderby and order, each already sanitised.
 	 */
 	private static function request_args() {
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only list table navigation; nothing here changes state, and a nonce would break a bookmarked URL.
 		$query = wp_unslash( $_GET );
 
 		return array(

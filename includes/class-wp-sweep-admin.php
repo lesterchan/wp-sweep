@@ -434,7 +434,7 @@ class WP_Sweep_Admin {
 	 */
 	private static function handle_single_sweep() {
 		$sweep = WP_Sweep::get_instance();
-		$name  = self::requested( 'sweep' );
+		$name  = isset( $_GET['sweep'] ) ? sanitize_key( wp_unslash( $_GET['sweep'] ) ) : '';
 
 		if ( '' === $name || ! $sweep->is_sweep_name_valid( $name ) ) {
 			return;
@@ -461,7 +461,7 @@ class WP_Sweep_Admin {
 	 */
 	private static function handle_details() {
 		$sweep = WP_Sweep::get_instance();
-		$name  = self::requested( 'sweep_details' );
+		$name  = isset( $_GET['sweep_details'] ) ? sanitize_key( wp_unslash( $_GET['sweep_details'] ) ) : '';
 
 		if ( '' === $name || ! $sweep->is_sweep_name_valid( $name ) ) {
 			return;
@@ -470,23 +470,6 @@ class WP_Sweep_Admin {
 		check_admin_referer( 'wp_sweep_details_' . $name );
 
 		self::$details = array( $name => (array) $sweep->details( $name ) );
-	}
-
-	/**
-	 * The sweep name a given request parameter names, if any.
-	 *
-	 * The referer is checked by the caller the moment the name turns out to be
-	 * one this plugin implements, which is why reading it here needs no nonce
-	 * of its own.
-	 *
-	 * @param string $key Request parameter to read.
-	 * @return string A sanitised sweep name, or an empty string.
-	 */
-	private static function requested( $key ) {
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Only used to decide which nonce to check; check_admin_referer() runs before the value is acted on.
-		$query = wp_unslash( $_GET );
-
-		return isset( $query[ $key ] ) ? sanitize_key( $query[ $key ] ) : '';
 	}
 
 	/**

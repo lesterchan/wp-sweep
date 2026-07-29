@@ -137,15 +137,13 @@ class WP_Sweep {
 	 * object was deleted, terms attached to nothing, relationships pointing at
 	 * posts that are gone. There is no cached equivalent of any of it, and a
 	 * cached count would be wrong the moment anything else on the site wrote,
-	 * so WordPress.DB.DirectDatabaseQuery does not apply to this plugin the way
-	 * it applies to a plugin that could have used WP_Query. Note that the sniff
-	 * matches the literal method name after `->` and therefore does not fire on
-	 * the dynamic call below: read this docblock as the standing justification
-	 * for all of them rather than assuming nobody checked.
+	 * which is why phpcs.xml excuses WordPress.DB.DirectDatabaseQuery inside
+	 * includes/ across the whole collection.
 	 *
 	 * Values are bound by the caller, which is where the literal SQL lives, so
 	 * $sql arrives here already through $wpdb->prepare() whenever it carries
-	 * anything a filter or a request could have influenced.
+	 * anything a filter or a request could have influenced. That half is not
+	 * excused anywhere: interpolating into SQL stays an error.
 	 *
 	 * @param string $method One of get_var, get_col, get_results or query.
 	 * @param string $sql    The statement to run.
