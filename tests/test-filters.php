@@ -10,7 +10,7 @@
  * metadata from deletion, so a rename here is a data-loss bug in someone
  * else's install. Every documented name is pinned.
  */
-class Test_WP_Sweep_Filters extends WP_Sweep_TestCase {
+class WP_Sweep_Filters_Test extends WP_Sweep_TestCase {
 
 	/**
 	 * The wp_sweep_count filter overrides a count and is passed the name.

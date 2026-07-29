@@ -11,7 +11,7 @@
  * important code is the part that runs when those APIs decline. Every branch
  * here drops to direct SQL, and every one of them was uncovered.
  */
-class Test_WP_Sweep_Edge_Cases extends WP_Sweep_TestCase {
+class WP_Sweep_Edge_Cases_Test extends WP_Sweep_TestCase {
 
 	/**
 	 * Registers a taxonomy, then forgets it, leaving its rows behind.

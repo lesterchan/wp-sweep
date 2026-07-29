@@ -9,7 +9,7 @@
  * The Details button is the only chance a user gets to look before deleting,
  * so it has to name the right rows and it has to stay bounded.
  */
-class Test_WP_Sweep_Details extends WP_Sweep_TestCase {
+class WP_Sweep_Details_Test extends WP_Sweep_TestCase {
 
 	/**
 	 * Revision details list post titles.

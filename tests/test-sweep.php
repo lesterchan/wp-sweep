@@ -9,7 +9,7 @@
  * Deletion is irreversible, so these assertions check two things every time:
  * that the rubbish is gone, and that nothing standing next to it went with it.
  */
-class Test_WP_Sweep_Sweep extends WP_Sweep_TestCase {
+class WP_Sweep_Sweep_Test extends WP_Sweep_TestCase {
 
 	/**
 	 * Revisions go, the parent post stays.

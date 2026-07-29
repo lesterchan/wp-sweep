@@ -10,7 +10,7 @@
  * least covered part of a plugin like this. These tests render it for real and
  * assert it comes back clean under PHP 8 — not merely non-empty.
  */
-class Test_WP_Sweep_Admin extends WP_Sweep_TestCase {
+class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 
 	/**
 	 * Administrator user ID.

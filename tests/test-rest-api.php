@@ -10,7 +10,7 @@
  * route shapes, the response keys and above all the capability gate are pinned
  * here. Every route deletes or discloses data about the whole install.
  */
-class Test_WP_Sweep_Rest_Api extends WP_Sweep_TestCase {
+class WP_Sweep_REST_API_Test extends WP_Sweep_TestCase {
 
 	/**
 	 * Administrator user ID.

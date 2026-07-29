@@ -10,7 +10,7 @@
  * and `wp sweep <name>` — and it deletes data without confirmation. It had no
  * test coverage at all before this.
  */
-class Test_WP_Sweep_Cli extends WP_Sweep_TestCase {
+class WP_Sweep_CLI_Test extends WP_Sweep_TestCase {
 
 	/**
 	 * Clears the recorded WP-CLI output.

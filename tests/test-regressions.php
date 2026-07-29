@@ -10,7 +10,7 @@
  * kept apart from the behaviour suite so it stays obvious which assertions
  * describe a fix rather than something that always worked.
  */
-class Test_WP_Sweep_Regressions extends WP_Sweep_TestCase {
+class WP_Sweep_Regressions_Test extends WP_Sweep_TestCase {
 
 	/**
 	 * Administrator user ID.

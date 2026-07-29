@@ -1,6 +1,6 @@
 <?php
 /**
- * Shared base class for the WP-Sweep test suite.
+ * The base class every WP-Sweep test extends.
  *
  * @package wp-sweep
  */

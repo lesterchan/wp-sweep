@@ -11,7 +11,7 @@
  * missed in another is silently unavailable rather than an error, so the lists
  * are compared here instead of trusted.
  */
-class Test_WP_Sweep_Sweep_Names extends WP_Sweep_TestCase {
+class WP_Sweep_Sweep_Names_Test extends WP_Sweep_TestCase {
 
 	/**
 	 * Every sweep the plugin is supposed to offer.

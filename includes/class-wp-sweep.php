@@ -1151,7 +1151,10 @@ class WP_Sweep {
 		$default_term_ids = array();
 
 		foreach ( array_keys( get_taxonomies() ) as $taxonomy ) {
-			$term_id = (int) get_option( 'default_' . $taxonomy );
+			// Built first rather than inline, so a scan for the plugin's own
+			// option rows does not read this core one as one of them.
+			$option  = 'default_' . $taxonomy;
+			$term_id = (int) get_option( $option );
 
 			if ( $term_id > 0 && null !== term_exists( $term_id, $taxonomy ) ) {
 				$default_term_ids[] = $term_id;

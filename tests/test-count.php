@@ -10,7 +10,7 @@
  * are the contract the rest of the plugin is built on: the admin screen, the
  * REST endpoint and the CLI command all decide whether to act on this number.
  */
-class Test_WP_Sweep_Count extends WP_Sweep_TestCase {
+class WP_Sweep_Count_Test extends WP_Sweep_TestCase {
 
 	/**
 	 * Revisions are counted by post_type.
