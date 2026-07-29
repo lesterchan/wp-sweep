@@ -20,18 +20,18 @@ export default [
 				...globals.browser,
 				// Localised into the page by wp_localize_script().
 				wpSweepL10n: 'readonly',
-				// Defined by wp-admin on every admin screen.
-				ajaxurl: 'readonly',
 			},
-		},
-		rules: {
-			// Properties stay exempt: the wp_localize_script() keys and the
-			// fields posted to admin-ajax.php are named on the PHP side, so
-			// their keys are snake_case by necessity.
-			camelcase: [ 'error', { properties: 'never' } ],
 		},
 		settings: {
 			react: { version: '18.0' },
+		},
+	},
+	{
+		files: [ 'tests/js/**/*.test.js' ],
+		languageOptions: {
+			globals: {
+				...globals.node,
+			},
 		},
 	},
 ];

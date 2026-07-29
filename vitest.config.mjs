@@ -1,17 +1,16 @@
 /**
- * Vitest configuration for WP-Sweep.
+ * Vitest configuration.
  *
- * The admin script is an IIFE that attaches delegated listeners to `document`
- * and is loaded into a jsdom page, so the tests drive it the same way an
- * administrator does: build the markup the PHP side emits, dispatch a real
- * click, then assert on the DOM and on what was sent to admin-ajax.php.
- *
- * Excluded from the SVN deploy, so this never ships to users.
+ * jsdom everywhere, so a test file never has to declare its own environment.
+ * Excluded from the SVN deploy by the vitest.config.* rule, so this never
+ * ships to users.
  */
-export default {
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig( {
 	test: {
 		environment: 'jsdom',
 		include: [ 'tests/js/**/*.test.js' ],
 		restoreMocks: true,
 	},
-};
+} );

@@ -1,25 +1,5 @@
-*.log
-
-# IDE
-.DS_Store
-.project
-.buildpath
-.settings
-.idea
-sftp-config.json
-
-# Build
-/vendor
-
-# VCS
-.svn
-.diff
-
-# Node
-/node_modules
-
-# PHPUnit
+vendor/
+node_modules/
+.idea/
 .phpunit.result.cache
-
-# Vitest
-/coverage
+.wp-env.override.json

@@ -22,7 +22,7 @@ jobs:
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '7.4'
+          php-version: '8.2'
           coverage: none
           tools: cs2pr
 
@@ -32,12 +32,13 @@ jobs:
           composer global require --no-interaction --no-progress \
             squizlabs/php_codesniffer wp-coding-standards/wpcs
 
-      # phpcs.xml pins extensions to php, so this never wanders into .js.
+      # phpcs.xml pins extensions to php, so this never wanders into other file types.
       - name: Run PHPCS
         run: $(composer global config bin-dir --absolute)/phpcs -q --report=checkstyle . | cs2pr
 
+  # NO-JS PLUGINS: delete this job AND this comment, through to `phpunit:`.
   eslint:
-    name: JS coding standards
+    name: JS coding standards and tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -53,30 +54,51 @@ jobs:
       - name: Run ESLint
         run: npm run lint:js
 
-      - name: Run the script tests
+      # vitest + jsdom, loading the plugin's scripts the way the browser does.
+      # No build step: the scripts ship to users exactly as they are in js/.
+      - name: Run JS tests
         run: npm run test:js
 
   phpunit:
-    name: PHPUnit (WP ${{ matrix.wordpress }}, PHP ${{ matrix.php }})
+    name: PHPUnit (WP ${{ matrix.wordpress }}, PHP ${{ matrix.php }}, ${{ matrix.multisite && 'multisite' || 'single site' }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
+        # Every supported stack, in both modes. Six rows, no special cases.
+        #
+        # Multisite is not a spare wheel: uninstall.php branches on
+        # is_multisite(), and network-activated plugins are read from a site
+        # option the single-site run never touches. It runs on the FLOOR too,
+        # because that is where multisite breaks -- wp_get_sites() removed in
+        # 5.1, uninstall stopping at 100 sites, switch_to_blog() stacks left
+        # unwound, custom tables not registered with $wpdb inside a switch.
+        # Testing multisite only on latest tests it where it least likely fails.
         include:
-          - php: '7.4'
-            wordpress: '6.0'
-          - php: '8.3'
+          - php: '8.2'
+            wordpress: '6.8'
+          - php: '8.2'
+            wordpress: '6.8'
+            multisite: true
+          - php: '8.2'
             wordpress: 'latest'
+          - php: '8.2'
+            wordpress: 'latest'
+            multisite: true
+          - php: '8.5'
+            wordpress: 'latest'
+          - php: '8.5'
+            wordpress: 'latest'
+            multisite: true
     steps:
       - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v7
         with:
           node-version: "24"
-          cache: npm
 
-      # The runner already has Docker, which is all wp-env needs, so CI runs
-      # the same stack as `bin/test.sh` does locally.
+      # The runner already has Docker, which is all wp-env needs, so CI runs the
+      # same stack as bin/test.sh does locally -- one code path, no drift.
       - name: Start wp-env
         env:
           WP_ENV_PHP_VERSION: ${{ matrix.php }}
@@ -88,7 +110,9 @@ jobs:
           npx --yes @wordpress/env run tests-cli --env-cwd=wp-content/plugins/wp-sweep \
             composer install --no-interaction --no-progress
 
+      # The multisite config sets WP_MULTISITE for the WordPress test bootstrap,
+      # so the mode is chosen by the config file rather than by the environment.
       - name: Run PHPUnit
         run: |
           npx --yes @wordpress/env run tests-cli --env-cwd=wp-content/plugins/wp-sweep \
-            vendor/bin/phpunit
+            vendor/bin/phpunit -c ${{ matrix.multisite && 'phpunit-multisite.xml.dist' || 'phpunit.xml.dist' }}

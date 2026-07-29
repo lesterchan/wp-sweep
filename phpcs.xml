@@ -4,153 +4,95 @@
 
 	<file>.</file>
 
+	<!-- WPCS has no JavaScript sniffs; never let PHPCS touch .js. -->
+	<arg name="extensions" value="php"/>
+	<arg name="basepath" value="."/>
+	<arg name="colors"/>
+	<arg value="sp"/>
+
 	<!-- Scanning these makes the CI runner run out of memory. -->
 	<exclude-pattern>/vendor/*</exclude-pattern>
 	<exclude-pattern>/node_modules/*</exclude-pattern>
 
-	<arg name="extensions" value="php"/>
-	<arg name="colors"/>
-	<arg value="ps"/>
+	<rule ref="WordPress"/>
 
-	<rule ref="WordPress">
-		<!--
-		Every query this plugin runs is a direct one by design. WP-Sweep exists
-		to find rows the WordPress APIs cannot see — meta attached to objects
-		that no longer exist, duplicate rows the meta API will not report, term
-		relationships pointing at deleted posts. There is no core API to use
-		instead, and nothing worth caching in a tool whose whole job is to
-		report the current state of the tables.
-		-->
-		<exclude name="WordPress.DB.DirectDatabaseQuery.DirectQuery"/>
-		<exclude name="WordPress.DB.DirectDatabaseQuery.NoCaching"/>
-		<!-- Table identifiers cannot be bound, and %i needs WP 6.2. -->
-		<exclude name="WordPress.DB.PreparedSQL.InterpolatedNotPrepared"/>
-	</rule>
+	<config name="text_domain" value="wp-sweep"/>
+	<config name="minimum_wp_version" value="6.8"/>
 
 	<!--
-	OPTIMIZE TABLE is the entire point of the Database Sweep, and SHOW TABLES
-	is how the plugin discovers what to optimize. Both read as schema changes
-	to the sniff.
+		Everything below relaxes a sniff for the test suite only, and this list
+		is closed: it is identical in all nineteen plugins. A sniff firing in
+		includes/ is a bug in the code, not a missing exclusion - fix the code.
 	-->
-	<rule ref="WordPress.DB.DirectDatabaseQuery.SchemaChange">
-		<exclude-pattern>/includes/class-sweep.php</exclude-pattern>
-	</rule>
 
-	<!--
-	The admin screen reads $_GET['sweep'] to decide whether the no-JavaScript
-	path was requested. The name is validated against the plugin's own list and
-	then check_admin_referer() runs before anything is deleted, which the sniff
-	cannot see because the two are separate statements.
-
-	The AJAX tests populate $_GET to stand in for a request; there is no form
-	to nonce.
-	-->
-	<rule ref="WordPress.Security.NonceVerification">
-		<exclude-pattern>/includes/admin.php</exclude-pattern>
-		<exclude-pattern>/tests/*</exclude-pattern>
-	</rule>
-
-	<!--
-	The four orphaned meta sweeps build their WHERE clause in two pieces:
-	get_meta_key_exclude_clause() returns a template containing only literal
-	%s placeholders, plus the matching args array, and the caller resolves
-	both in a single $wpdb->prepare() call. Every value that originates
-	outside the plugin — the meta keys from the wp_sweep_*_whitelist filters —
-	is bound. Only $wpdb table properties are interpolated.
-
-	The sniff sees $wpdb->get_var( $sql ) and cannot follow the template back
-	to its placeholders, so it reports all eight call sites. The unprepared
-	branch of each ternary runs only when the args array is empty, because
-	prepare() emits a _doing_it_wrong notice when handed a query with no
-	placeholders to fill.
-	-->
-	<rule ref="WordPress.DB.PreparedSQL.NotPrepared">
-		<exclude-pattern>/includes/class-sweep.php</exclude-pattern>
-	</rule>
-
-	<!--
-	The class is Sweep and its main method is sweep(), which the sniff reads
-	as a PHP 4 style constructor returning a value. It is not one: the class
-	declares a real __construct(), so PHP treats the same-named method as an
-	ordinary method and raises nothing. Verified on 7.4.33, the declared
-	floor, and on 8.5. PHP 4 constructors were removed outright in PHP 8.
-
-	Renaming either half would be worse — sweep() is the method the REST
-	route, the WP-CLI command and the admin screen all call.
-	-->
-	<rule ref="Universal.CodeAnalysis.ConstructorDestructorReturn.ReturnValueFound">
-		<exclude-pattern>/includes/class-sweep.php</exclude-pattern>
-	</rule>
-
-	<!--
-	tests/helper-wp-cli.php declares stand-ins for WP_CLI and WP_CLI_Command,
-	which a PHPUnit run does not load and which the command file extends. A
-	stub file necessarily declares more than one class.
-	-->
-	<rule ref="Generic.Files.OneObjectStructurePerFile">
-		<exclude-pattern>/tests/helper-wp-cli.php</exclude-pattern>
-	</rule>
-
-	<rule ref="WordPress.WP.I18n">
-		<properties>
-			<property name="text_domain" type="array">
-				<element value="wp-sweep"/>
-			</property>
-		</properties>
-	</rule>
-
-	<!-- Tests assemble their own markup and assert on it. -->
+	<!-- The tests assert on the plugin's own markup, so they must not escape it. -->
 	<rule ref="WordPress.Security.EscapeOutput">
 		<exclude-pattern>/tests/*</exclude-pattern>
 	</rule>
 
 	<!--
-	The class-*.php file naming rule exempts test classes, which follow
-	PHPUnit's own test-*.php convention.
+		A test method's name is its documentation - test_a_malformed_range_does_
+		not_ban_everyone() gains nothing from a docblock repeating it. Required
+		everywhere else.
+	-->
+	<rule ref="Squiz.Commenting.FunctionComment.Missing">
+		<exclude-pattern>/tests/*</exclude-pattern>
+	</rule>
+	<rule ref="Generic.Commenting.DocComment.MissingShort">
+		<exclude-pattern>/tests/*</exclude-pattern>
+	</rule>
+
+	<!--
+		Test files are named test-*.php by WordPress convention rather than
+		class-*.php; the coding standard excepts test classes from that rule.
 	-->
 	<rule ref="WordPress.Files.FileName.InvalidClassFileName">
 		<exclude-pattern>/tests/*</exclude-pattern>
 	</rule>
 
 	<!--
-	Several tests assert against the plugin's own source: that the sweep name
-	lists are not copies of each other, that the script contains no innerHTML,
-	that nothing writes an option. These read files on disk, not remote URLs,
-	so wp_remote_get() is not the alternative the sniff thinks it is — and
-	WP_Filesystem is not loaded in a PHPUnit run.
+		The tests read wp_options directly to assert which rows the migration
+		left behind. There is no API for "which rows exist".
 	-->
+	<rule ref="WordPress.DB.DirectDatabaseQuery">
+		<exclude-pattern>/tests/*</exclude-pattern>
+	</rule>
+
+	<!--
+		The tests drive superglobals to simulate proxy headers and form posts;
+		that is the behaviour under test, not unvalidated input.
+	-->
+	<rule ref="WordPress.Security.ValidatedSanitizedInput">
+		<exclude-pattern>/tests/*</exclude-pattern>
+	</rule>
+	<rule ref="WordPress.Security.NonceVerification">
+		<exclude-pattern>/tests/*</exclude-pattern>
+	</rule>
+
+	<!-- The tests read the plugin's own source; WP_Filesystem is not appropriate. -->
 	<rule ref="WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents">
 		<exclude-pattern>/tests/*</exclude-pattern>
 	</rule>
 
 	<!--
-	render_admin_page() installs an error handler so a diagnostic raised while
-	the admin screen renders becomes a failed assertion instead of vanishing.
-	Collecting them is the point of that helper.
+		The admin-screen tests install an error handler on purpose: collecting
+		the diagnostics is what makes them more than smoke tests.
 	-->
-	<rule ref="WordPress.PHP.DevelopmentFunctions">
+	<rule ref="WordPress.PHP.DevelopmentFunctions.error_log_set_error_handler">
 		<exclude-pattern>/tests/*</exclude-pattern>
 	</rule>
 
 	<!--
-	$submenu and $wp_scripts are the globals under test. WP_Scripts in
-	particular survives the transaction rollback between tests, so a handle
-	enqueued by one test is still enqueued in the next unless it is reset.
+		The settings tests set $hook_suffix, which wp-admin would have set before
+		any page callback ran. WP_List_Table's constructor reaches
+		WP_Screen::get(), which reads that global, so the test bootstrap has to
+		stand in for admin.php.
+
+		Worth re-checking now the floor is WordPress 6.8: this exclusion was
+		added for a much older core, and if current WP guards the read, the
+		tests can drop the assignment and this rule can go.
 	-->
 	<rule ref="WordPress.WP.GlobalVariablesOverride">
-		<exclude-pattern>/tests/*</exclude-pattern>
-	</rule>
-
-	<!--
-	The fixtures insert deliberately orphaned meta rows, which the WordPress
-	meta API will not do, and count them back by key afterwards. meta_key and
-	meta_value here are column names in a direct insert, not query arguments,
-	and the table name comes from a fixed map of $wpdb properties.
-	-->
-	<rule ref="WordPress.DB.SlowDBQuery">
-		<exclude-pattern>/tests/*</exclude-pattern>
-	</rule>
-	<rule ref="WordPress.DB.PreparedSQL.NotPrepared">
 		<exclude-pattern>/tests/*</exclude-pattern>
 	</rule>
 </ruleset>

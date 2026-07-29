@@ -1,4 +1,10 @@
 <?xml version="1.0"?>
+<!--
+	Identical to phpunit.xml.dist apart from WP_MULTISITE. The WordPress test
+	bootstrap reads that variable from the environment, so setting it here means
+	`vendor/bin/phpunit -c phpunit-multisite.xml.dist` is the whole command --
+	no wrapper shell needed locally or in CI.
+-->
 <phpunit
 	bootstrap="tests/bootstrap.php"
 	backupGlobals="false"
@@ -11,13 +17,11 @@
 	failOnWarning="true"
 	failOnRisky="true"
 	>
+	<php>
+		<env name="WP_MULTISITE" value="1"/>
+	</php>
 	<testsuites>
-		<!--
-			Discovery is by the test- prefix, so helper-*.php, bootstrap.php and
-			index.php need no <exclude> entries. Adding a helper never means
-			editing this file.
-		-->
-		<testsuite name="wp-sweep">
+		<testsuite name="wp-sweep (multisite)">
 			<directory prefix="test-" suffix=".php">./tests/</directory>
 		</testsuite>
 	</testsuites>
