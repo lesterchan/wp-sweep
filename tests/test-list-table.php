@@ -222,9 +222,19 @@ class WP_Sweep_List_Table_Test extends WP_Sweep_TestCase {
 	}
 
 	/**
-	 * An empty row offers neither, so a bulk sweep cannot queue up a no-op.
+	 * An empty row keeps its checkbox but offers no Sweep action.
+	 *
+	 * The checkbox is structural: a gap in that column, and a header select-all
+	 * that claims more rows than it selects, is not something any core list table
+	 * does. Sweeping an empty sweep removes nothing, and the count is only a
+	 * snapshot from when the page rendered, so withholding the checkbox never
+	 * really stopped a no-op either.
+	 *
+	 * The row action is a different matter: a link labelled Sweep on a row with
+	 * nothing to sweep is an invitation to nothing, and hiding it costs no
+	 * alignment.
 	 */
-	public function test_an_empty_row_offers_neither() {
+	public function test_an_empty_row_keeps_its_checkbox_but_offers_no_action() {
 		$item = array(
 			'name'  => 'revisions',
 			'label' => 'Revisions',
@@ -233,7 +243,7 @@ class WP_Sweep_List_Table_Test extends WP_Sweep_TestCase {
 			'count' => 0,
 		);
 
-		$this->assertSame( '', $this->table()->column_cb( $item ), 'An empty row offered a checkbox.' );
+		$this->assertStringContainsString( 'name="sweep[]"', $this->table()->column_cb( $item ), 'An empty row lost its checkbox.' );
 		$this->assertStringNotContainsString( 'row-actions', $this->table()->column_name( $item ), 'An empty row offered a row action.' );
 	}
 

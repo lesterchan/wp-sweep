@@ -293,10 +293,18 @@ class WP_Sweep_List_Table extends WP_List_Table {
 	 * @return string
 	 */
 	public function column_cb( $item ) {
-		if ( 0 === $item['count'] ) {
-			return '';
-		}
-
+		/*
+		 * Every row gets one, including a row with nothing to sweep.
+		 *
+		 * This used to return an empty string for an empty row, on the reasoning
+		 * that a bulk sweep should not be able to queue a no-op. It never
+		 * actually prevented one -- the count is a snapshot taken when the page
+		 * rendered, and anything that empties or fills a sweep between then and
+		 * the form post leaves the checkbox saying the wrong thing either way --
+		 * and sweeping an empty sweep removes nothing regardless. What it did do
+		 * was leave gaps down the checkbox column and make the header's select-all
+		 * claim more rows than it selects, which no core list table does.
+		 */
 		return sprintf(
 			'<label class="screen-reader-text" for="sweep_%1$s">%2$s</label><input type="checkbox" id="sweep_%1$s" name="sweep[]" value="%1$s" />',
 			esc_attr( $item['name'] ),
