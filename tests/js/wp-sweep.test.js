@@ -123,6 +123,21 @@ describe( 'the details list', () => {
 		expect( document.querySelector( '.sweep-details' ).hidden ).toBe( true );
 	} );
 
+	it( 'toggles: a second click puts the list away', async () => {
+		document.body.innerHTML = sweepSection();
+		stubFetch( [ detailsResponse( [ 'first' ] ) ] );
+
+		const button = document.querySelector( '.btn-sweep-details' );
+
+		await clickAndSettle( button );
+		expect( document.querySelector( '.sweep-details' ).hidden ).toBe( false );
+		expect( button.getAttribute( 'aria-expanded' ) ).toBe( 'true' );
+
+		await clickAndSettle( button );
+		expect( document.querySelector( '.sweep-details' ).hidden ).toBe( true );
+		expect( button.getAttribute( 'aria-expanded' ) ).toBe( 'false' );
+	} );
+
 	it( 'replaces a previous list rather than appending to it', async () => {
 		document.body.innerHTML = sweepSection();
 		stubFetch( [
@@ -131,6 +146,10 @@ describe( 'the details list', () => {
 		] );
 
 		const button = document.querySelector( '.btn-sweep-details' );
+
+		// Open, close, open: the middle click is the toggle putting it away, so
+		// the third fetches afresh. Without it the second click would only hide.
+		await clickAndSettle( button );
 		await clickAndSettle( button );
 		await clickAndSettle( button );
 
@@ -314,7 +333,6 @@ describe( 'the close warning', () => {
 		expect( captured.defaultPrevented ).toBe( true );
 	} );
 } );
-
 
 describe( 'when things go wrong', () => {
 	it( 'recovers the button and the page state if the request fails', async () => {

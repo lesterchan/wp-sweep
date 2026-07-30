@@ -660,6 +660,42 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 	}
 
 	/**
+	 * Bulk sweeping an empty sweep says so, rather than claiming nothing was ticked.
+	 *
+	 * Reachable because every row carries a checkbox now, empty or not. The two
+	 * outcomes used to share one message, and "Nothing was selected" is simply
+	 * false when something was.
+	 */
+	public function test_bulk_sweeping_an_empty_sweep_does_not_claim_nothing_was_selected() {
+		$html = $this->render_admin_page(
+			array( 'page' => 'wp-sweep' ),
+			array(
+				'action'   => 'sweep',
+				'sweep'    => array( 'revisions' ),
+				'_wpnonce' => wp_create_nonce( 'bulk-sweeps' ),
+			)
+		);
+
+		$this->assertStringContainsString( 'nothing left to sweep', $html, 'An empty sweep did not say it was empty.' );
+		$this->assertStringNotContainsString( 'Nothing was selected', $html, 'A ticked row was reported as nothing selected.' );
+	}
+
+	/**
+	 * Ticking nothing still says nothing was ticked.
+	 */
+	public function test_bulk_sweeping_with_nothing_ticked_says_so() {
+		$html = $this->render_admin_page(
+			array( 'page' => 'wp-sweep' ),
+			array(
+				'action'   => 'sweep',
+				'_wpnonce' => wp_create_nonce( 'bulk-sweeps' ),
+			)
+		);
+
+		$this->assertStringContainsString( 'Nothing was selected', $html, 'An empty selection did not say so.' );
+	}
+
+	/**
 	 * The bulk action refuses a name that is not one of the plugin's own.
 	 */
 	public function test_bulk_sweep_ignores_an_unknown_name() {

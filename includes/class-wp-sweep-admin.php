@@ -400,7 +400,9 @@ class WP_Sweep_Admin {
 		// Filtered from the canonical list rather than taken as given, so the
 		// sweeps run in the order they have to and an unknown name is dropped
 		// rather than passed on.
-		foreach ( array_intersect( $sweep->get_sweep_names(), $posted ) as $name ) {
+		$selected = array_intersect( $sweep->get_sweep_names(), $posted );
+
+		foreach ( $selected as $name ) {
 			$message = $sweep->sweep( $name );
 
 			if ( '' !== $message ) {
@@ -408,8 +410,23 @@ class WP_Sweep_Admin {
 			}
 		}
 
-		if ( empty( $messages ) ) {
+		/*
+		 * Two different outcomes, and they used to share one message.
+		 *
+		 * Ticking nothing and ticking a sweep that had nothing left in it both
+		 * ended with an empty $messages and the screen saying "Nothing was
+		 * selected", which is simply false in the second case -- and reachable
+		 * now that every row carries a checkbox whether it has anything to sweep
+		 * or not.
+		 */
+		if ( empty( $selected ) ) {
 			add_settings_error( 'wp_sweep', 'wp_sweep_nothing', __( 'Nothing was selected, so nothing was swept.', 'wp-sweep' ), 'warning' );
+
+			return;
+		}
+
+		if ( empty( $messages ) ) {
+			add_settings_error( 'wp_sweep', 'wp_sweep_nothing', __( 'There was nothing left to sweep.', 'wp-sweep' ), 'warning' );
 
 			return;
 		}

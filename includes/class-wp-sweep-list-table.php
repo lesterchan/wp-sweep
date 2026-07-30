@@ -71,7 +71,7 @@ class WP_Sweep_List_Table extends WP_List_Table {
 			'name'       => _x( 'Sweep', 'Column heading', 'wp-sweep' ),
 			'group'      => __( 'Group', 'wp-sweep' ),
 			'count'      => __( 'Count', 'wp-sweep' ),
-			'percentage' => __( '% Of', 'wp-sweep' ),
+			'percentage' => __( '%', 'wp-sweep' ),
 			'actions'    => __( 'Actions', 'wp-sweep' ),
 		);
 	}
@@ -98,7 +98,7 @@ class WP_Sweep_List_Table extends WP_List_Table {
 
 		return $this->action_link( $item, 'sweep', __( 'Sweep', 'wp-sweep' ), 'button button-primary' )
 			. ' '
-			. $this->action_link( $item, 'sweep_details', __( 'Details', 'wp-sweep' ), 'button' );
+			. $this->action_link( $item, 'sweep_details', __( 'Details', 'wp-sweep' ), 'button', array( 'aria-expanded' => 'false' ) );
 	}
 
 	/**
@@ -412,11 +412,13 @@ class WP_Sweep_List_Table extends WP_List_Table {
 	 * @param array  $item    Row.
 	 * @param string $action  Either sweep or sweep_details.
 	 * @param string $label   Translated link text.
-	 * @param string $classes Extra CSS classes, so the same link can be drawn as
-	 *                        a button.
+	 * @param string $classes    Extra CSS classes, so the same link can be drawn
+	 *                            as a button.
+	 * @param array  $attributes Extra attributes, already-escaped values keyed
+	 *                            by attribute name.
 	 * @return string
 	 */
-	private function action_link( $item, $action, $label, $classes = '' ) {
+	private function action_link( $item, $action, $label, $classes = '', $attributes = array() ) {
 		$nonce = 'sweep' === $action ? 'wp_sweep_' . $item['name'] : 'wp_sweep_details_' . $item['name'];
 
 		$url = wp_nonce_url(
@@ -431,14 +433,21 @@ class WP_Sweep_List_Table extends WP_List_Table {
 			$nonce
 		);
 
+		$extra = '';
+
+		foreach ( $attributes as $attribute => $value ) {
+			$extra .= sprintf( ' %1$s="%2$s"', esc_attr( $attribute ), esc_attr( $value ) );
+		}
+
 		return sprintf(
-			'<a href="%1$s" class="%2$s" data-action="%3$s" data-sweep-name="%4$s" data-sweep-type="%5$s" data-nonce="%6$s">%7$s</a>',
+			'<a href="%1$s" class="%2$s" data-action="%3$s" data-sweep-name="%4$s" data-sweep-type="%5$s" data-nonce="%6$s"%7$s>%8$s</a>',
 			esc_url( $url ),
 			trim( ( 'sweep' === $action ? 'btn-sweep' : 'btn-sweep-details' ) . ' ' . $classes ),
 			esc_attr( $action ),
 			esc_attr( $item['name'] ),
 			esc_attr( $item['type'] ),
 			esc_attr( wp_create_nonce( $nonce ) ),
+			$extra,
 			esc_html( $label )
 		);
 	}

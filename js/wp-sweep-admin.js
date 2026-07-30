@@ -249,12 +249,23 @@
 		}
 
 		if ( trigger.classList.contains( 'btn-sweep-details' ) ) {
+			const row = trigger.closest( 'tr' );
+			const shown = row.querySelector( '.sweep-details' );
+
+			// A toggle, not a one-way door. The list can be long, and the only
+			// way to put it away used to be reloading the screen.
+			if ( shown && ! shown.hidden ) {
+				hideDetails( row );
+				trigger.setAttribute( 'aria-expanded', 'false' );
+				return;
+			}
+
 			request( trigger ).then( function( response ) {
 				if ( response && response.success && response.data.length > 0 ) {
-					renderDetails( trigger.closest( 'tr' ), response.data );
+					renderDetails( row, response.data );
+					trigger.setAttribute( 'aria-expanded', 'true' );
 				}
 			} );
-			return;
 		}
 	} );
 
