@@ -283,7 +283,7 @@ class WP_Sweep_Metadata_Test extends WP_Sweep_TestCase {
 		$this->assertFileExists( $this->root . '/index.php', 'The plugin root has no index.php.' );
 	}
 
-	public function test_the_plugin_owns_exactly_two_option_rows() {
+	public function test_the_plugin_owns_exactly_one_option_row() {
 		global $wpdb;
 
 		WP_Sweep_Options::maybe_upgrade();
@@ -292,10 +292,11 @@ class WP_Sweep_Metadata_Test extends WP_Sweep_TestCase {
 
 		sort( $rows );
 
+		// One row, not two: the settings row went with the settings screen.
 		$this->assertSame(
-			array( WP_Sweep_Options::OPTION, WP_Sweep_Options::VERSION ),
+			array( WP_Sweep_Options::VERSION ),
 			$rows,
-			'The plugin owns option rows beyond its settings and its version markers.'
+			'The plugin owns an option row beyond its version markers.'
 		);
 	}
 
@@ -349,18 +350,21 @@ class WP_Sweep_Metadata_Test extends WP_Sweep_TestCase {
 		$this->assertSame( array( 'plugin', 'db' ), array_keys( $row ), 'The version row does not hold exactly the plugin and db markers.' );
 	}
 
-	public function test_settings_sanitizer_never_stores_version_markers() {
-		$clean = WP_Sweep_Options::sanitize(
-			array(
-				'limit_details' => 200,
-				'version'       => '2.0.0',
-				'db_version'    => '1',
-				'versions'      => array( 'plugin' => '2.0.0' ),
-			)
-		);
+	/**
+	 * The version markers are the only thing in the version row.
+	 *
+	 * This used to check that the settings sanitiser could not smuggle a marker
+	 * into the settings row. There is no settings row and no sanitiser any more --
+	 * the plugin's one tunable is the wp_sweep_limit_details filter -- so what is
+	 * left to hold true is that nothing else has crept into the row that remains.
+	 */
+	public function test_the_version_row_holds_nothing_but_the_markers() {
+		WP_Sweep_Options::maybe_upgrade();
 
-		foreach ( array( 'version', 'db_version', 'versions' ) as $key ) {
-			$this->assertArrayNotHasKey( $key, $clean, "The sanitiser stored a '{$key}' key in the settings row." );
+		$row = get_option( WP_Sweep_Options::VERSION );
+
+		foreach ( array( 'limit_details', 'version', 'db_version', 'versions' ) as $key ) {
+			$this->assertArrayNotHasKey( $key, $row, "The version row has grown a '{$key}' key." );
 		}
 	}
 }

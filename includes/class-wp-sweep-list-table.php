@@ -72,7 +72,33 @@ class WP_Sweep_List_Table extends WP_List_Table {
 			'group'      => __( 'Group', 'wp-sweep' ),
 			'count'      => __( 'Count', 'wp-sweep' ),
 			'percentage' => __( '% Of', 'wp-sweep' ),
+			'actions'    => __( 'Actions', 'wp-sweep' ),
 		);
+	}
+
+	/**
+	 * The Sweep and Details buttons, in a column of their own.
+	 *
+	 * Not row actions. WordPress hides those until the row is hovered, which is
+	 * right for Edit and Trash on a list of posts, where the row itself is the
+	 * subject and the actions are secondary. Here the action *is* the subject:
+	 * there is nothing else to do with a row but sweep it, and 1.2.0 put a
+	 * visible button on every row. Hiding the only verb on the screen behind a
+	 * hover -- and behind nothing at all on a touch screen -- was a real
+	 * regression, and this is the column that undoes it.
+	 *
+	 * @param array $item Row.
+	 * @return string
+	 */
+	public function column_actions( $item ) {
+		if ( 0 === $item['count'] ) {
+			return '<span class="sweep-nothing" aria-hidden="true">&mdash;</span><span class="screen-reader-text">'
+				. esc_html__( 'Nothing to sweep', 'wp-sweep' ) . '</span>';
+		}
+
+		return $this->action_link( $item, 'sweep', __( 'Sweep', 'wp-sweep' ), 'button button-primary' )
+			. ' '
+			. $this->action_link( $item, 'sweep_details', __( 'Details', 'wp-sweep' ), 'button' );
 	}
 
 	/**
@@ -95,6 +121,22 @@ class WP_Sweep_List_Table extends WP_List_Table {
 	 */
 	protected function get_primary_column_name() {
 		return 'name';
+	}
+
+	/**
+	 * The nonce action guarding the bulk form.
+	 *
+	 * WP_List_Table::display_tablenav() prints wp_nonce_field() for this action
+	 * itself, in a field named _wpnonce. Printing a second _wpnonce beside it --
+	 * which this screen used to do -- does not add a check, it replaces one:
+	 * PHP keeps the last field of a repeated name, so whichever the plugin chose
+	 * was thrown away and every bulk sweep failed with "The link you followed has
+	 * expired". Verify the one core actually emits.
+	 *
+	 * @return string
+	 */
+	public function bulk_nonce_action() {
+		return 'bulk-' . $this->_args['plural'];
 	}
 
 	/**
@@ -146,7 +188,7 @@ class WP_Sweep_List_Table extends WP_List_Table {
 				'page'  => WP_Sweep_Admin::PAGE,
 				'group' => $group,
 			),
-			admin_url( 'admin.php' )
+			admin_url( 'tools.php' )
 		);
 
 		return sprintf(
@@ -347,12 +389,9 @@ class WP_Sweep_List_Table extends WP_List_Table {
 			return $name;
 		}
 
-		return $name . $this->row_actions(
-			array(
-				'sweep'   => $this->action_link( $item, 'sweep', __( 'Sweep', 'wp-sweep' ) ),
-				'details' => $this->action_link( $item, 'sweep_details', __( 'Details', 'wp-sweep' ) ),
-			)
-		);
+		// No row_actions() here: the buttons live in their own always-visible
+		// column. See column_actions().
+		return $name;
 	}
 
 	/**
@@ -362,12 +401,14 @@ class WP_Sweep_List_Table extends WP_List_Table {
 	 * type and nonce back off the data attributes and calls admin-ajax.php
 	 * instead, so the row updates in place rather than reloading the screen.
 	 *
-	 * @param array  $item   Row.
-	 * @param string $action Either sweep or sweep_details.
-	 * @param string $label  Translated link text.
+	 * @param array  $item    Row.
+	 * @param string $action  Either sweep or sweep_details.
+	 * @param string $label   Translated link text.
+	 * @param string $classes Extra CSS classes, so the same link can be drawn as
+	 *                        a button.
 	 * @return string
 	 */
-	private function action_link( $item, $action, $label ) {
+	private function action_link( $item, $action, $label, $classes = '' ) {
 		$nonce = 'sweep' === $action ? 'wp_sweep_' . $item['name'] : 'wp_sweep_details_' . $item['name'];
 
 		$url = wp_nonce_url(
@@ -377,7 +418,7 @@ class WP_Sweep_List_Table extends WP_List_Table {
 					'group' => self::current_group(),
 					$action => $item['name'],
 				),
-				admin_url( 'admin.php' )
+				admin_url( 'tools.php' )
 			),
 			$nonce
 		);
@@ -385,7 +426,7 @@ class WP_Sweep_List_Table extends WP_List_Table {
 		return sprintf(
 			'<a href="%1$s" class="%2$s" data-action="%3$s" data-sweep-name="%4$s" data-sweep-type="%5$s" data-nonce="%6$s">%7$s</a>',
 			esc_url( $url ),
-			'sweep' === $action ? 'btn-sweep' : 'btn-sweep-details',
+			trim( ( 'sweep' === $action ? 'btn-sweep' : 'btn-sweep-details' ) . ' ' . $classes ),
 			esc_attr( $action ),
 			esc_attr( $item['name'] ),
 			esc_attr( $item['type'] ),

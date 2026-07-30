@@ -37,7 +37,7 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 		parent::set_up();
 
 		wp_set_current_user( self::$admin );
-		set_current_screen( 'toplevel_page_wp-sweep' );
+		set_current_screen( 'tools_page_wp-sweep' );
 
 		// WP_Scripts is a global that survives the transaction rollback, so a
 		// handle enqueued by one test is still enqueued in the next one.
@@ -446,20 +446,45 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 	/**
 	 * The top level menu entry is registered and gated on activate_plugins.
 	 */
-	public function test_top_level_menu_is_registered() {
-		global $menu;
+	public function test_the_screen_is_registered_under_tools() {
+		global $submenu;
 
-		$menu = array();
+		$submenu = array();
 		do_action( 'admin_menu' );
 
-		$slugs = wp_list_pluck( $menu, 2 );
-		$this->assertContains( WP_Sweep_Admin::PAGE, $slugs, 'The Sweep menu was not registered.' );
+		$this->assertArrayHasKey( 'tools.php', $submenu, 'Nothing was registered under Tools.' );
 
-		foreach ( $menu as $entry ) {
-			if ( WP_Sweep_Admin::PAGE === $entry[2] ) {
-				$this->assertSame( 'activate_plugins', $entry[1], 'The Sweep menu is gated on the wrong capability.' );
-			}
-		}
+		$entries = wp_list_filter( $submenu['tools.php'], array( 2 => WP_Sweep_Admin::PAGE ) );
+
+		$this->assertCount( 1, $entries, 'The Sweep screen is not under Tools, or is there more than once.' );
+
+		$entry = reset( $entries );
+
+		$this->assertSame( 'activate_plugins', $entry[1], 'The Sweep screen is gated on the wrong capability.' );
+		$this->assertSame( 'WP-Sweep', $entry[0], 'The Tools entry is not named after the plugin.' );
+	}
+
+	/**
+	 * Sweep claims no top-level sidebar slot, and files nothing under Settings.
+	 *
+	 * It is one screen doing maintenance against the installation, which is what
+	 * Tools is for. There is no settings screen to scatter: the plugin's one
+	 * tunable is the wp_sweep_limit_details filter.
+	 */
+	public function test_no_top_level_menu_and_no_settings_entry() {
+		global $menu, $submenu;
+
+		$menu    = array();
+		$submenu = array();
+
+		do_action( 'admin_menu' );
+
+		$this->assertNotContains( WP_Sweep_Admin::PAGE, wp_list_pluck( $menu, 2 ), 'Sweep took a top-level menu slot.' );
+		$this->assertArrayNotHasKey( WP_Sweep_Admin::PAGE, $submenu, 'Sweep is parenting submenus of its own.' );
+
+		$options = isset( $submenu['options-general.php'] ) ? wp_list_pluck( $submenu['options-general.php'], 2 ) : array();
+
+		$this->assertNotContains( WP_Sweep_Admin::PAGE, $options, 'Sweep filed a screen under Settings.' );
 	}
 
 	/**
@@ -470,16 +495,16 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 	 * the page URL.
 	 */
 	public function test_menu_uses_a_plain_slug() {
-		global $menu;
+		global $submenu;
 
-		$menu = array();
+		$submenu = array();
 		do_action( 'admin_menu' );
 
-		$slugs = wp_list_pluck( $menu, 2 );
+		$slugs = wp_list_pluck( $submenu['tools.php'], 2 );
 
-		$this->assertContains( WP_Sweep_Admin::PAGE, $slugs );
-		$this->assertSame( 'wp-sweep', WP_Sweep_Admin::PAGE );
-		$this->assertNotContains( 'wp-sweep/admin.php', $slugs );
+		$this->assertContains( WP_Sweep_Admin::PAGE, $slugs, 'The screen is not registered under Tools.' );
+		$this->assertSame( 'wp-sweep', WP_Sweep_Admin::PAGE, 'The page slug changed.' );
+		$this->assertNotContains( 'wp-sweep/admin.php', $slugs, 'The legacy plugin-file slug is back.' );
 	}
 
 	/**
@@ -582,6 +607,39 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 	}
 
 	/**
+	 * The form carries exactly one nonce field, and it is the one that is checked.
+	 *
+	 * This is the regression test for a bug that every unit test missed and every
+	 * browser hit. WP_List_Table::display_tablenav() prints its own
+	 * wp_nonce_field(), named _wpnonce. The screen printed a second one beside it
+	 * under the same name, so PHP kept only the last and check_admin_referer()
+	 * was handed a nonce for an action it was not checking: every bulk sweep died
+	 * with "The link you followed has expired". The tests passed throughout,
+	 * because they built the nonce themselves instead of reading the one the form
+	 * actually emits.
+	 *
+	 * So this reads the value out of the rendered markup and verifies it, which
+	 * is the only version of this test with any teeth.
+	 */
+	public function test_the_bulk_form_emits_one_nonce_and_it_verifies() {
+		$this->make_revisions( 1 );
+
+		$html = $this->render_admin_page( array( 'page' => 'wp-sweep' ) );
+
+		preg_match_all( '/name="_wpnonce" value="([^"]+)"/', $html, $matches );
+
+		$this->assertCount( 1, $matches[1], 'The form carries more than one _wpnonce field, so only the last one survives the post.' );
+
+		$table = new WP_Sweep_List_Table();
+
+		$this->assertSame(
+			1,
+			wp_verify_nonce( $matches[1][0], $table->bulk_nonce_action() ),
+			'The nonce the form emits does not verify against the action the bulk handler checks.'
+		);
+	}
+
+	/**
 	 * The bulk action sweeps everything that was checked.
 	 */
 	public function test_bulk_sweep_runs_every_checked_sweep() {
@@ -593,7 +651,7 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 			array(
 				'action'   => 'sweep',
 				'sweep'    => array( 'revisions', 'deleted_posts' ),
-				'_wpnonce' => wp_create_nonce( 'wp_sweep_bulk' ),
+				'_wpnonce' => wp_create_nonce( 'bulk-sweeps' ),
 			)
 		);
 
@@ -613,7 +671,7 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 			array(
 				'action'   => 'sweep',
 				'sweep'    => array( 'no_such_sweep' ),
-				'_wpnonce' => wp_create_nonce( 'wp_sweep_bulk' ),
+				'_wpnonce' => wp_create_nonce( 'bulk-sweeps' ),
 			)
 		);
 

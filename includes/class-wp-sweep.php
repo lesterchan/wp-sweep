@@ -31,6 +31,16 @@ class WP_Sweep {
 	const CAPABILITY = 'activate_plugins';
 
 	/**
+	 * How many items a details list shows unless wp_sweep_limit_details says otherwise.
+	 *
+	 * The whole sample is held in memory and written into the page, which is why
+	 * there is a limit at all.
+	 *
+	 * @var int
+	 */
+	const DEFAULT_LIMIT_DETAILS = 500;
+
+	/**
 	 * Static instance.
 	 *
 	 * @var WP_Sweep|null
@@ -86,10 +96,8 @@ class WP_Sweep {
 		 * registers simply never fire on a front end request.
 		 */
 		require_once WP_SWEEP_DIR . 'includes/class-wp-sweep-admin.php';
-		require_once WP_SWEEP_DIR . 'includes/class-wp-sweep-settings.php';
 
 		WP_Sweep_Admin::init();
-		WP_Sweep_Settings::init();
 
 		// Activation hooks do not fire when a plugin is updated, so the upgrade
 		// routine is also run on every admin load.
@@ -343,16 +351,17 @@ class WP_Sweep {
 	 * @return int Maximum number of sample items.
 	 */
 	public function limit_details() {
-		$limit = (int) WP_Sweep_Options::get( 'limit_details' );
-
 		/**
 		 * Filters how many items a details list may show.
+		 *
+		 * A filter and not a setting on purpose: one field does not earn a
+		 * screen, an option row and a sanitiser. See DEFAULT_LIMIT_DETAILS.
 		 *
 		 * @since 2.0.0
 		 *
 		 * @param int $limit Maximum number of sample items.
 		 */
-		return max( 1, (int) apply_filters( 'wp_sweep_limit_details', $limit ) );
+		return max( 1, (int) apply_filters( 'wp_sweep_limit_details', self::DEFAULT_LIMIT_DETAILS ) );
 	}
 
 	/**

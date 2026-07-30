@@ -2,11 +2,15 @@
 /**
  * Removes everything WP-Sweep stored.
  *
- * Two option rows and nothing else: no database tables, no capabilities and no
- * scheduled events. Before 2.0.0 the plugin stored nothing at all, and this
- * file looped over every site on a network to call an empty function -- a loop
- * that carried three bugs at once, none of which mattered, because there was
- * nothing to delete.
+ * One option row and nothing else: no settings row, no database tables, no
+ * capabilities and no scheduled events. `wp_sweep_version` holds the two
+ * markers; `wp_sweep_options` is a settings row that only a 2.0.0 beta ever
+ * wrote, deleted here for the same reason the upgrade deletes it.
+ *
+ * Before 2.0.0 the plugin stored nothing at all, so uninstalling a 1.2.0 install
+ * finds nothing to remove -- and this file still looped over every site on a
+ * network to call an empty function, a loop that carried three bugs at once,
+ * none of which mattered, because there was nothing to delete.
  *
  * Now that there is, the loop is the correct one: get_sites() with
  * 'fields' => 'ids' so full WP_Site objects are not hydrated to read one

@@ -189,7 +189,7 @@ describe( 'the result of a sweep', () => {
 		expect( window.pwned ).toBeUndefined();
 	} );
 
-	it( 'takes the row actions away once the count reaches zero', async () => {
+	it( 'takes the buttons away once the count reaches zero', async () => {
 		document.body.innerHTML = sweepSection();
 		stubFetch( sweepResponse( { count: 0 } ) );
 
@@ -197,16 +197,19 @@ describe( 'the result of a sweep', () => {
 
 		expect( document.querySelector( '.btn-sweep' ) ).toBeNull();
 		expect( document.querySelector( '.btn-sweep-details' ) ).toBeNull();
-		expect( document.querySelector( '.row-actions' ) ).toBeNull();
+		expect( document.querySelector( '.sweep-nothing' ) ).not.toBeNull();
 	} );
 
-	it( 'takes the checkbox away too, so a bulk sweep cannot queue a no-op', async () => {
+	it( 'keeps the checkbox, so the column does not grow holes', async () => {
 		document.body.innerHTML = sweepSection();
 		stubFetch( sweepResponse( { count: 0 } ) );
 
 		await clickAndSettle( document.querySelector( '.btn-sweep' ) );
 
-		expect( document.querySelector( 'input[type="checkbox"]' ) ).toBeNull();
+		// A swept row has to look like a reloaded one: column_actions() renders
+		// the same dash on a fresh page load, and every row keeps its checkbox
+		// whether it has anything to sweep or not.
+		expect( document.querySelector( 'input[type="checkbox"]' ) ).not.toBeNull();
 	} );
 
 	it( 'leaves the row actions in place when items remain', async () => {

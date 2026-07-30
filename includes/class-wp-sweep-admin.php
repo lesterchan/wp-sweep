@@ -80,32 +80,21 @@ class WP_Sweep_Admin {
 	 * @return void
 	 */
 	public static function admin_menu() {
-		self::$hook_suffix = add_menu_page(
+		// Tools, where this screen lived for its whole released life. Sweeping is
+		// maintenance against the installation, which is what core keeps under
+		// Tools beside Site Health, Export and Erase Personal Data.
+		//
+		// This is only possible because there is no settings screen: the one
+		// setting became the wp_sweep_limit_details filter. Tools has no submenus,
+		// so a second screen would have had to become a tab of this one, and that
+		// would have made WP-Sweep the only plugin of the nineteen where a data
+		// screen and a settings screen share a page.
+		self::$hook_suffix = add_management_page(
 			_x( 'Sweep', 'Page title', 'wp-sweep' ),
-			_x( 'Sweep', 'Menu title', 'wp-sweep' ),
-			WP_Sweep::capability( 'sweep' ),
-			self::PAGE,
-			array( __CLASS__, 'render_page' ),
-			'dashicons-editor-removeformatting'
-		);
-
-		// The data screen first, Settings last.
-		add_submenu_page(
-			self::PAGE,
-			_x( 'Sweep', 'Page title', 'wp-sweep' ),
-			_x( 'Sweep', 'Menu title', 'wp-sweep' ),
+			_x( 'WP-Sweep', 'Menu title', 'wp-sweep' ),
 			WP_Sweep::capability( 'sweep' ),
 			self::PAGE,
 			array( __CLASS__, 'render_page' )
-		);
-
-		add_submenu_page(
-			self::PAGE,
-			__( 'Sweep Settings', 'wp-sweep' ),
-			__( 'Settings', 'wp-sweep' ),
-			WP_Sweep_Settings::capability( 'settings' ),
-			WP_Sweep_Settings::PAGE,
-			array( 'WP_Sweep_Settings', 'render_page' )
 		);
 	}
 
@@ -145,11 +134,12 @@ class WP_Sweep_Admin {
 			'wp-sweep-admin',
 			'wpSweepL10n',
 			array(
-				'textCloseWarning' => __( 'Sweeping is in progress. If you leave now, the process won\'t be completed.', 'wp-sweep' ),
-				'textSweep'        => __( 'Sweep', 'wp-sweep' ),
-				'textSweepAll'     => __( 'Sweep All', 'wp-sweep' ),
-				'textSweeping'     => __( 'Sweeping...', 'wp-sweep' ),
-				'textNa'           => __( 'N/A', 'wp-sweep' ),
+				'textCloseWarning'   => __( 'Sweeping is in progress. If you leave now, the process won\'t be completed.', 'wp-sweep' ),
+				'textSweep'          => __( 'Sweep', 'wp-sweep' ),
+				'textSweepAll'       => __( 'Sweep All', 'wp-sweep' ),
+				'textSweeping'       => __( 'Sweeping...', 'wp-sweep' ),
+				'textNa'             => __( 'N/A', 'wp-sweep' ),
+				'textNothingToSweep' => __( 'Nothing to sweep', 'wp-sweep' ),
 			)
 		);
 	}
@@ -211,7 +201,8 @@ class WP_Sweep_Admin {
 
 			<form method="post" action="<?php echo esc_url( self::page_url() ); ?>">
 				<?php
-				wp_nonce_field( 'wp_sweep_bulk' );
+				// No wp_nonce_field() here: the list table prints its own, under
+				// the same _wpnonce name. See WP_Sweep_List_Table::bulk_nonce_action().
 				$table->display();
 				?>
 			</form>
@@ -236,7 +227,7 @@ class WP_Sweep_Admin {
 				'page'  => self::PAGE,
 				'group' => WP_Sweep_List_Table::current_group(),
 			),
-			admin_url( 'admin.php' )
+			admin_url( 'tools.php' )
 		);
 	}
 
@@ -390,7 +381,7 @@ class WP_Sweep_Admin {
 			return;
 		}
 
-		check_admin_referer( 'wp_sweep_bulk' );
+		check_admin_referer( $table->bulk_nonce_action() );
 
 		$sweep    = WP_Sweep::get_instance();
 		$posted   = isset( $_POST['sweep'] ) ? array_map( 'sanitize_key', (array) wp_unslash( $_POST['sweep'] ) ) : array();

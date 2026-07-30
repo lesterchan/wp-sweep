@@ -1,15 +1,18 @@
 <?php
 /**
- * Tests for the option rows and the upgrade routine.
+ * Tests for the option row and the upgrade routine.
  *
  * @package wp-sweep
  */
 
 /**
- * WP-Sweep stored nothing before 2.0.0, so there is no legacy row to fold in.
- * What these assert is that the two rows it stores now are the right shape, that
- * the upgrade routine is idempotent, and that the settings sanitiser and the
- * version markers cannot reach into each other.
+ * WP-Sweep stores exactly one row, `wp_sweep_version`, holding the two markers.
+ * It has no settings row: its one tunable is the `wp_sweep_limit_details`
+ * filter, so there is nothing to save and no settings screen to save it from.
+ *
+ * What these assert is that the row is the right shape, that the upgrade routine
+ * is idempotent, and that the settings row a 2.0.0 beta may have written is
+ * cleaned up rather than left behind.
  */
 class WP_Sweep_Options_Test extends WP_Sweep_TestCase {
 
@@ -24,24 +27,34 @@ class WP_Sweep_Options_Test extends WP_Sweep_TestCase {
 	}
 
 	/**
-	 * The two rows are named after the plugin, with no unprefixed survivor.
+	 * The rows are named after the plugin, with no unprefixed survivor.
 	 */
 	public function test_the_option_rows_carry_the_plugin_prefix() {
-		$this->assertSame( 'wp_sweep_options', WP_Sweep_Options::OPTION, 'The settings row is misnamed.' );
+		$this->assertSame( 'wp_sweep_options', WP_Sweep_Options::OPTION, 'The legacy settings row is misnamed.' );
 		$this->assertSame( 'wp_sweep_version', WP_Sweep_Options::VERSION, 'The version row is misnamed.' );
 	}
 
 	/**
-	 * A fresh install ends up with the defaults written out rather than absent.
+	 * A settings-less plugin writes no settings row.
+	 *
+	 * Section 2.1: a plugin with nothing to configure gets no settings row at
+	 * all, rather than an empty one that looks like a place to put things.
 	 */
-	public function test_first_upgrade_writes_the_defaults() {
+	public function test_no_settings_row_is_ever_written() {
 		WP_Sweep_Options::maybe_upgrade();
 
-		$this->assertSame(
-			WP_Sweep_Options::get_defaults(),
-			get_option( WP_Sweep_Options::OPTION ),
-			'A fresh install did not get the default settings.'
-		);
+		$this->assertFalse( get_option( WP_Sweep_Options::OPTION, false ), 'A settings row was written for a plugin with no settings.' );
+	}
+
+	/**
+	 * A row left by a 2.0.0 beta is removed on upgrade.
+	 */
+	public function test_a_beta_settings_row_is_cleaned_up() {
+		update_option( WP_Sweep_Options::OPTION, array( 'limit_details' => 42 ) );
+
+		WP_Sweep_Options::maybe_upgrade();
+
+		$this->assertFalse( get_option( WP_Sweep_Options::OPTION, false ), 'The beta settings row survived the upgrade.' );
 	}
 
 	/**
@@ -79,37 +92,11 @@ class WP_Sweep_Options_Test extends WP_Sweep_TestCase {
 	public function test_upgrade_is_idempotent() {
 		WP_Sweep_Options::maybe_upgrade();
 
-		WP_Sweep_Options::update( array( 'limit_details' => 42 ) );
+		$first = get_option( WP_Sweep_Options::VERSION );
 
 		WP_Sweep_Options::maybe_upgrade();
 
-		$this->assertSame(
-			42,
-			WP_Sweep_Options::get( 'limit_details' ),
-			'A second upgrade run overwrote a stored setting.'
-		);
-	}
-
-	/**
-	 * An upgrade re-sanitises whatever an older schema left in the row.
-	 */
-	public function test_upgrade_re_sanitises_a_stored_row() {
-		update_option( WP_Sweep_Options::OPTION, array( 'limit_details' => -7 ) );
-		update_option(
-			WP_Sweep_Options::VERSION,
-			array(
-				'plugin' => '1.2.0',
-				'db'     => '0',
-			)
-		);
-
-		WP_Sweep_Options::maybe_upgrade();
-
-		$this->assertSame(
-			1,
-			WP_Sweep_Options::get( 'limit_details' ),
-			'An out of range value survived the upgrade.'
-		);
+		$this->assertSame( $first, get_option( WP_Sweep_Options::VERSION ), 'A second upgrade run rewrote the version row.' );
 	}
 
 	/**
@@ -130,31 +117,6 @@ class WP_Sweep_Options_Test extends WP_Sweep_TestCase {
 
 		$this->assertSame( WP_SWEEP_VERSION, $versions['plugin'], 'The plugin marker was not advanced.' );
 		$this->assertSame( WP_SWEEP_DB_VERSION, $versions['db'], 'The db marker was not advanced.' );
-	}
-
-	/**
-	 * Reading a key that has never been stored falls back to the default.
-	 */
-	public function test_a_missing_key_falls_back_to_its_default() {
-		update_option( WP_Sweep_Options::OPTION, array() );
-
-		$this->assertSame( 500, WP_Sweep_Options::get( 'limit_details' ), 'The default cap was not applied.' );
-	}
-
-	/**
-	 * A row that is not an array at all does not take the screen down.
-	 */
-	public function test_a_corrupt_row_falls_back_to_the_defaults() {
-		update_option( WP_Sweep_Options::OPTION, 'not-an-array' );
-
-		$this->assertSame( WP_Sweep_Options::get_defaults(), WP_Sweep_Options::get(), 'A corrupt row was not replaced.' );
-	}
-
-	/**
-	 * An unknown key reads as null rather than as a notice.
-	 */
-	public function test_an_unknown_key_reads_as_null() {
-		$this->assertNull( WP_Sweep_Options::get( 'no_such_setting' ), 'An unknown key did not read as null.' );
 	}
 
 	/**
@@ -187,101 +149,20 @@ class WP_Sweep_Options_Test extends WP_Sweep_TestCase {
 		);
 	}
 
-	// -- The sanitiser. --
+	// -- The details cap. --
 
 	/**
-	 * The sanitiser bounds the details cap at both ends.
-	 *
-	 * @dataProvider data_limits
-	 *
-	 * @param mixed $input    Submitted value.
-	 * @param int   $expected Value that should be stored.
+	 * The cap defaults to the constant, with no option row involved.
 	 */
-	public function test_the_details_cap_is_bounded( $input, $expected ) {
-		$clean = WP_Sweep_Options::sanitize( array( 'limit_details' => $input ) );
-
-		$this->assertSame( $expected, $clean['limit_details'], 'The details cap was not bounded.' );
+	public function test_the_details_cap_defaults_to_the_constant() {
+		$this->assertSame( 500, WP_Sweep::DEFAULT_LIMIT_DETAILS, 'The documented default moved.' );
+		$this->assertSame( 500, $this->sweep()->limit_details(), 'The engine did not use the default cap.' );
 	}
 
 	/**
-	 * Submitted caps and the values they must be stored as.
-	 *
-	 * @return array
-	 */
-	public function data_limits() {
-		return array(
-			'in range'      => array( 250, 250 ),
-			'zero'          => array( 0, 1 ),
-			'negative'      => array( -40, 1 ),
-			'above the top' => array( 999999, 10000 ),
-			'numeric text'  => array( '120', 120 ),
-			'not a number'  => array( 'lots', 1 ),
-		);
-	}
-
-	/**
-	 * Anything that is not an array sanitises to the defaults.
-	 */
-	public function test_a_non_array_sanitises_to_the_defaults() {
-		$this->assertSame( WP_Sweep_Options::get_defaults(), WP_Sweep_Options::sanitize( 'nonsense' ), 'A scalar was not replaced.' );
-	}
-
-	/**
-	 * The sanitiser never stores a version marker.
-	 *
-	 * This is the regression guard for the bug the standard was written
-	 * around: a marker kept inside the settings array has to be rescued from
-	 * the stored value on every save, and the save that forgets records the
-	 * upgrade as incomplete forever. With a separate row it is impossible by
-	 * construction, and this fails the moment someone moves one back.
-	 */
-	public function test_the_sanitiser_never_stores_version_markers() {
-		$clean = WP_Sweep_Options::sanitize(
-			array(
-				'limit_details' => 100,
-				'version'       => '2.0.0',
-				'db_version'    => '1',
-				'versions'      => array( 'plugin' => '2.0.0' ),
-			)
-		);
-
-		foreach ( array( 'version', 'db_version', 'versions', 'plugin', 'db' ) as $key ) {
-			$this->assertArrayNotHasKey( $key, $clean, "The sanitiser stored a '{$key}' key in the settings row." );
-		}
-	}
-
-	/**
-	 * The sanitiser reads nothing back out of the database.
-	 *
-	 * A sanitize_callback that calls get_option() is the shape the separate
-	 * version row exists to make unnecessary.
-	 */
-	public function test_the_sanitiser_reads_nothing_back() {
-		$code = $this->source_without_comments( '/includes/class-wp-sweep-options.php' );
-
-		$sanitize = substr( $code, strpos( $code, 'public static function sanitize' ) );
-		$sanitize = substr( $sanitize, 0, strpos( $sanitize, "\n\t}" ) );
-
-		$this->assertStringNotContainsString( 'get_option(', $sanitize, 'The sanitiser reaches back into the database.' );
-	}
-
-	// -- What the rest of the plugin reads. --
-
-	/**
-	 * The details cap the engine uses is the one that was stored.
-	 */
-	public function test_the_engine_reads_the_stored_details_cap() {
-		WP_Sweep_Options::update( array( 'limit_details' => 7 ) );
-
-		$this->assertSame( 7, $this->sweep()->limit_details(), 'The engine ignored the stored cap.' );
-	}
-
-	/**
-	 * The filter still wins over the stored value.
+	 * The filter is the only way to change it.
 	 */
 	public function test_the_details_cap_filter_wins() {
-		WP_Sweep_Options::update( array( 'limit_details' => 7 ) );
-
 		add_filter(
 			'wp_sweep_limit_details',
 			static function () {
@@ -289,6 +170,36 @@ class WP_Sweep_Options_Test extends WP_Sweep_TestCase {
 			}
 		);
 
-		$this->assertSame( 3, $this->sweep()->limit_details(), 'The filter did not override the stored cap.' );
+		$this->assertSame( 3, $this->sweep()->limit_details(), 'The filter did not set the cap.' );
+	}
+
+	/**
+	 * A filter returning nonsense cannot open an empty details list.
+	 *
+	 * A cap of zero renders a Details button that opens nothing, which reads as
+	 * a broken screen rather than as a setting.
+	 */
+	public function test_the_details_cap_is_never_below_one() {
+		add_filter(
+			'wp_sweep_limit_details',
+			static function () {
+				return -7;
+			}
+		);
+
+		$this->assertSame( 1, $this->sweep()->limit_details(), 'A negative cap was not floored at one.' );
+	}
+
+	/**
+	 * Nothing reads the cap out of an option row any more.
+	 */
+	public function test_the_cap_is_not_read_from_an_option() {
+		$code = $this->source_without_comments( '/includes/class-wp-sweep.php' );
+
+		$limit = substr( $code, strpos( $code, 'public function limit_details' ) );
+		$limit = substr( $limit, 0, strpos( $limit, "\n\t}" ) );
+
+		$this->assertStringNotContainsString( 'get_option(', $limit, 'The cap is being read from the database again.' );
+		$this->assertStringNotContainsString( 'WP_Sweep_Options', $limit, 'The cap is being read from the options class again.' );
 	}
 }

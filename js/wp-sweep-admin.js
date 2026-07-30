@@ -198,18 +198,27 @@
 
 				document.body.classList.remove( 'sweep-active' );
 
-				// Nothing left to sweep, so the row actions go with it.
+				// Nothing left to sweep, so the buttons go and the cell says so.
+				// The checkbox stays: every row has one, empty or not, or the
+				// column gains holes and select-all starts claiming rows it does
+				// not select. This mirrors what column_actions() renders on a
+				// fresh page load, so a swept row and a reloaded one agree.
 				if ( 0 === count ) {
-					const actions = row.querySelector( '.row-actions' );
+					const actions = row.querySelector( '.column-actions' );
 
 					if ( actions ) {
-						actions.remove();
-					}
+						actions.textContent = '';
 
-					const box = row.querySelector( 'input[type="checkbox"]' );
+						const dash = document.createElement( 'span' );
+						dash.className = 'sweep-nothing';
+						dash.setAttribute( 'aria-hidden', 'true' );
+						dash.textContent = '\u2014';
 
-					if ( box ) {
-						box.remove();
+						const label = document.createElement( 'span' );
+						label.className = 'screen-reader-text';
+						label.textContent = l10n.textNothingToSweep;
+
+						actions.append( dash, label );
 					}
 
 					return;

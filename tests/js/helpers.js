@@ -152,13 +152,13 @@ export function sweepSection( {
 					<td>
 						<strong>Revisions</strong>
 						<p class="sweep-details" hidden></p>
-						<div class="row-actions">
-							<span class="sweep"><a href="?sweep=${ name }" data-action="sweep" data-sweep-name="${ name }" data-sweep-type="${ type }" data-nonce="NONCE" class="btn-sweep">Sweep</a></span>
-							<span class="details"><a href="?sweep_details=${ name }" data-action="sweep_details" data-sweep-name="${ name }" data-sweep-type="${ type }" data-nonce="DNONCE" class="btn-sweep-details">Details</a></span>
-						</div>
 					</td>
 					<td><span class="sweep-count">${ count }</span></td>
 					<td><span class="sweep-percentage">${ percentage }</span></td>
+					<td class="column-actions">
+						<a href="?sweep=${ name }" data-action="sweep" data-sweep-name="${ name }" data-sweep-type="${ type }" data-nonce="NONCE" class="btn-sweep button button-primary">Sweep</a>
+						<a href="?sweep_details=${ name }" data-action="sweep_details" data-sweep-name="${ name }" data-sweep-type="${ type }" data-nonce="DNONCE" class="btn-sweep-details button">Details</a>
+					</td>
 				</tr>
 			</tbody>
 		</table>

@@ -21,7 +21,17 @@ defined( 'ABSPATH' ) || exit;
 class WP_Sweep_Options {
 
 	/**
-	 * The option row holding every setting, as a nested array.
+	 * The settings row this plugin no longer has.
+	 *
+	 * WP-Sweep has one tunable -- how many items a details list shows -- and for
+	 * a while it was the single field of a settings screen. One field does not
+	 * earn a screen, an option row, a Settings API registration and a sanitiser,
+	 * so it is the `wp_sweep_limit_details` filter instead. Losing the second
+	 * screen is also what lets the plugin sit under Tools again, where it was for
+	 * its whole released life.
+	 *
+	 * The name survives only so the upgrade has something to delete. No released
+	 * version ever wrote this row, so that cleanup is for 2.0.0 beta installs.
 	 *
 	 * Not to be confused with the `wp_sweep_transient_options` and
 	 * `wp_sweep_details_transient_options` strings elsewhere in the plugin.
@@ -42,51 +52,6 @@ class WP_Sweep_Options {
 	const VERSION = 'wp_sweep_version';
 
 	/**
-	 * The default option values.
-	 *
-	 * Until 2.0.0 the details cap was a public property on the sweep class set
-	 * to 500, which meant the only way to change it was to reach into the
-	 * object from another plugin.
-	 *
-	 * @return array
-	 */
-	public static function get_defaults() {
-		return array(
-			'limit_details' => 500,
-		);
-	}
-
-	/**
-	 * Get the stored options, merged over the defaults.
-	 *
-	 * Merging on read is what lets an install upgraded from an older version
-	 * pick up keys that did not exist when its row was written.
-	 *
-	 * @param string|null $key Optional single key to return.
-	 * @return mixed The full option array, or one value, or null for an unknown key.
-	 */
-	public static function get( $key = null ) {
-		$stored  = get_option( self::OPTION, array() );
-		$options = wp_parse_args( is_array( $stored ) ? $stored : array(), self::get_defaults() );
-
-		if ( null === $key ) {
-			return $options;
-		}
-
-		return isset( $options[ $key ] ) ? $options[ $key ] : null;
-	}
-
-	/**
-	 * Replace the stored options.
-	 *
-	 * @param array $options Option values.
-	 * @return bool Whether the option row changed.
-	 */
-	public static function update( array $options ) {
-		return update_option( self::OPTION, $options );
-	}
-
-	/**
 	 * Get the version markers.
 	 *
 	 * @return array The 'plugin' and 'db' markers, each an empty string when unset.
@@ -101,37 +66,6 @@ class WP_Sweep_Options {
 		return array(
 			'plugin' => isset( $stored['plugin'] ) ? (string) $stored['plugin'] : '',
 			'db'     => isset( $stored['db'] ) ? (string) $stored['db'] : '',
-		);
-	}
-
-	/**
-	 * Clean a full set of submitted options.
-	 *
-	 * Also used as register_setting()'s sanitize_callback, which receives the
-	 * whole nested array in one go. It reads nothing back out of the database:
-	 * the version markers live in their own row, so there is nothing here to
-	 * rescue and nothing this can corrupt.
-	 *
-	 * @param mixed $input Raw submitted values.
-	 * @return array
-	 */
-	public static function sanitize( $input ) {
-		$defaults = self::get_defaults();
-
-		if ( ! is_array( $input ) ) {
-			return $defaults;
-		}
-
-		$limit = isset( $input['limit_details'] ) ? (int) $input['limit_details'] : 0;
-
-		/*
-		 * A cap of zero would render a Details button that opens an empty list,
-		 * which reads as a broken screen rather than as a setting. The upper
-		 * bound is the point of the cap: the whole list is held in memory and
-		 * written into the page.
-		 */
-		return array(
-			'limit_details' => max( 1, min( 10000, $limit ) ),
 		);
 	}
 
@@ -179,14 +113,10 @@ class WP_Sweep_Options {
 	 * @return void
 	 */
 	private static function migrate( $versions ) {
-		if ( '' === $versions['plugin'] && '' === $versions['db'] && false === get_option( self::OPTION, false ) ) {
-			// A fresh install. Write the defaults once rather than leaving the
-			// row absent and merging them on every read forever.
-			add_option( self::OPTION, self::get_defaults() );
+		unset( $versions );
 
-			return;
-		}
-
-		self::update( self::sanitize( get_option( self::OPTION, array() ) ) );
+		// The settings row went with the settings screen. No released version
+		// ever wrote it, so this only tidies up an install that ran a 2.0.0 beta.
+		delete_option( self::OPTION );
 	}
 }

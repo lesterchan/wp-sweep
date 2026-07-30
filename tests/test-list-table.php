@@ -37,7 +37,7 @@ class WP_Sweep_List_Table_Test extends WP_Sweep_TestCase {
 		parent::set_up();
 
 		wp_set_current_user( self::$admin );
-		set_current_screen( 'toplevel_page_wp-sweep' );
+		set_current_screen( 'tools_page_wp-sweep' );
 
 		require_once WP_SWEEP_DIR . 'includes/class-wp-sweep-list-table.php';
 	}
@@ -217,8 +217,16 @@ class WP_Sweep_List_Table_Test extends WP_Sweep_TestCase {
 		$items = wp_list_filter( $this->table()->items, array( 'name' => 'revisions' ) );
 		$item  = reset( $items );
 
-		$this->assertStringContainsString( 'btn-sweep', $this->table()->column_name( $item ), 'The row offers no Sweep action.' );
+		$actions = $this->table()->column_actions( $item );
+
+		$this->assertStringContainsString( 'btn-sweep', $actions, 'The row offers no Sweep action.' );
+		$this->assertStringContainsString( 'btn-sweep-details', $actions, 'The row offers no Details action.' );
 		$this->assertStringContainsString( 'name="sweep[]"', $this->table()->column_cb( $item ), 'The row offers no checkbox.' );
+
+		// The buttons are a column of their own, not row actions: WordPress hides
+		// those until hover, and sweeping is the only thing this screen does.
+		$this->assertStringNotContainsString( 'row-actions', $this->table()->column_name( $item ), 'The actions went back to being hover-only row actions.' );
+		$this->assertStringContainsString( 'button', $actions, 'The actions are not drawn as buttons.' );
 	}
 
 	/**
@@ -244,7 +252,7 @@ class WP_Sweep_List_Table_Test extends WP_Sweep_TestCase {
 		);
 
 		$this->assertStringContainsString( 'name="sweep[]"', $this->table()->column_cb( $item ), 'An empty row lost its checkbox.' );
-		$this->assertStringNotContainsString( 'row-actions', $this->table()->column_name( $item ), 'An empty row offered a row action.' );
+		$this->assertStringNotContainsString( 'btn-sweep', $this->table()->column_actions( $item ), 'An empty row offered a Sweep button.' );
 	}
 
 	/**
