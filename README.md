@@ -181,7 +181,7 @@ Before 2.0.0 the exclusion was a SQL `LIKE` clause, and `LIKE` treats an undersc
 
 ### Does WP-Sweep leave anything behind when I delete it?
 
-Nothing. No option rows, no database tables, no capabilities and no scheduled events. `uninstall.php` still runs, deleting `wp_sweep_options` and `wp_sweep_version` on every site of a network — not just the first hundred — because early 2.0.0 builds did write them.
+Nothing. WP-Sweep stores no option rows, creates no database tables, registers no capabilities and schedules no events. `uninstall.php` runs anyway and sweeps up after itself across a whole network rather than the first hundred sites.
 
 ## Screenshots
 1. Tools -> WP-Sweep, listing every sweep with what it removes
@@ -204,7 +204,7 @@ Nothing. No option rows, no database tables, no capabilities and no scheduled ev
 * NEW: The meta key whitelists protect the duplicated meta sweeps as well as the orphaned ones, which the readme always claimed and the code never did.
 * NEW: `wp_sweep_capability` and `wp_sweep_limit_details` filters. WP-Sweep has no settings screen: `wp_sweep_limit_details` is how the Details cap is changed.
 * NEW: Every sweep carries a description of what it removes, shown under its name.
-* NEW: An `uninstall.php` that cleans up across a whole network rather than the first hundred sites. WP-Sweep stores no option rows of its own.
+* NEW: An `uninstall.php` that cleans up across a whole network rather than the first hundred sites. WP-Sweep itself stores nothing: no option rows, no tables, no capabilities and no scheduled events.
 * NEW: Restructured into `includes/`, following the Plugin Handbook.
 * NEW: PHPUnit and vitest suites, and GitHub Actions CI across six WordPress and PHP combinations, single site and multisite.
 * CHANGED: Meta key exclusions are matched in PHP rather than with SQL `LIKE`, so an underscore in a protected key is an underscore rather than a wildcard.
@@ -315,7 +315,7 @@ A major release. There are four things to check before you update from 1.2.0.
 
 **The screen has a new address, but it has not moved.** It is still at **Tools → WP-Sweep**. Only the address changed, from `tools.php?page=wp-sweep/admin.php` to `tools.php?page=wp-sweep`, so a bookmark to the old one needs updating. The old form had the plugin's folder name inside it, which is why the screen broke for anyone who installed WP-Sweep under a different folder name.
 
-**Sweep All is gone, and there is no settings screen.** Every row has a checkbox now, so ticking the one in the header and applying the **Sweep** bulk action does what Sweep All did — and lets you leave rows out, which it never could. The single setting that briefly existed, how many items Details lists, is the `wp_sweep_limit_details` filter instead; it still defaults to 500, so if you never changed it there is nothing to do.
+**Sweep All is gone.** Every row has a checkbox now, so ticking the one in the header and applying the **Sweep** bulk action does what Sweep All did — and lets you leave rows out, which it never could.
 
 **Anything scripted against WP-Sweep needs editing.** The WP-CLI command is now `wp wp-sweep` rather than `wp sweep`, and the REST routes live under `/wp-json/wp-sweep/v1/` rather than `/wp-json/sweep/v1/`. Both were generic names another plugin could have claimed. If a cron job or a deploy script calls either, update it — the old spellings do not fall back, they fail. Code calling `WPSweep::get_instance()` must become `WP_Sweep::get_instance()`, and code reading `$sweep->limit_details` must call `$sweep->limit_details()`. Every filter and action keeps the name it had.
 
