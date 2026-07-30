@@ -275,31 +275,38 @@ class WP_Sweep_Admin {
 	 * @return array Type label keyed by type, keyed by group label.
 	 */
 	private static function totals() {
-		$groups = WP_Sweep::get_instance()->get_sweep_groups();
-
+		/*
+		 * Labelled with plain nouns, not with get_sweep_groups().
+		 *
+		 * Those read "Post Sweep", "Comment Sweep" and so on, which is right
+		 * above the table where they filter which sweeps are listed. Here they
+		 * would be wrong: these are counts of what is in the database right now,
+		 * not of anything a sweep would remove. A row saying "Post Sweep 3 Posts"
+		 * reads as three posts waiting to be deleted.
+		 */
 		return array(
-			$groups['posts']    => array(
+			__( 'Posts', 'wp-sweep' )    => array(
 				'posts'    => __( 'Posts', 'wp-sweep' ),
 				'postmeta' => __( 'Post Meta', 'wp-sweep' ),
 			),
-			$groups['comments'] => array(
+			__( 'Comments', 'wp-sweep' ) => array(
 				'comments'    => __( 'Comments', 'wp-sweep' ),
 				'commentmeta' => __( 'Comment Meta', 'wp-sweep' ),
 			),
-			$groups['users']    => array(
+			__( 'Users', 'wp-sweep' )    => array(
 				'users'    => __( 'Users', 'wp-sweep' ),
 				'usermeta' => __( 'User Meta', 'wp-sweep' ),
 			),
-			$groups['terms']    => array(
+			__( 'Terms', 'wp-sweep' )    => array(
 				'terms'              => __( 'Terms', 'wp-sweep' ),
 				'termmeta'           => __( 'Term Meta', 'wp-sweep' ),
 				'term_taxonomy'      => __( 'Term Taxonomy', 'wp-sweep' ),
 				'term_relationships' => __( 'Term Relationships', 'wp-sweep' ),
 			),
-			$groups['options']  => array(
+			__( 'Options', 'wp-sweep' )  => array(
 				'options' => __( 'Options', 'wp-sweep' ),
 			),
-			$groups['database'] => array(
+			__( 'Database', 'wp-sweep' ) => array(
 				'tables' => __( 'Tables', 'wp-sweep' ),
 			),
 		);
