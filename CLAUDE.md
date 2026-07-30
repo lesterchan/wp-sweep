@@ -106,13 +106,22 @@ treats an underscore as a single-character wildcard and meta keys are full of
 underscores. An empty exclusion list must never reach `NOT IN ()`, which is a
 syntax error rather than a match-nothing clause.
 
-### `includes/class-wp-sweep-options.php` — the two option rows
+### What WP-Sweep stores: nothing
 
-`wp_sweep_options` holds the settings, `wp_sweep_version` holds `plugin` and
-`db`. They are separate rows so the settings screen and the upgrade routine can
-never overwrite each other's work; `sanitize()` must never read from
-`get_option()`, and `WP_Sweep_Metadata_Test` fails if a marker ends up in the
-settings array.
+No settings row, no version row, no tables, no capabilities, no scheduled
+events. It has no settings and nothing to migrate, so under STANDARDS.md 2.1 it
+writes nothing at all — there is no options class and no upgrade routine.
+`WP_Sweep_Options_Test` boots the plugin and fails if any `wp_sweep_*` row
+appears.
+
+The one tunable is the `wp_sweep_limit_details` filter, defaulting to
+`WP_Sweep::DEFAULT_LIMIT_DETAILS` (500). It was briefly the single field of a
+settings screen; one field does not earn a screen, an option row, a
+`register_setting()` and a sanitiser.
+
+`uninstall.php` still deletes `wp_sweep_options` and `wp_sweep_version`. Nothing
+writes them now and no released version ever did, so that is purely for installs
+that ran a 2.0.0 beta.
 
 `wp_sweep_transient_options` and `wp_sweep_details_transient_options` are
 **nonce actions** for the sweep named `transient_options`, built as
@@ -121,12 +130,37 @@ named `options` or `version`, and `WP_Sweep_Regressions_Test` keeps it that way.
 
 ### `includes/class-wp-sweep-admin.php` and `class-wp-sweep-list-table.php`
 
-One top-level `Sweep` menu, `admin.php?page=wp-sweep`, with the sweep screen
-first and Settings last. The rows come from `WP_Sweep_List_Table`: pagination at
-20, sortable columns, group views, a bulk sweep and a `no_items()` message.
+One screen, `add_management_page()` at `tools.php?page=wp-sweep`, where the
+plugin sat for its whole released life. Sweeping is maintenance against the
+installation, which is what Tools is for. **This only works because there is no
+settings screen** — Tools has no submenus, so a second screen would have to
+become a tab of this one, making WP-Sweep the only plugin of the nineteen where
+a data screen and a settings screen share a page. That was tried and reverted;
+see STANDARDS.md 4.1 before proposing it again.
 
-**Every path works without JavaScript.** The row actions are real nonced links
-and the bulk action is a real form post, both handled in `handle_request()`. The
+The rows come from `WP_Sweep_List_Table`: pagination at 20, sortable columns,
+group views, a bulk sweep and a `no_items()` message. Every sweep carries a
+`description` in `get_sweeps()`, rendered under its name.
+
+**Sweep and Details are a column, not row actions.** WordPress hides row actions
+until hover, which is right when the row is the subject and the actions are
+secondary. Here the action is the whole point, and hover reaches nothing on a
+touch screen. Do not move them back.
+
+**Every row has a checkbox, including a row with nothing to sweep.** Withholding
+it left gaps down the column and made the header select-all claim rows it did
+not select, and it never prevented a no-op anyway — the count is a snapshot from
+when the page rendered.
+
+**The bulk form carries exactly one nonce.** `WP_List_Table::display_tablenav()`
+prints `wp_nonce_field()` for `bulk-sweeps` itself, in a field named `_wpnonce`.
+Printing a second `_wpnonce` beside it does not add a check, it replaces one —
+PHP keeps the last field of a repeated name — and every bulk sweep failed with
+"The link you followed has expired". Verify `bulk_nonce_action()`, never a
+nonce of the screen's own.
+
+**Every path works without JavaScript.** The buttons are real nonced links and
+the bulk action is a real form post, both handled in `handle_request()`. The
 script intercepts them so the screen updates in place. Do not add a control that
 only works with the script running.
 
@@ -139,18 +173,20 @@ concatenation is how the stored XSS fixed in 2.0.0 got there.
 `add_settings_error()` is escaped first — sweep results come back through the
 public `wp_sweep_sweep` filter.
 
-### `includes/class-wp-sweep-settings.php`
-
-Full Settings API: `register_setting()` with `WP_Sweep_Options::sanitize`, one
-section, one `field_*()` method per field. No hand-written `<table
-class="form-table">`, no hand-rolled `div.updated`.
-
 ### Capabilities
 
 The sweep surface takes `activate_plugins` (`update_plugins` returns false when
 `DISALLOW_FILE_MODS` is set, which took the screen away from the administrators
-who needed it). The settings screen takes `manage_options`. Both resolve through
-one filter, `wp_sweep_capability`, with a context.
+who needed it). It resolves through one filter, `wp_sweep_capability`, with a
+context: `sweep`, `ajax` or `rest`.
+
+**Under multisite that capability is not what it looks like.** Core's
+`map_meta_cap()` adds `manage_network_plugins` to `activate_plugins` unless the
+network admin has delegated the Plugins menu, which is not delegated by default,
+so an ordinary site administrator cannot sweep. That is correct for something
+that deletes data. Tests go through `WP_Sweep_Creates_Admins::create_admin()`,
+which grants super admin when `is_multisite()`; do not weaken the gate to make a
+test pass.
 
 ### Hooks
 
@@ -160,11 +196,15 @@ before 2.0.0 and are public API — **do not rename them.**
 
 ### Adding a new sweep
 
-1. Add an entry to `WP_Sweep::get_sweeps()`, in the position it must run in.
+1. Add an entry to `WP_Sweep::get_sweeps()`, in the position it must run in,
+   **with a `description`** saying what it removes. These rows delete data that
+   does not come back, and a label like "Orphaned Term Relationships" tells a
+   site owner nothing about whether it is safe to tick.
 2. Add a `case` for it in `count()`, `details()` and `sweep()`.
 3. Add its table type to `get_sweep_types()` and `total_count()` if it is new.
-4. `WP_Sweep_Sweep_Names_Test` fails until all three switches handle it. The
-   screen needs no edit — the rows are generated.
+4. `WP_Sweep_Sweep_Names_Test` fails until all three switches handle it, and
+   `test_every_sweep_carries_a_description` until it has one. The screen needs
+   no edit — the rows are generated.
 
 ## Testing
 
@@ -212,7 +252,8 @@ Notes that will save time:
 
 ## Known gap
 
-Roughly 260 of the suite's 450-odd assertions still carry no failure message.
+Roughly 290 of the suite's 1,100-odd assertions still carry no failure message.
 §7.1 asks for one on every assertion; new and rewritten tests have them, the
 older ones do not. Worth a uniform pass across the whole collection rather than
-plugin by plugin.
+plugin by plugin — the measured spread is 0% in freemyinternet to 95% in
+wp-email.
