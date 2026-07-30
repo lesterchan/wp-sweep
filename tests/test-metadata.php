@@ -283,49 +283,27 @@ class WP_Sweep_Metadata_Test extends WP_Sweep_TestCase {
 		$this->assertFileExists( $this->root . '/index.php', 'The plugin root has no index.php.' );
 	}
 
-	public function test_the_plugin_owns_exactly_one_option_row() {
+	public function test_the_plugin_owns_no_option_rows_at_all() {
 		global $wpdb;
 
-		WP_Sweep_Options::maybe_upgrade();
-
-		$rows = $wpdb->get_col( $wpdb->prepare( "SELECT option_name FROM $wpdb->options WHERE option_name LIKE %s", 'wp\_sweep\_%' ) );
-
-		sort( $rows );
-
-		// One row, not two: the settings row went with the settings screen.
-		$this->assertSame(
-			array( WP_Sweep_Options::VERSION ),
-			$rows,
-			'The plugin owns an option row beyond its version markers.'
-		);
-	}
-
-	public function test_uninstall_removes_every_option_row() {
-		global $wpdb;
-
-		WP_Sweep_Options::maybe_upgrade();
-
-		$this->assertNotEmpty(
-			$wpdb->get_col( $wpdb->prepare( "SELECT option_name FROM $wpdb->options WHERE option_name LIKE %s", 'wp\_sweep\_%' ) ),
-			'There was nothing to uninstall, so this proves nothing.'
-		);
-
-		// uninstall.php guards on WP_UNINSTALL_PLUGIN and defining it would
-		// take the rest of the run with it, so the deletions it performs are
-		// run here instead and the file is asserted to name the same rows.
-		delete_option( WP_Sweep_Options::OPTION );
-		delete_option( WP_Sweep_Options::VERSION );
+		do_action( 'plugins_loaded' );
+		do_action( 'init' );
 
 		$this->assertSame(
 			array(),
 			$wpdb->get_col( $wpdb->prepare( "SELECT option_name FROM $wpdb->options WHERE option_name LIKE %s", 'wp\_sweep\_%' ) ),
-			'A wp_sweep_ option row survived the uninstall.'
+			'WP-Sweep wrote an option row; it has no settings and no tables, so it stores nothing.'
 		);
+	}
 
+	public function test_uninstall_names_both_rows_a_pre_release_build_wrote() {
 		$uninstall = file_get_contents( $this->root . '/uninstall.php' );
 
-		$this->assertStringContainsString( "delete_option( '" . WP_Sweep_Options::OPTION . "' )", $uninstall, 'uninstall.php does not delete the settings row.' );
-		$this->assertStringContainsString( "delete_option( '" . WP_Sweep_Options::VERSION . "' )", $uninstall, 'uninstall.php does not delete the version row.' );
+		// Nothing writes either of these now. An early build of the unreleased
+		// 2.0.0 wrote both, and uninstall is the only thing that will ever take
+		// them off a site that ran that build.
+		$this->assertStringContainsString( "delete_option( 'wp_sweep_options' )", $uninstall, 'uninstall.php does not delete the pre-release settings row.' );
+		$this->assertStringContainsString( "delete_option( 'wp_sweep_version' )", $uninstall, 'uninstall.php does not delete the pre-release version row.' );
 	}
 
 	public function test_uninstall_walks_the_whole_network() {
@@ -341,30 +319,19 @@ class WP_Sweep_Metadata_Test extends WP_Sweep_TestCase {
 		);
 	}
 
-	public function test_version_row_holds_exactly_plugin_and_db() {
-		WP_Sweep_Options::maybe_upgrade();
-
-		$row = get_option( WP_Sweep_Options::VERSION );
-
-		$this->assertIsArray( $row, 'The version row is not an array.' );
-		$this->assertSame( array( 'plugin', 'db' ), array_keys( $row ), 'The version row does not hold exactly the plugin and db markers.' );
-	}
-
 	/**
-	 * The version markers are the only thing in the version row.
+	 * There is no version row to hold anything.
 	 *
-	 * This used to check that the settings sanitiser could not smuggle a marker
-	 * into the settings row. There is no settings row and no sanitiser any more --
-	 * the plugin's one tunable is the wp_sweep_limit_details filter -- so what is
-	 * left to hold true is that nothing else has crept into the row that remains.
+	 * This slot used to check the markers' shape, and before that that the
+	 * settings sanitiser could not smuggle a marker into the settings row. There
+	 * is no settings row, no sanitiser and no version row now: the plugin's one
+	 * tunable is the wp_sweep_limit_details filter and it stores nothing.
 	 */
-	public function test_the_version_row_holds_nothing_but_the_markers() {
-		WP_Sweep_Options::maybe_upgrade();
+	public function test_there_is_no_version_row() {
+		do_action( 'plugins_loaded' );
+		do_action( 'init' );
 
-		$row = get_option( WP_Sweep_Options::VERSION );
-
-		foreach ( array( 'limit_details', 'version', 'db_version', 'versions' ) as $key ) {
-			$this->assertArrayNotHasKey( $key, $row, "The version row has grown a '{$key}' key." );
-		}
+		$this->assertFalse( get_option( 'wp_sweep_version', false ), 'The version row is back.' );
+		$this->assertFalse( get_option( 'wp_sweep_options', false ), 'The settings row is back.' );
 	}
 }

@@ -1,20 +1,27 @@
 <?php
 /**
- * Tests for the option row and the upgrade routine.
+ * Tests that WP-Sweep stores nothing at all.
  *
  * @package wp-sweep
  */
 
 /**
- * WP-Sweep stores exactly one row, `wp_sweep_version`, holding the two markers.
- * It has no settings row: its one tunable is the `wp_sweep_limit_details`
- * filter, so there is nothing to save and no settings screen to save it from.
+ * WP-Sweep has no settings and no tables, so under STANDARDS.md 2.1 it writes no
+ * option row -- not a settings row, and not the version markers either. Those
+ * exist to tell a migration what it is upgrading from, and there is no migration
+ * and nothing to migrate.
  *
- * What these assert is that the row is the right shape, that the upgrade routine
- * is idempotent, and that the settings row a 2.0.0 beta may have written is
- * cleaned up rather than left behind.
+ * Two rows did exist during 2.0.0 development, and neither was ever released:
+ * 1.2.0 stored nothing. So both are cleaned up on uninstall and nowhere else.
  */
 class WP_Sweep_Options_Test extends WP_Sweep_TestCase {
+
+	/**
+	 * The row names a pre-release build wrote.
+	 *
+	 * @var string[]
+	 */
+	const LEGACY_ROWS = array( 'wp_sweep_options', 'wp_sweep_version' );
 
 	/**
 	 * Starts every test from an install that has never run the plugin.
@@ -22,184 +29,84 @@ class WP_Sweep_Options_Test extends WP_Sweep_TestCase {
 	public function set_up() {
 		parent::set_up();
 
-		delete_option( WP_Sweep_Options::OPTION );
-		delete_option( WP_Sweep_Options::VERSION );
+		foreach ( self::LEGACY_ROWS as $row ) {
+			delete_option( $row );
+		}
 	}
 
 	/**
-	 * The rows are named after the plugin, with no unprefixed survivor.
-	 */
-	public function test_the_option_rows_carry_the_plugin_prefix() {
-		$this->assertSame( 'wp_sweep_options', WP_Sweep_Options::OPTION, 'The legacy settings row is misnamed.' );
-		$this->assertSame( 'wp_sweep_version', WP_Sweep_Options::VERSION, 'The version row is misnamed.' );
-	}
-
-	/**
-	 * A settings-less plugin writes no settings row.
+	 * Every option row whose name starts with the plugin's prefix.
 	 *
-	 * Section 2.1: a plugin with nothing to configure gets no settings row at
-	 * all, rather than an empty one that looks like a place to put things.
+	 * A LIKE rather than two delete_option() checks: a row added later and
+	 * forgotten is exactly the failure this is here to catch.
+	 *
+	 * @return string[]
 	 */
-	public function test_no_settings_row_is_ever_written() {
-		WP_Sweep_Options::maybe_upgrade();
+	private function stored_rows() {
+		global $wpdb;
 
-		$this->assertFalse( get_option( WP_Sweep_Options::OPTION, false ), 'A settings row was written for a plugin with no settings.' );
-	}
-
-	/**
-	 * A row left by a 2.0.0 beta is removed on upgrade.
-	 */
-	public function test_a_beta_settings_row_is_cleaned_up() {
-		update_option( WP_Sweep_Options::OPTION, array( 'limit_details' => 42 ) );
-
-		WP_Sweep_Options::maybe_upgrade();
-
-		$this->assertFalse( get_option( WP_Sweep_Options::OPTION, false ), 'The beta settings row survived the upgrade.' );
-	}
-
-	/**
-	 * The version row holds the two markers and the values they should hold.
-	 */
-	public function test_upgrade_stamps_both_version_markers() {
-		WP_Sweep_Options::maybe_upgrade();
-
-		$this->assertSame(
-			array(
-				'plugin' => WP_SWEEP_VERSION,
-				'db'     => WP_SWEEP_DB_VERSION,
-			),
-			get_option( WP_Sweep_Options::VERSION ),
-			'The version row does not hold the running version.'
-		);
-	}
-
-	/**
-	 * The version row holds those two keys and nothing else, ever.
-	 */
-	public function test_version_row_holds_exactly_plugin_and_db() {
-		WP_Sweep_Options::maybe_upgrade();
-
-		$this->assertSame(
-			array( 'plugin', 'db' ),
-			array_keys( get_option( WP_Sweep_Options::VERSION ) ),
-			'The version row has grown a third key.'
-		);
-	}
-
-	/**
-	 * Running the upgrade twice changes nothing the second time.
-	 */
-	public function test_upgrade_is_idempotent() {
-		WP_Sweep_Options::maybe_upgrade();
-
-		$first = get_option( WP_Sweep_Options::VERSION );
-
-		WP_Sweep_Options::maybe_upgrade();
-
-		$this->assertSame( $first, get_option( WP_Sweep_Options::VERSION ), 'A second upgrade run rewrote the version row.' );
-	}
-
-	/**
-	 * An upgrade from an older version leaves no stale marker behind.
-	 */
-	public function test_upgrade_replaces_an_older_marker() {
-		update_option(
-			WP_Sweep_Options::VERSION,
-			array(
-				'plugin' => '1.2.0',
-				'db'     => '0',
+		return (array) $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s",
+				$wpdb->esc_like( 'wp_sweep_' ) . '%'
 			)
 		);
+	}
 
-		WP_Sweep_Options::maybe_upgrade();
+	public function test_the_plugin_stores_nothing() {
+		do_action( 'plugins_loaded' );
+		do_action( 'init' );
 
-		$versions = WP_Sweep_Options::get_versions();
-
-		$this->assertSame( WP_SWEEP_VERSION, $versions['plugin'], 'The plugin marker was not advanced.' );
-		$this->assertSame( WP_SWEEP_DB_VERSION, $versions['db'], 'The db marker was not advanced.' );
+		$this->assertSame( array(), $this->stored_rows(), 'WP-Sweep wrote an option row; it is meant to store nothing at all.' );
 	}
 
 	/**
-	 * The version markers are missing rather than empty before anything runs.
+	 * Running a sweep does not start storing state either.
 	 */
-	public function test_the_markers_read_as_empty_strings_when_unset() {
-		$this->assertSame(
-			array(
-				'plugin' => '',
-				'db'     => '',
-			),
-			WP_Sweep_Options::get_versions(),
-			'An install that has never upgraded reported a version.'
-		);
+	public function test_sweeping_stores_nothing() {
+		$this->make_revisions( 2 );
+
+		$this->sweep()->sweep( 'revisions' );
+
+		$this->assertSame( array(), $this->stored_rows(), 'A sweep left an option row behind.' );
 	}
 
 	/**
-	 * A version row someone corrupted reads as unset rather than fatalling.
+	 * There is no upgrade routine, because there is nothing to upgrade.
 	 */
-	public function test_a_corrupt_version_row_reads_as_unset() {
-		update_option( WP_Sweep_Options::VERSION, 'not-an-array' );
-
-		$this->assertSame(
-			array(
-				'plugin' => '',
-				'db'     => '',
-			),
-			WP_Sweep_Options::get_versions(),
-			'A corrupt version row was not treated as unset.'
-		);
-	}
-
-	// -- The details cap. --
-
-	/**
-	 * The cap defaults to the constant, with no option row involved.
-	 */
-	public function test_the_details_cap_defaults_to_the_constant() {
-		$this->assertSame( 500, WP_Sweep::DEFAULT_LIMIT_DETAILS, 'The documented default moved.' );
-		$this->assertSame( 500, $this->sweep()->limit_details(), 'The engine did not use the default cap.' );
+	public function test_there_is_no_upgrade_class() {
+		$this->assertFalse( class_exists( 'WP_Sweep_Options' ), 'The options class is back without anything to store.' );
+		$this->assertFalse( defined( 'WP_SWEEP_DB_VERSION' ), 'The schema counter is back without a schema to count.' );
 	}
 
 	/**
-	 * The filter is the only way to change it.
+	 * Nothing hooks an upgrade check onto admin_init or activation.
 	 */
-	public function test_the_details_cap_filter_wins() {
-		add_filter(
-			'wp_sweep_limit_details',
-			static function () {
-				return 3;
-			}
-		);
-
-		$this->assertSame( 3, $this->sweep()->limit_details(), 'The filter did not set the cap.' );
-	}
-
-	/**
-	 * A filter returning nonsense cannot open an empty details list.
-	 *
-	 * A cap of zero renders a Details button that opens nothing, which reads as
-	 * a broken screen rather than as a setting.
-	 */
-	public function test_the_details_cap_is_never_below_one() {
-		add_filter(
-			'wp_sweep_limit_details',
-			static function () {
-				return -7;
-			}
-		);
-
-		$this->assertSame( 1, $this->sweep()->limit_details(), 'A negative cap was not floored at one.' );
-	}
-
-	/**
-	 * Nothing reads the cap out of an option row any more.
-	 */
-	public function test_the_cap_is_not_read_from_an_option() {
+	public function test_nothing_hooks_an_upgrade_check() {
 		$code = $this->source_without_comments( '/includes/class-wp-sweep.php' );
 
-		$limit = substr( $code, strpos( $code, 'public function limit_details' ) );
-		$limit = substr( $limit, 0, strpos( $limit, "\n\t}" ) );
+		$this->assertStringNotContainsString( 'maybe_upgrade', $code, 'An upgrade check is hooked up again.' );
+		$this->assertStringNotContainsString( 'register_activation_hook', $code, 'An activation hook is back.' );
+	}
 
-		$this->assertStringNotContainsString( 'get_option(', $limit, 'The cap is being read from the database again.' );
-		$this->assertStringNotContainsString( 'WP_Sweep_Options', $limit, 'The cap is being read from the options class again.' );
+	/**
+	 * Uninstall still clears both rows a pre-release build wrote.
+	 */
+	public function test_uninstall_clears_a_pre_release_row() {
+		foreach ( self::LEGACY_ROWS as $row ) {
+			update_option( $row, array( 'plugin' => '2.0.0' ) );
+		}
+
+		$this->assertNotEmpty( $this->stored_rows(), 'There should be rows to remove before uninstall runs.' );
+
+		if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
+			define( 'WP_UNINSTALL_PLUGIN', 'wp-sweep/wp-sweep.php' );
+		}
+
+		require dirname( __DIR__ ) . '/uninstall.php';
+
+		wp_cache_flush();
+
+		$this->assertSame( array(), $this->stored_rows(), 'uninstall.php must remove every wp_sweep_* row.' );
 	}
 }

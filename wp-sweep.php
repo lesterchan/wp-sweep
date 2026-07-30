@@ -37,7 +37,6 @@
 defined( 'ABSPATH' ) || exit;
 
 define( 'WP_SWEEP_VERSION', '2.0.0' );
-define( 'WP_SWEEP_DB_VERSION', '1' );
 define( 'WP_SWEEP_SLUG', 'wp-sweep' );
 define( 'WP_SWEEP_MAIN_FILE', __FILE__ );
 define( 'WP_SWEEP_DIR', plugin_dir_path( __FILE__ ) );

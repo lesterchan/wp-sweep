@@ -136,7 +136,6 @@ class WP_Sweep_Admin {
 			array(
 				'textCloseWarning'   => __( 'Sweeping is in progress. If you leave now, the process won\'t be completed.', 'wp-sweep' ),
 				'textSweep'          => __( 'Sweep', 'wp-sweep' ),
-				'textSweepAll'       => __( 'Sweep All', 'wp-sweep' ),
 				'textSweeping'       => __( 'Sweeping...', 'wp-sweep' ),
 				'textNa'             => __( 'N/A', 'wp-sweep' ),
 				'textNothingToSweep' => __( 'Nothing to sweep', 'wp-sweep' ),
@@ -181,12 +180,12 @@ class WP_Sweep_Admin {
 				</p>
 			</div>
 
-			<p>
+			<p class="description">
 				<?php
 				echo esc_html(
 					sprintf(
 						/* translators: %s is the maximum number of sample items. */
-						__( 'For performance reasons, only %s items are listed when you ask for details.', 'wp-sweep' ),
+						__( 'Details lists a sample of up to %s items. Filter wp_sweep_limit_details to change it.', 'wp-sweep' ),
 						number_format_i18n( $sweep->limit_details() )
 					)
 				);
@@ -206,10 +205,6 @@ class WP_Sweep_Admin {
 				$table->display();
 				?>
 			</form>
-
-			<p>
-				<button type="button" class="button button-primary btn-sweep-all"><?php esc_html_e( 'Sweep All', 'wp-sweep' ); ?></button>
-			</p>
 
 			<?php self::fire_group_actions(); ?>
 		</div>
@@ -242,7 +237,15 @@ class WP_Sweep_Admin {
 	private static function render_totals() {
 		$sweep = WP_Sweep::get_instance();
 
-		echo '<ul class="sweep-totals">';
+		// A widefat table rather than a bullet list. These are six rows of
+		// numbers, and as a list they ran together as prose with nothing lining
+		// up; in a table the counts sit in a column and can be read down. It uses
+		// core's own admin classes, so it needs no stylesheet of its own.
+		echo '<table class="widefat striped sweep-totals">';
+		echo '<thead><tr>';
+		printf( '<th scope="col">%s</th>', esc_html__( 'Group', 'wp-sweep' ) );
+		printf( '<th scope="col">%s</th>', esc_html__( 'Currently in your database', 'wp-sweep' ) );
+		echo '</tr></thead><tbody>';
 
 		foreach ( self::totals() as $label => $types ) {
 			$parts = array();
@@ -257,13 +260,13 @@ class WP_Sweep_Admin {
 			}
 
 			printf(
-				'<li><strong>%1$s</strong> %2$s</li>',
+				'<tr><th scope="row">%1$s</th><td>%2$s</td></tr>',
 				esc_html( $label ),
 				wp_kses_post( implode( ', ', $parts ) )
 			);
 		}
 
-		echo '</ul>';
+		echo '</tbody></table>';
 	}
 
 	/**
@@ -405,11 +408,16 @@ class WP_Sweep_Admin {
 		}
 
 		/*
+		 * Joined with wp_sprintf( '%l' ), which builds a localised list -- "a, b
+		 * and c" in English, and whatever the locale does instead everywhere
+		 * else. Imploding on a space ran them together into "11 Transient Options
+		 * Processed 20 Tables Processed", which reads as one broken sentence.
+		 *
 		 * Escaped here, not by settings_errors(), which prints the message
 		 * straight into the page. Every one of these comes back through the
 		 * wp_sweep_sweep filter, which is public API and can return anything.
 		 */
-		add_settings_error( 'wp_sweep', 'wp_sweep_swept', esc_html( implode( ' ', $messages ) ), 'success' );
+		add_settings_error( 'wp_sweep', 'wp_sweep_swept', esc_html( wp_sprintf( '%l', $messages ) ), 'success' );
 	}
 
 	/**

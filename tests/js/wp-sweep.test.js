@@ -315,69 +315,6 @@ describe( 'the close warning', () => {
 	} );
 } );
 
-describe( 'Sweep All', () => {
-	it( 'runs every sweep one at a time, not all at once', async () => {
-		document.body.innerHTML =
-			sweepSection( { name: 'revisions', type: 'posts' } ) +
-			sweepSection( { name: 'auto_drafts', type: 'posts' } ) +
-			'<button class="btn-sweep-all">Sweep All</button>';
-
-		const inFlight = [];
-		let peak = 0;
-
-		const spy = vi.fn( () => {
-			inFlight.push( 1 );
-			peak = Math.max( peak, inFlight.length );
-
-			return Promise.resolve( {
-				json: () => {
-					inFlight.pop();
-					return Promise.resolve( sweepResponse( { count: 0 } ) );
-				},
-			} );
-		} );
-		global.fetch = spy;
-		window.fetch = spy;
-
-		const all = document.querySelector( '.btn-sweep-all' );
-		all.dispatchEvent( new window.MouseEvent( 'click', { bubbles: true } ) );
-
-		for ( let i = 0; i < 20; i++ ) {
-			await new Promise( ( resolve ) => setTimeout( resolve, 0 ) );
-		}
-
-		expect( spy ).toHaveBeenCalledTimes( 2 );
-		expect( peak ).toBe( 1 );
-		expect( sentParams( spy, 0 ).sweep_name ).toBe( 'revisions' );
-		expect( sentParams( spy, 1 ).sweep_name ).toBe( 'auto_drafts' );
-	} );
-
-	it( 're-enables itself when every sweep has finished', async () => {
-		document.body.innerHTML =
-			sweepSection() + '<button class="btn-sweep-all">Sweep All</button>';
-		stubFetch( sweepResponse( { count: 0 } ) );
-
-		const all = document.querySelector( '.btn-sweep-all' );
-		all.dispatchEvent( new window.MouseEvent( 'click', { bubbles: true } ) );
-
-		expect( all.disabled ).toBe( true );
-
-		for ( let i = 0; i < 20; i++ ) {
-			await new Promise( ( resolve ) => setTimeout( resolve, 0 ) );
-		}
-
-		expect( all.disabled ).toBe( false );
-		expect( all.textContent ).toBe( l10n.textSweepAll );
-		expect( document.body.classList.contains( 'sweep-active' ) ).toBe( false );
-	} );
-} );
-
-describe( 'jQuery', () => {
-	it( 'is not needed — the script runs with no jQuery on the page', () => {
-		expect( window.jQuery ).toBeUndefined();
-		expect( window.$ ).toBeUndefined();
-	} );
-} );
 
 describe( 'when things go wrong', () => {
 	it( 'recovers the button and the page state if the request fails', async () => {

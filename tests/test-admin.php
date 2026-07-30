@@ -182,7 +182,6 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 			array( 'Term Sweep' ),
 			array( 'Option Sweep' ),
 			array( 'Database Sweep' ),
-			array( 'Sweep All' ),
 		);
 	}
 
@@ -438,7 +437,7 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 
 		$this->assertStringContainsString( 'wpSweepL10n', $data );
 
-		foreach ( array( 'textCloseWarning', 'textSweep', 'textSweepAll', 'textSweeping', 'textNa' ) as $key ) {
+		foreach ( array( 'textCloseWarning', 'textSweep', 'textSweeping', 'textNa' ) as $key ) {
 			$this->assertStringContainsString( $key, $data );
 		}
 	}

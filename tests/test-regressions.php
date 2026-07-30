@@ -142,21 +142,16 @@ class WP_Sweep_Regressions_Test extends WP_Sweep_TestCase {
 	// -- What the plugin stores, and what uninstall has to remove. --
 
 	/**
-	 * Only WP_Sweep_Options writes an option row.
+	 * Nothing in the plugin writes an option row.
 	 *
-	 * WP-Sweep stored nothing at all until 2.0.0, and it stores two rows now.
-	 * Keeping every write in one class is what lets uninstall.php name what it
-	 * deletes with confidence: a write that appears anywhere else is a row
-	 * nothing would ever clean up.
+	 * WP-Sweep has no settings and no tables, so under STANDARDS.md 2.1 it
+	 * stores nothing at all -- not even version markers. A write appearing
+	 * anywhere is a row nothing would ever clean up.
 	 */
-	public function test_only_the_options_class_writes_an_option() {
+	public function test_nothing_writes_an_option() {
 		$writes = array( 'add_option(', 'update_option(', 'add_site_option(', 'update_site_option(' );
 
 		foreach ( $this->plugin_sources() as $file => $source ) {
-			if ( 'class-wp-sweep-options.php' === $file ) {
-				continue;
-			}
-
 			foreach ( $writes as $write ) {
 				$this->assertStringNotContainsString(
 					$write,
@@ -177,7 +172,7 @@ class WP_Sweep_Regressions_Test extends WP_Sweep_TestCase {
 	public function test_uninstall_deletes_every_row_the_plugin_writes() {
 		$uninstall = file_get_contents( dirname( __DIR__ ) . '/uninstall.php' );
 
-		foreach ( array( WP_Sweep_Options::OPTION, WP_Sweep_Options::VERSION ) as $row ) {
+		foreach ( array( 'wp_sweep_options', 'wp_sweep_version' ) as $row ) {
 			$this->assertStringContainsString(
 				"delete_option( '{$row}' )",
 				$uninstall,
@@ -195,7 +190,7 @@ class WP_Sweep_Regressions_Test extends WP_Sweep_TestCase {
 	 * where both are just strings. Nothing in WordPress would notice.
 	 */
 	public function test_no_nonce_action_reads_as_an_option_row() {
-		$rows = array( WP_Sweep_Options::OPTION, WP_Sweep_Options::VERSION );
+		$rows = array( 'wp_sweep_options', 'wp_sweep_version' );
 
 		foreach ( $this->sweep()->get_sweep_names() as $name ) {
 			$this->assertNotContains(

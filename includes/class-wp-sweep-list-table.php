@@ -252,12 +252,13 @@ class WP_Sweep_List_Table extends WP_List_Table {
 			$count = (int) $sweep->count( $name );
 
 			$rows[] = array(
-				'name'       => $name,
-				'label'      => $args['label'],
-				'type'       => $args['type'],
-				'group'      => $args['group'],
-				'count'      => $count,
-				'percentage' => $sweep->format_percentage( $count, $sweep->total_count( $args['type'] ) ),
+				'name'        => $name,
+				'label'       => $args['label'],
+				'description' => isset( $args['description'] ) ? (string) $args['description'] : '',
+				'type'        => $args['type'],
+				'group'       => $args['group'],
+				'count'       => $count,
+				'percentage'  => $sweep->format_percentage( $count, $sweep->total_count( $args['type'] ) ),
 			);
 		}
 
@@ -363,6 +364,13 @@ class WP_Sweep_List_Table extends WP_List_Table {
 	 */
 	public function column_name( $item ) {
 		$name = '<strong>' . esc_html( $item['label'] ) . '</strong>';
+
+		// Every sweep says what it removes. These screens delete data that does
+		// not come back, and "Orphaned Term Relationships" tells a site owner
+		// nothing about whether it is safe to tick.
+		if ( ! empty( $item['description'] ) ) {
+			$name .= '<p class="description">' . esc_html( $item['description'] ) . '</p>';
+		}
 
 		if ( 'unused_terms' === $item['name'] ) {
 			$name .= '<p class="description">' . esc_html__( 'Some unused terms belong to drafts that have not been published yet. Only sweep this when you have no draft posts.', 'wp-sweep' ) . '</p>';

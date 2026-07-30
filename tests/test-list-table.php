@@ -230,6 +230,34 @@ class WP_Sweep_List_Table_Test extends WP_Sweep_TestCase {
 	}
 
 	/**
+	 * Every sweep explains what it removes.
+	 *
+	 * These rows delete data that does not come back, and a label like "Orphaned
+	 * Term Relationships" tells a site owner nothing about whether it is safe to
+	 * tick. The description is part of get_sweeps(), so a sweep added without one
+	 * fails here.
+	 */
+	public function test_every_sweep_carries_a_description() {
+		foreach ( WP_Sweep::get_instance()->get_sweeps() as $name => $args ) {
+			$this->assertArrayHasKey( 'description', $args, "The '{$name}' sweep has no description." );
+			$this->assertNotSame( '', trim( (string) $args['description'] ), "The '{$name}' sweep has an empty description." );
+		}
+	}
+
+	/**
+	 * The description is rendered under the name.
+	 */
+	public function test_the_description_is_rendered_under_the_name() {
+		$items = wp_list_filter( $this->table()->items, array( 'name' => 'revisions' ) );
+		$item  = reset( $items );
+
+		$html = $this->table()->column_name( $item );
+
+		$this->assertStringContainsString( '<p class="description">', $html, 'The row shows no description.' );
+		$this->assertStringContainsString( esc_html( $item['description'] ), $html, 'The description rendered is not the one in get_sweeps().' );
+	}
+
+	/**
 	 * An empty row keeps its checkbox but offers no Sweep action.
 	 *
 	 * The checkbox is structural: a gap in that column, and a header select-all

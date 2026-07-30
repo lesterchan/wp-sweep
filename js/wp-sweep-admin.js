@@ -234,7 +234,7 @@
 
 	document.addEventListener( 'click', function( event ) {
 		const trigger = event.target.closest(
-			'.btn-sweep, .btn-sweep-details, .btn-sweep-all',
+			'.btn-sweep, .btn-sweep-details',
 		);
 
 		if ( ! trigger || 'true' === trigger.getAttribute( 'aria-disabled' ) ) {
@@ -256,27 +256,6 @@
 			} );
 			return;
 		}
-
-		// Sweep All: one at a time, so the server is never asked to run
-		// nineteen deletions at once.
-		trigger.disabled = true;
-		trigger.textContent = l10n.textSweeping;
-
-		const triggers = Array.prototype.slice.call(
-			document.querySelectorAll( '.btn-sweep' ),
-		);
-
-		triggers
-			.reduce( function( chain, next ) {
-				return chain.then( function() {
-					return sweep( next );
-				} );
-			}, Promise.resolve() )
-			.then( function() {
-				document.body.classList.remove( 'sweep-active' );
-				trigger.disabled = false;
-				trigger.textContent = l10n.textSweepAll;
-			} );
 	} );
 
 	/*

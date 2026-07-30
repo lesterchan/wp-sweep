@@ -55,13 +55,11 @@ class WP_Sweep {
 	 * for plugins hosted on WordPress.org by itself, at the right moment.
 	 */
 	public function __construct() {
-		require_once WP_SWEEP_DIR . 'includes/class-wp-sweep-options.php';
 		require_once WP_SWEEP_DIR . 'includes/class-wp-sweep-api.php';
 
 		new WP_Sweep_API();
 
 		// Must be registered at file-load time, which is when this runs.
-		register_activation_hook( WP_SWEEP_MAIN_FILE, array( 'WP_Sweep_Options', 'maybe_upgrade' ) );
 
 		add_action( 'plugins_loaded', array( $this, 'add_hooks' ) );
 	}
@@ -98,10 +96,6 @@ class WP_Sweep {
 		require_once WP_SWEEP_DIR . 'includes/class-wp-sweep-admin.php';
 
 		WP_Sweep_Admin::init();
-
-		// Activation hooks do not fire when a plugin is updated, so the upgrade
-		// routine is also run on every admin load.
-		add_action( 'admin_init', array( 'WP_Sweep_Options', 'maybe_upgrade' ) );
 	}
 
 	/**
@@ -181,99 +175,118 @@ class WP_Sweep {
 	public function get_sweeps() {
 		return array(
 			'revisions'                 => array(
-				'label' => __( 'Revisions', 'wp-sweep' ),
-				'type'  => 'posts',
-				'group' => 'posts',
+				'label'       => __( 'Revisions', 'wp-sweep' ),
+				'description' => __( 'Older copies of a post kept every time you saved it. The post itself is untouched.', 'wp-sweep' ),
+				'type'        => 'posts',
+				'group'       => 'posts',
 			),
 			'auto_drafts'               => array(
-				'label' => __( 'Auto Drafts', 'wp-sweep' ),
-				'type'  => 'posts',
-				'group' => 'posts',
+				'label'       => __( 'Auto Drafts', 'wp-sweep' ),
+				'description' => __( 'Blank posts WordPress created when you opened the editor and never published.', 'wp-sweep' ),
+				'type'        => 'posts',
+				'group'       => 'posts',
 			),
 			'deleted_posts'             => array(
-				'label' => __( 'Deleted Posts', 'wp-sweep' ),
-				'type'  => 'posts',
-				'group' => 'posts',
+				'label'       => __( 'Deleted Posts', 'wp-sweep' ),
+				'description' => __( 'Posts and pages already in the Trash. Emptying the Trash by hand does the same thing.', 'wp-sweep' ),
+				'type'        => 'posts',
+				'group'       => 'posts',
 			),
 			'unapproved_comments'       => array(
-				'label' => __( 'Unapproved Comments', 'wp-sweep' ),
-				'type'  => 'comments',
-				'group' => 'comments',
+				'label'       => __( 'Unapproved Comments', 'wp-sweep' ),
+				'description' => __( 'Comments still waiting in the moderation queue. Read them before you sweep.', 'wp-sweep' ),
+				'type'        => 'comments',
+				'group'       => 'comments',
 			),
 			'spam_comments'             => array(
-				'label' => __( 'Spammed Comments', 'wp-sweep' ),
-				'type'  => 'comments',
-				'group' => 'comments',
+				'label'       => __( 'Spammed Comments', 'wp-sweep' ),
+				'description' => __( 'Comments already marked as spam.', 'wp-sweep' ),
+				'type'        => 'comments',
+				'group'       => 'comments',
 			),
 			'deleted_comments'          => array(
-				'label' => __( 'Deleted Comments', 'wp-sweep' ),
-				'type'  => 'comments',
-				'group' => 'comments',
+				'label'       => __( 'Deleted Comments', 'wp-sweep' ),
+				'description' => __( 'Comments already in the Trash.', 'wp-sweep' ),
+				'type'        => 'comments',
+				'group'       => 'comments',
 			),
 			'transient_options'         => array(
-				'label' => __( 'Transient Options', 'wp-sweep' ),
-				'type'  => 'options',
-				'group' => 'options',
+				'label'       => __( 'Transient Options', 'wp-sweep' ),
+				'description' => __( 'Expired cached values. WordPress and your plugins rebuild whatever they still need.', 'wp-sweep' ),
+				'type'        => 'options',
+				'group'       => 'options',
 			),
 			'orphan_postmeta'           => array(
-				'label' => __( 'Orphaned Post Meta', 'wp-sweep' ),
-				'type'  => 'postmeta',
-				'group' => 'posts',
+				'label'       => __( 'Orphaned Post Meta', 'wp-sweep' ),
+				'description' => __( 'Custom fields whose post no longer exists.', 'wp-sweep' ),
+				'type'        => 'postmeta',
+				'group'       => 'posts',
 			),
 			'orphan_commentmeta'        => array(
-				'label' => __( 'Orphaned Comment Meta', 'wp-sweep' ),
-				'type'  => 'commentmeta',
-				'group' => 'comments',
+				'label'       => __( 'Orphaned Comment Meta', 'wp-sweep' ),
+				'description' => __( 'Comment metadata whose comment no longer exists.', 'wp-sweep' ),
+				'type'        => 'commentmeta',
+				'group'       => 'comments',
 			),
 			'orphan_usermeta'           => array(
-				'label' => __( 'Orphaned User Meta', 'wp-sweep' ),
-				'type'  => 'usermeta',
-				'group' => 'users',
+				'label'       => __( 'Orphaned User Meta', 'wp-sweep' ),
+				'description' => __( 'User metadata whose user no longer exists.', 'wp-sweep' ),
+				'type'        => 'usermeta',
+				'group'       => 'users',
 			),
 			'orphan_termmeta'           => array(
-				'label' => __( 'Orphaned Term Meta', 'wp-sweep' ),
-				'type'  => 'termmeta',
-				'group' => 'terms',
+				'label'       => __( 'Orphaned Term Meta', 'wp-sweep' ),
+				'description' => __( 'Term metadata whose category or tag no longer exists.', 'wp-sweep' ),
+				'type'        => 'termmeta',
+				'group'       => 'terms',
 			),
 			'orphan_term_relationships' => array(
-				'label' => __( 'Orphaned Term Relationships', 'wp-sweep' ),
-				'type'  => 'term_relationships',
-				'group' => 'terms',
+				'label'       => __( 'Orphaned Term Relationships', 'wp-sweep' ),
+				'description' => __( 'Links between a category or tag and a post that is gone.', 'wp-sweep' ),
+				'type'        => 'term_relationships',
+				'group'       => 'terms',
 			),
 			'unused_terms'              => array(
-				'label' => __( 'Unused Terms', 'wp-sweep' ),
-				'type'  => 'terms',
-				'group' => 'terms',
+				'label'       => __( 'Unused Terms', 'wp-sweep' ),
+				'description' => __( 'Categories and tags attached to nothing.', 'wp-sweep' ),
+				'type'        => 'terms',
+				'group'       => 'terms',
 			),
 			'duplicated_postmeta'       => array(
-				'label' => __( 'Duplicated Post Meta', 'wp-sweep' ),
-				'type'  => 'postmeta',
-				'group' => 'posts',
+				'label'       => __( 'Duplicated Post Meta', 'wp-sweep' ),
+				'description' => __( 'Custom fields stored more than once on the same post. One copy is kept.', 'wp-sweep' ),
+				'type'        => 'postmeta',
+				'group'       => 'posts',
 			),
 			'duplicated_commentmeta'    => array(
-				'label' => __( 'Duplicated Comment Meta', 'wp-sweep' ),
-				'type'  => 'commentmeta',
-				'group' => 'comments',
+				'label'       => __( 'Duplicated Comment Meta', 'wp-sweep' ),
+				'description' => __( 'Comment metadata stored more than once on the same comment. One copy is kept.', 'wp-sweep' ),
+				'type'        => 'commentmeta',
+				'group'       => 'comments',
 			),
 			'duplicated_usermeta'       => array(
-				'label' => __( 'Duplicated User Meta', 'wp-sweep' ),
-				'type'  => 'usermeta',
-				'group' => 'users',
+				'label'       => __( 'Duplicated User Meta', 'wp-sweep' ),
+				'description' => __( 'User metadata stored more than once on the same user. One copy is kept.', 'wp-sweep' ),
+				'type'        => 'usermeta',
+				'group'       => 'users',
 			),
 			'duplicated_termmeta'       => array(
-				'label' => __( 'Duplicated Term Meta', 'wp-sweep' ),
-				'type'  => 'termmeta',
-				'group' => 'terms',
+				'label'       => __( 'Duplicated Term Meta', 'wp-sweep' ),
+				'description' => __( 'Term metadata stored more than once on the same term. One copy is kept.', 'wp-sweep' ),
+				'type'        => 'termmeta',
+				'group'       => 'terms',
 			),
 			'optimize_database'         => array(
-				'label' => __( 'Optimize Tables', 'wp-sweep' ),
-				'type'  => 'tables',
-				'group' => 'database',
+				'label'       => __( 'Optimize Tables', 'wp-sweep' ),
+				'description' => __( 'Reclaims space MySQL is still holding after deletions. Removes nothing of yours.', 'wp-sweep' ),
+				'type'        => 'tables',
+				'group'       => 'database',
 			),
 			'oembed_postmeta'           => array(
-				'label' => __( 'oEmbed Caches In Post Meta', 'wp-sweep' ),
-				'type'  => 'postmeta',
-				'group' => 'posts',
+				'label'       => __( 'oEmbed Caches In Post Meta', 'wp-sweep' ),
+				'description' => __( 'Cached copies of embedded tweets, videos and the like. They are fetched again when needed.', 'wp-sweep' ),
+				'type'        => 'postmeta',
+				'group'       => 'posts',
 			),
 		);
 	}

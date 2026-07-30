@@ -16,7 +16,6 @@ export const l10n = {
 	textCloseWarning:
 		"Sweeping is in progress. If you leave now, the process won't be completed.",
 	textSweep: 'Sweep',
-	textSweepAll: 'Sweep All',
 	textSweeping: 'Sweeping...',
 	textNa: 'N/A',
 };
