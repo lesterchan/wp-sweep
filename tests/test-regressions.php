@@ -121,7 +121,6 @@ class WP_Sweep_Regressions_Test extends WP_Sweep_TestCase {
 	public function test_rest_api_uses_the_canonical_list() {
 		$api        = new WP_Sweep_API();
 		$reflection = new ReflectionMethod( $api, 'is_sweep_name_valid' );
-		$reflection->setAccessible( true );
 
 		foreach ( $this->sweep()->get_sweep_names() as $name ) {
 			$this->assertTrue( $reflection->invoke( $api, $name ) );
@@ -364,7 +363,6 @@ class WP_Sweep_Regressions_Test extends WP_Sweep_TestCase {
 	 */
 	protected function excluded_termids() {
 		$method = new ReflectionMethod( $this->sweep(), 'get_excluded_termids' );
-		$method->setAccessible( true );
 
 		return array_map( 'intval', (array) $method->invoke( $this->sweep() ) );
 	}
