@@ -306,7 +306,7 @@ Two option rows, `wp_sweep_options` and `wp_sweep_version`, both of which `unins
 ### 2.0.0
 A major release. There are four things to check before you update from 1.2.0.
 
-**Your server has to be new enough.** WP-Sweep now needs WordPress 6.8 and PHP 8.2, up from 6.0 and 7.4. If your site is on anything older, WordPress will not offer you the update at all — you will simply stay on 1.2.0 until the host is upgraded.
+**Your server has to be new enough.** WP-Sweep now needs WordPress 6.8 and PHP 8.2. If your site is on anything older, WordPress will not offer you the update at all — you will simply stay on 1.2.0 until the host is upgraded.
 
 **The screen has moved.** It is no longer under Tools. There is a **Sweep** entry in the sidebar instead, with the sweeps on the first page and a new Settings page below it. If you bookmarked the old address, `tools.php?page=wp-sweep/admin.php`, it will not work; the new one is `admin.php?page=wp-sweep`.
 
