@@ -223,10 +223,12 @@ class WP_Sweep_Regressions_Test extends WP_Sweep_TestCase {
 	}
 
 	/**
-	 * Nothing calls wp_get_sites(), which was removed in WordPress 5.1 and
-	 * fatals on any network that reaches it.
+	 * Nothing calls wp_get_sites(), which has been deprecated since WordPress
+	 * 4.6 and still ships in ms-deprecated.php. It does not fatal -- it returns
+	 * only the first 100 sites, so a network larger than that is swept in part
+	 * and reports success, which is the worse failure of the two.
 	 */
-	public function test_nothing_calls_the_removed_site_function() {
+	public function test_nothing_calls_the_deprecated_site_function() {
 		foreach ( $this->plugin_sources() as $file => $source ) {
 			$this->assertStringNotContainsString( 'wp_get_sites(', $source, "{$file} calls wp_get_sites()." );
 		}

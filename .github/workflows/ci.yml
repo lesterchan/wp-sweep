@@ -69,10 +69,13 @@ jobs:
         # Multisite is not a spare wheel: uninstall.php branches on
         # is_multisite(), and network-activated plugins are read from a site
         # option the single-site run never touches. It runs on the FLOOR too,
-        # because that is where multisite breaks -- wp_get_sites() removed in
-        # 5.1, uninstall stopping at 100 sites, switch_to_blog() stacks left
-        # unwound, custom tables not registered with $wpdb inside a switch.
-        # Testing multisite only on latest tests it where it least likely fails.
+        # rather than on latest alone, which would test it where it is least
+        # likely to fail. What actually breaks there: activation and uninstall
+        # walking only the first 100 sites, because that is the default limit
+        # of the site queries; switch_to_blog() stacks left unwound; custom
+        # tables not registered with $wpdb inside a switch; and capabilities
+        # that mean something different on a network, which is what the first
+        # multisite run of this collection failed on in five plugins.
         include:
           - php: '8.2'
             wordpress: '6.8'
