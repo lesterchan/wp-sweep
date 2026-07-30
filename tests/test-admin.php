@@ -26,7 +26,7 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 	 * @return void
 	 */
 	public static function wpSetUpBeforeClass( $factory ) {
-		self::$admin = $factory->user->create( array( 'role' => 'administrator' ) );
+		self::$admin = self::create_admin( $factory );
 	}
 
 	/**

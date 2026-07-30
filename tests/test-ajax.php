@@ -13,6 +13,8 @@
  */
 class WP_Sweep_Ajax_Test extends WP_Ajax_UnitTestCase {
 
+	use WP_Sweep_Creates_Admins;
+
 	/**
 	 * Administrator user ID.
 	 *
@@ -34,7 +36,7 @@ class WP_Sweep_Ajax_Test extends WP_Ajax_UnitTestCase {
 	 * @return void
 	 */
 	public static function wpSetUpBeforeClass( $factory ) {
-		self::$admin      = $factory->user->create( array( 'role' => 'administrator' ) );
+		self::$admin      = self::create_admin( $factory );
 		self::$subscriber = $factory->user->create( array( 'role' => 'subscriber' ) );
 	}
 

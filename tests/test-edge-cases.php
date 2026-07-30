@@ -163,17 +163,37 @@ class WP_Sweep_Edge_Cases_Test extends WP_Sweep_TestCase {
 	 * Site transients are removed through delete_site_transient(), not
 	 * delete_transient(). The two write different option names, and using
 	 * the wrong one leaves the row in place.
+	 *
+	 * The reach of that differs by install type, and the difference is not a
+	 * bug in the sweep. On a single site set_site_transient() writes
+	 * `_site_transient_*` into wp_options, so the sweep finds it. On a network
+	 * it writes to wp_sitemeta instead, which this sweep never reads: it reads
+	 * the options table of the one site being swept. So a network transient
+	 * survives, and that is the outcome to want — a site transient on a network
+	 * is shared by every site on it, and one site's Sweep screen has no business
+	 * purging a cache the whole network is relying on.
 	 */
 	public function test_sweeps_site_transients() {
 		set_site_transient( 'sweep_site_transient', 'value', HOUR_IN_SECONDS );
 		set_transient( 'sweep_blog_transient', 'value', HOUR_IN_SECONDS );
 
-		$this->assertSame( 'value', get_site_transient( 'sweep_site_transient' ) );
+		$this->assertSame( 'value', get_site_transient( 'sweep_site_transient' ), 'the site transient was never stored' );
 
 		$this->sweep()->sweep( 'transient_options' );
 
-		$this->assertFalse( get_site_transient( 'sweep_site_transient' ) );
-		$this->assertFalse( get_transient( 'sweep_blog_transient' ) );
+		$this->assertFalse( get_transient( 'sweep_blog_transient' ), 'the blog transient survived the sweep' );
+
+		if ( is_multisite() ) {
+			$this->assertSame(
+				'value',
+				get_site_transient( 'sweep_site_transient' ),
+				'sweeping one site purged a transient the whole network shares'
+			);
+
+			return;
+		}
+
+		$this->assertFalse( get_site_transient( 'sweep_site_transient' ), 'the site transient survived the sweep' );
 	}
 
 	/**

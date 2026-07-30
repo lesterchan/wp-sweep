@@ -11,6 +11,9 @@
  * turn an assertion red.
  */
 abstract class WP_Sweep_TestCase extends WP_UnitTestCase {
+
+	use WP_Sweep_Creates_Admins;
+
 	/**
 	 * Sweep counts captured before a test seeds anything.
 	 *
