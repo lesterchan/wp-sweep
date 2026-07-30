@@ -247,6 +247,19 @@ class WP_Sweep_List_Table_Test extends WP_Sweep_TestCase {
 	public function test_requested_details_are_escaped() {
 		$comments = $this->make_comments( 'spam', 1 );
 
+		/*
+		 * The author name has to be written past core's own sanitisers, or there
+		 * is nothing here to escape. wp_update_comment() runs the value through
+		 * pre_comment_author_name, where sanitize_text_field() drops a script
+		 * element and its contents together, so the column would end up holding
+		 * the empty string and the assertions below would pass on a details list
+		 * that had rendered nothing. A hostile value gets into that column by a
+		 * route that does not go through those filters -- an importer, a direct
+		 * write, a comment stored before core hardened this -- and that is the
+		 * input this plugin's details list has to survive.
+		 */
+		remove_all_filters( 'pre_comment_author_name' );
+
 		wp_update_comment(
 			array(
 				'comment_ID'     => $comments[0],

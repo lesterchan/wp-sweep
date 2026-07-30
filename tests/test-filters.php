@@ -380,13 +380,20 @@ class WP_Sweep_Filters_Test extends WP_Sweep_TestCase {
 	 *
 	 * A hook without a @since is a hook nobody can safely depend on, because
 	 * there is no way to tell which releases have it.
+	 *
+	 * A hook fired from more than one place is documented once and pointed at
+	 * from the others, which is WordPress core's own convention and what WPCS
+	 * expects: `\/** This filter is documented in <file> *\/`. Repeating the full
+	 * block at every site is how two copies of the same @since drift apart. The
+	 * pointer is not taken on trust -- the file it names has to exist, fire the
+	 * same hook, and be the one carrying the @since.
 	 */
 	public function test_every_fired_hook_documents_the_version_it_appeared_in() {
 		foreach ( $this->plugin_source_files() as $file ) {
 			$lines = explode( "\n", file_get_contents( $file ) );
 
 			foreach ( $lines as $number => $line ) {
-				if ( ! preg_match( "/(?:apply_filters|do_action)\(\s*'wp_sweep_/", $line ) ) {
+				if ( ! preg_match( "/(?:apply_filters|do_action)\(\s*'(wp_sweep_[a-z0-9_]+)'/", $line, $fired ) ) {
 					continue;
 				}
 
@@ -394,13 +401,50 @@ class WP_Sweep_Filters_Test extends WP_Sweep_TestCase {
 				$opens = strrpos( $above, '/**' );
 
 				$this->assertNotFalse( $opens, basename( $file ) . " line {$number} fires a hook with no docblock above it." );
+
+				$docblock = substr( $above, $opens );
+
+				if ( preg_match( '#(?:filter|action) is documented in (\S+?)\s*\*/#', $docblock, $pointer ) ) {
+					$this->assert_hook_is_documented_in( $fired[1], $pointer[1], basename( $file ), $number );
+
+					continue;
+				}
+
 				$this->assertStringContainsString(
 					'@since',
-					substr( $above, $opens ),
+					$docblock,
 					basename( $file ) . " line {$number} fires a hook whose docblock has no @since."
 				);
 			}
 		}
+	}
+
+	/**
+	 * Follow a "documented in" pointer and assert it leads somewhere real.
+	 *
+	 * @param string $hook      Hook name the pointer belongs to.
+	 * @param string $target    Plugin-relative path the docblock names.
+	 * @param string $from      File the pointer was found in, for the message.
+	 * @param int    $line      Line the pointer was found on, for the message.
+	 * @return void
+	 */
+	private function assert_hook_is_documented_in( $hook, $target, $from, $line ) {
+		$path = dirname( __DIR__ ) . '/' . ltrim( $target, '/' );
+
+		$this->assertFileExists( $path, "{$from} line {$line} points at {$target}, which does not exist." );
+
+		$source = file_get_contents( $path );
+
+		$this->assertStringContainsString(
+			"'" . $hook . "'",
+			$source,
+			"{$from} line {$line} points at {$target}, which does not fire {$hook}."
+		);
+		$this->assertStringContainsString(
+			'@since',
+			$source,
+			"{$from} line {$line} points at {$target}, which carries no @since for {$hook}."
+		);
 	}
 
 	/**

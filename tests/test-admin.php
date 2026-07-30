@@ -81,12 +81,29 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 	}
 
 	/**
-	 * A group filter that matches nothing says so rather than rendering a void.
+	 * A group filter narrows the table to that group's sweeps.
 	 */
-	public function test_an_empty_table_says_so() {
+	public function test_a_group_filter_narrows_the_table() {
 		$html = $this->render_admin_page( array( 'group' => 'users' ) );
 
+		$this->assertStringContainsString( 'Orphaned User Meta', $html, 'The user group filter dropped a user sweep.' );
+		$this->assertStringNotContainsString( 'Revisions', $html, 'The user group filter kept a post sweep.' );
+	}
+
+	/**
+	 * A table with nothing on it says so rather than rendering a void.
+	 *
+	 * Reached with a page number past the last one, which is not a contrivance:
+	 * the pagination links are ordinary GET URLs, so a bookmarked or shared page
+	 * 2 outlives the rows that justified it. A group filter cannot get here --
+	 * get_sweeps() is a fixed list and every group in it has members, so
+	 * filtering by group always leaves something to show.
+	 */
+	public function test_an_empty_table_says_so() {
+		$html = $this->render_admin_page( array( 'paged' => '2' ) );
+
 		$this->assertStringContainsString( 'no-items', $html, 'An empty table did not render the no-items row.' );
+		$this->assertStringContainsString( 'Nothing here needs cleaning up', $html, 'The no-items row carried no message.' );
 	}
 
 	/**
@@ -499,6 +516,12 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 	 * name — renamed by hand, or unzipped as wp-sweep-2.0.0. Asserting on
 	 * the rendered markup cannot catch this, because a 404 URL is still
 	 * well-formed markup.
+	 *
+	 * One 'wp-sweep/…' literal is legitimate and is named here rather than
+	 * matched around: the REST namespace, which §13.3 of the standard fixes at
+	 * {{SLUG}}/v1 precisely so that no two plugins in the collection can claim
+	 * the same one. It is an identifier a client sends, not a path anything is
+	 * read from, so the directory could be renamed and it would still be right.
 	 */
 	public function test_no_php_file_hardcodes_the_directory_name() {
 		$root  = dirname( __DIR__ );
@@ -507,12 +530,16 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 			glob( $root . '/includes/*.php' )
 		);
 
+		$allowed = array( "'" . WP_Sweep_API::REST_NAMESPACE . "'" );
+
 		foreach ( $files as $file ) {
 			$code = $this->source_without_comments( str_replace( $root, '', $file ) );
 
-			$this->assertStringNotContainsString(
-				"'wp-sweep/",
-				$code,
+			preg_match_all( "#'wp-sweep/[^']*'#", $code, $matches );
+
+			$this->assertSame(
+				array(),
+				array_values( array_diff( array_unique( $matches[0] ), $allowed ) ),
 				basename( $file ) . ' builds a path from the literal directory name.'
 			);
 		}

@@ -209,6 +209,17 @@ class WP_Sweep_Metadata_Test extends WP_Sweep_TestCase {
 	}
 
 	public function test_no_jquery_is_enqueued() {
+		/*
+		 * A screen has to be set before admin_enqueue_scripts is fired.
+		 * WP_UnitTestCase_Base::tear_down() nulls $current_screen -- its own
+		 * comment says a test wanting one is expected to call
+		 * set_current_screen() -- and core's own listener on this action,
+		 * WP_Site_Health::enqueue_scripts(), reads get_current_screen()->id
+		 * unguarded. Firing the action with no screen therefore fails inside core
+		 * before the plugin's own callback is ever reached.
+		 */
+		set_current_screen( WP_Sweep_Admin::get_hook_suffix() );
+
 		do_action( 'admin_enqueue_scripts', WP_Sweep_Admin::get_hook_suffix() );
 
 		foreach ( wp_scripts()->registered as $handle => $script ) {
