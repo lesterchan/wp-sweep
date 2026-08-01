@@ -190,7 +190,7 @@ Nothing. WP-Sweep stores no option rows, creates no database tables, registers n
 
 ## Changelog
 ### 2.0.0
-* BREAKING: Requires WordPress 6.8 and PHP 8.2, up from 6.0 and 7.4. A site on an older stack will not be offered the update.
+* BREAKING: Requires WordPress 6.8 and PHP 8.2, up from 6.0 and 7.4.
 * BREAKING: The screen stays under Tools but its address changed, from `tools.php?page=wp-sweep/admin.php` to `tools.php?page=wp-sweep`. The old form put the installation directory name into the URL.
 * BREAKING: The WP-CLI command is `wp wp-sweep`, not `wp sweep`.
 * BREAKING: The REST namespace is `wp-sweep/v1`, not `sweep/v1`. The routes are otherwise unchanged.
@@ -218,17 +218,15 @@ Nothing. WP-Sweep stores no option rows, creates no database tables, registers n
 * FIXED: Request parameters are sanitized and validated against the plugin's own list of sweeps.
 
 ## Upgrade Notice
+
 ### 2.0.0
-A major release. There are four things to check before you update from 1.2.0.
 
-**Your server has to be new enough.** WP-Sweep now needs WordPress 6.8 and PHP 8.2. If your site is on anything older, WordPress will not offer you the update at all — you will simply stay on 1.2.0 until the host is upgraded.
+Requires WordPress 6.8 and PHP 8.2.
 
-**The screen has a new address, but it has not moved.** It is still at **Tools → WP-Sweep**. Only the address changed, from `tools.php?page=wp-sweep/admin.php` to `tools.php?page=wp-sweep`, so a bookmark to the old one needs updating. The old form had the plugin's folder name inside it, which is why the screen broke for anyone who installed WP-Sweep under a different folder name.
+**The screen's address changed**, though it is still at **Tools -> WP-Sweep**: `tools.php?page=wp-sweep/admin.php` is now `tools.php?page=wp-sweep`. The old form embedded the plugin's folder name, which broke the screen for anyone who installed WP-Sweep under a different one.
 
-**Sweep All is gone.** Every row has a checkbox now, so ticking the one in the header and applying the **Sweep** bulk action does what Sweep All did — and lets you leave rows out, which it never could.
+**Sweep All is gone.** Every row has a checkbox; tick the one in the header and apply the **Sweep** bulk action for the same effect, with the option of leaving rows out.
 
-**Anything scripted against WP-Sweep needs editing.** The WP-CLI command is now `wp wp-sweep` rather than `wp sweep`, and the REST routes live under `/wp-json/wp-sweep/v1/` rather than `/wp-json/sweep/v1/`. Both were generic names another plugin could have claimed. If a cron job or a deploy script calls either, update it — the old spellings do not fall back, they fail. Code calling `WPSweep::get_instance()` must become `WP_Sweep::get_instance()`, and code reading `$sweep->limit_details` must call `$sweep->limit_details()`. Every filter and action keeps the name it had.
+**Scripted callers need editing.** The WP-CLI command is `wp wp-sweep`, not `wp sweep`, and the REST routes are under `/wp-json/wp-sweep/v1/`, not `/wp-json/sweep/v1/`. The old spellings fail rather than falling back. `WPSweep::get_instance()` is now `WP_Sweep::get_instance()`, and the `$sweep->limit_details` property is now the `$sweep->limit_details()` method. Filter and action names are unchanged.
 
-**Two sweeps now remove slightly less than they used to, on purpose.** If you protect meta keys with the whitelist filters, those keys are honoured by the duplicated meta sweeps as well as the orphaned ones — which is what the documentation always said. And because the matching moved out of SQL, an underscore in a protected key is now matched literally rather than as a wildcard, so `_my_key` protects that key and nothing else. Check your list if you were relying on the old behaviour.
-
-If you use the plugin from wp-admin and nothing else, there is nothing to do beyond finding the new menu. Back your database up before you sweep, as always.
+**Two sweeps remove less than they did, deliberately.** Meta keys protected by the whitelist filters are honoured by the duplicated meta sweeps as well as the orphaned ones, which is what the documentation always said. Matching also moved out of SQL, so an underscore in a protected key is matched literally rather than as a wildcard: `_my_key` protects that key and nothing else. Review your list if you relied on the old behaviour.
