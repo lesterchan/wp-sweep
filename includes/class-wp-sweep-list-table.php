@@ -388,9 +388,20 @@ class WP_Sweep_List_Table extends WP_List_Table {
 				$list .= '<li>' . esc_html( $detail ) . '</li>';
 			}
 
-			$name .= '<p class="sweep-details"><ol>' . $list . '</ol></p>';
+			// A div rather than the p this used to be. An <ol> inside a <p> is
+			// not valid, and a browser does not merely tolerate it: the parser
+			// closes the paragraph before the list, so .sweep-details ended up
+			// empty and the <ol> became its sibling. Anyone with JavaScript
+			// never saw the bug, because renderDetails() builds the same list
+			// through the DOM and gets what it asked for -- so only visitors
+			// without it lost the details entirely.
+			//
+			// The <ol> stays inside rather than becoming .sweep-details itself,
+			// so that this markup and the one renderDetails() produces are the
+			// same shape. The two paths disagreeing is what the bug was.
+			$name .= '<div class="sweep-details"><ol>' . $list . '</ol></div>';
 		} else {
-			$name .= '<p class="sweep-details" hidden></p>';
+			$name .= '<div class="sweep-details" hidden></div>';
 		}
 
 		if ( 0 === $item['count'] ) {
