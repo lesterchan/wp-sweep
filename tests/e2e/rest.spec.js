@@ -111,9 +111,16 @@ test.describe( 'The REST routes', () => {
 		createJunk( 'spam_comments' );
 		const before = sweepCount( 'spam_comments' );
 
+		// rejects.toMatchObject, not rejects.toThrow. requestUtils.rest() does
+		// `throw json` on a non-2xx -- it rejects with the parsed error body,
+		// a plain object and not an Error -- and toThrow() only recognises an
+		// Error, so it reported "did not throw" for a call that had rejected.
+		// Asserting the body is the stronger check anyway: it pins *why* the
+		// call was refused, so a route that started 500ing would no longer
+		// satisfy this test.
 		await expect(
 			requestUtils.rest( { path: `${ NAMESPACE }/sweep/spam_comments` } ),
-		).rejects.toThrow();
+		).rejects.toMatchObject( { code: 'rest_no_route', data: { status: 404 } } );
 
 		// A destructive route that answered GET would be one a link, a
 		// prefetcher or a crawler could fire.
@@ -125,12 +132,17 @@ test.describe( 'The REST routes', () => {
 		requestUtils,
 	} ) => {
 		for ( const route of [ 'count', 'details', 'sweep' ] ) {
+			// See the note above on toMatchObject. rest_invalid_param is the
+			// answer from the route's own validate_callback, which is the
+			// point of the test: 400 rather than 404 is what says the name was
+			// rejected by is_sweep_name_valid() rather than by there being no
+			// such route.
 			await expect(
 				requestUtils.rest( {
 					method: 'sweep' === route ? 'DELETE' : 'GET',
 					path: `${ NAMESPACE }/${ route }/not_a_sweep`,
 				} ),
-			).rejects.toThrow();
+			).rejects.toMatchObject( { code: 'rest_invalid_param', data: { status: 400 } } );
 		}
 
 		// The validation is on the route rather than inside the engine, so the
