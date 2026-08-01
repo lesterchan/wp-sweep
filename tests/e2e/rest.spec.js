@@ -1,0 +1,172 @@
+/**
+ * The REST routes.
+ *
+ * Three routes -- count, details and sweep -- under a namespace that carries
+ * the plugin slug rather than a bare noun, because `sweep/v1` is a name any
+ * plugin could have claimed and two plugins claiming it is not something
+ * WordPress detects.
+ *
+ * They are the same three calls the screen makes, so what is worth testing here
+ * is what only the REST layer decides: that a name it does not implement is
+ * refused by the route rather than reaching the engine, that the delete really
+ * is a DELETE, and that an unauthenticated caller cannot sweep a site by
+ * curling one URL.
+ */
+
+const { test, expect } = require( '@wordpress/e2e-test-utils-playwright' );
+const {
+	INTACT,
+	createFixtures,
+	createJunk,
+	sweepCount,
+	survivors,
+} = require( './helpers.js' );
+
+/** Every route lives under this namespace. */
+const NAMESPACE = '/wp-sweep/v1';
+
+test.describe( 'The REST routes', () => {
+	let ids;
+
+	test.beforeEach( async () => {
+		ids = createFixtures();
+	} );
+
+	test( 'the fixture really is the namespace this plugin registered', async ( {
+		requestUtils,
+	} ) => {
+		// Everything below calls three paths under one namespace. If the
+		// namespace were ever renamed, every one of those calls would 404 and
+		// the "an unknown name is refused" tests would pass for the wrong
+		// reason.
+		const index = await requestUtils.rest( { path: '/' } );
+
+		expect( index.namespaces ).toContain( 'wp-sweep/v1' );
+	} );
+
+	test( 'count answers with the same number the engine reports', async ( { requestUtils } ) => {
+		// Spam comments rather than transients: WordPress writes its own site
+		// transients back on the very next request, so a count read twice a
+		// second apart would not be the same number twice.
+		const expected = createJunk( 'spam_comments' );
+		expect( expected ).toBeGreaterThan( 0 );
+
+		const response = await requestUtils.rest( { path: `${ NAMESPACE }/count/spam_comments` } );
+
+		expect( response.name ).toBe( 'spam_comments' );
+		expect( response.count ).toBe( expected );
+		// Reading a count deletes nothing, which is worth saying out loud on a
+		// plugin where two of the three routes look very similar.
+		expect( sweepCount( 'spam_comments' ) ).toBe( expected );
+		expect( survivors( ids ) ).toEqual( INTACT );
+	} );
+
+	test( 'details answers with a sample and its size', async ( { requestUtils } ) => {
+		createJunk( 'spam_comments' );
+
+		const response = await requestUtils.rest( {
+			path: `${ NAMESPACE }/details/spam_comments`,
+		} );
+
+		expect( response.name ).toBe( 'spam_comments' );
+		expect( response.data.length ).toBe( response.count );
+		expect( response.data.join( ' ' ) ).toContain( 'Sweep junk commenter' );
+		expect( survivors( ids ) ).toEqual( INTACT );
+	} );
+
+	test( 'sweep removes the junk and says what it did', async ( { requestUtils } ) => {
+		createJunk( 'spam_comments' );
+
+		const response = await requestUtils.rest( {
+			method: 'DELETE',
+			path: `${ NAMESPACE }/sweep/spam_comments`,
+		} );
+
+		expect( response.success ).toBe( true );
+		expect( response.message ).toContain( 'Spam Comments Processed' );
+		expect( sweepCount( 'spam_comments' ) ).toBe( 0 );
+		expect( survivors( ids ) ).toEqual( INTACT );
+	} );
+
+	test( 'sweeping an empty sweep succeeds and says there was nothing to do', async ( {
+		requestUtils,
+	} ) => {
+		await requestUtils.rest( {
+			method: 'DELETE',
+			path: `${ NAMESPACE }/sweep/spam_comments`,
+		} );
+
+		const response = await requestUtils.rest( {
+			method: 'DELETE',
+			path: `${ NAMESPACE }/sweep/spam_comments`,
+		} );
+
+		// Not an error: there was nothing to remove, which is a perfectly
+		// ordinary answer and the one a scheduled job gets most of the time.
+		expect( response.success ).toBe( false );
+		expect( response.message ).toBe( 'No items left to sweep.' );
+	} );
+
+	test( 'the sweep route only answers DELETE', async ( { requestUtils } ) => {
+		createJunk( 'spam_comments' );
+		const before = sweepCount( 'spam_comments' );
+
+		await expect(
+			requestUtils.rest( { path: `${ NAMESPACE }/sweep/spam_comments` } ),
+		).rejects.toThrow();
+
+		// A destructive route that answered GET would be one a link, a
+		// prefetcher or a crawler could fire.
+		expect( sweepCount( 'spam_comments' ) ).toBe( before );
+		expect( survivors( ids ) ).toEqual( INTACT );
+	} );
+
+	test( 'a name this plugin does not implement is refused by every route', async ( {
+		requestUtils,
+	} ) => {
+		for ( const route of [ 'count', 'details', 'sweep' ] ) {
+			await expect(
+				requestUtils.rest( {
+					method: 'sweep' === route ? 'DELETE' : 'GET',
+					path: `${ NAMESPACE }/${ route }/not_a_sweep`,
+				} ),
+			).rejects.toThrow();
+		}
+
+		// The validation is on the route rather than inside the engine, so the
+		// name never reaches the switch statements at all.
+		expect( survivors( ids ) ).toEqual( INTACT );
+	} );
+
+	test( 'a logged out caller cannot count, inspect or sweep', async ( { page } ) => {
+		createJunk( 'spam_comments' );
+		const before = sweepCount( 'spam_comments' );
+
+		// A context with no session at all, which is what a curl from outside
+		// looks like.
+		const context = await page.context().browser().newContext( { storageState: undefined } );
+		const guest = await context.newPage();
+
+		try {
+			for ( const [ method, route ] of [
+				[ 'GET', 'count' ],
+				[ 'GET', 'details' ],
+				[ 'DELETE', 'sweep' ],
+			] ) {
+				const response = await guest.request.fetch(
+					`/index.php?rest_route=${ NAMESPACE }/${ route }/spam_comments`,
+					{ method },
+				);
+
+				expect( response.status() ).toBe( 401 );
+			}
+		} finally {
+			await context.close();
+		}
+
+		// Nothing was swept by any of those, which is the assertion that
+		// matters on a route that deletes.
+		expect( sweepCount( 'spam_comments' ) ).toBe( before );
+		expect( survivors( ids ) ).toEqual( INTACT );
+	} );
+} );

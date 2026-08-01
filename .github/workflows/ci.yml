@@ -62,6 +62,38 @@ jobs:
       - name: Run JS tests
         run: npm run test:js --if-present
 
+  e2e:
+    name: End-to-end (Playwright)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Install dev dependencies
+        run: npm ci --no-fund --no-audit
+
+      # The same script developers run, so there is one code path and no drift.
+      # It starts wp-env, activates the plugin and a theme in the tests
+      # environment -- neither of which wp-env does for that environment, and
+      # without them the browser gets a site with no plugin and a blank front
+      # page -- and installs the browser.
+      - name: Run Playwright
+        run: npm run test:e2e
+
+      # Traces and screenshots, kept only when something failed. A passing run
+      # uploads nothing.
+      - name: Upload artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-artifacts
+          path: artifacts/
+          retention-days: 7
+
   phpunit:
     name: PHPUnit (WP ${{ matrix.wordpress }}, PHP ${{ matrix.php }}, ${{ matrix.multisite && 'multisite' || 'single site' }})
     runs-on: ubuntu-latest

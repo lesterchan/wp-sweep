@@ -34,4 +34,15 @@ export default [
 			},
 		},
 	},
+	{
+		// The Playwright suite is CommonJS and runs under Node, not in a page:
+		// it requires its helpers and exports nothing to a browser.
+		files: [ 'tests/e2e/**/*.js', 'playwright.config.js' ],
+		languageOptions: {
+			sourceType: 'commonjs',
+			globals: {
+				...globals.node,
+			},
+		},
+	},
 ];

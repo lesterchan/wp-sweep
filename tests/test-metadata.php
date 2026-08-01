@@ -257,7 +257,11 @@ class WP_Sweep_Metadata_Test extends WP_Sweep_TestCase {
 				static function ( $file ) {
 					$name = $file->getFilename();
 
-					return ! in_array( $name, array( 'vendor', 'node_modules', '.git', '.github', '.claude' ), true )
+					// artifacts/ is Playwright's: traces, screenshots and the
+					// stored admin session from a failing end-to-end run. It is
+					// gitignored and never shipped, so it has no index.php and
+					// no business being walked here.
+					return ! in_array( $name, array( 'vendor', 'node_modules', '.git', '.github', '.claude', 'artifacts' ), true )
 						&& 0 !== strpos( $name, '.' );
 				}
 			),
