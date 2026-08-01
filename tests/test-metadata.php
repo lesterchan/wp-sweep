@@ -338,4 +338,145 @@ class WP_Sweep_Metadata_Test extends WP_Sweep_TestCase {
 		$this->assertFalse( get_option( 'wp_sweep_version', false ), 'The version row is back.' );
 		$this->assertFalse( get_option( 'wp_sweep_options', false ), 'The settings row is back.' );
 	}
+	/**
+	 * The plugin root, whatever the checkout is called.
+	 *
+	 * @return string
+	 */
+	protected function metadata_root() {
+		return dirname( __DIR__ );
+	}
+
+	/**
+	 * Every PHP file the plugin ships, concatenated.
+	 *
+	 * @return string
+	 */
+	protected function metadata_source() {
+		$source = '';
+
+		foreach ( (array) glob( $this->metadata_root() . '/*.php' ) as $file ) {
+			$source .= (string) file_get_contents( $file ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Reading the plugin's own source in a test.
+		}
+
+		foreach ( (array) glob( $this->metadata_root() . '/includes/*.php' ) as $file ) {
+			$source .= (string) file_get_contents( $file ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Reading the plugin's own source in a test.
+		}
+
+		return $this->without_comments( $source );
+	}
+
+	/**
+	 * The same source with every comment removed.
+	 *
+	 * A test that greps the source for a call it does not want finds the comment
+	 * explaining why the call is absent, and fails the plugin for documenting
+	 * itself. wp-sweep says "There is no load_plugin_textdomain() call" and was
+	 * failed for saying so. Tokenising is the only honest way to tell code from
+	 * prose about code.
+	 *
+	 * @param string $source PHP source.
+	 * @return string
+	 */
+	protected function without_comments( $source ) {
+		$code = '';
+
+		foreach ( token_get_all( $source ) as $token ) {
+			if ( is_array( $token ) ) {
+				if ( T_COMMENT === $token[0] || T_DOC_COMMENT === $token[0] ) {
+					continue;
+				}
+				$code .= $token[1];
+				continue;
+			}
+
+			$code .= $token;
+		}
+
+		return $code;
+	}
+
+	/**
+	 * The GPL text ships with the plugin.
+	 *
+	 * @return void
+	 */
+	public function test_the_gpl_licence_is_shipped() {
+		$licence = (string) file_get_contents( $this->metadata_root() . '/LICENSE' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Reading the plugin's own licence in a test.
+
+		$this->assertStringContainsString( 'GNU GENERAL PUBLIC LICENSE', $licence, 'The GPL text must ship with the plugin.' );
+		$this->assertStringContainsString( 'Version 2, June 1991', $licence, 'The licence must be GPLv2, matching the plugin header.' );
+	}
+
+	/**
+	 * The plugin header fields appear in the canonical order.
+	 *
+	 * @return void
+	 */
+	public function test_the_plugin_header_fields_are_in_the_canonical_order() {
+		$expected = array(
+			'Plugin Name',
+			'Plugin URI',
+			'Description',
+			'Version',
+			'Requires at least',
+			'Requires PHP',
+			'Author',
+			'Author URI',
+			'License',
+			'License URI',
+			'Text Domain',
+			'Domain Path',
+		);
+
+		// The main file is named for the directory, which is what wordpress.org
+		// installs it as.
+		$main = $this->metadata_root() . '/' . basename( $this->metadata_root() ) . '.php';
+		$this->assertFileExists( $main, 'The main plugin file is named after the plugin directory.' );
+
+		preg_match( '#^<\?php\s*/\*\*(.+?)\*/#s', (string) file_get_contents( $main ), $matches ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Reading the plugin's own source in a test.
+		$this->assertNotEmpty( $matches, 'The plugin file must open with a docblock header.' );
+
+		preg_match_all( '/^\s*\*\s*([A-Z][A-Za-z ]*?):\s/m', $matches[1], $fields );
+
+		$this->assertSame( $expected, $fields[1], 'Plugin header fields must appear in the canonical order.' );
+	}
+
+	/**
+	 * The plugin leaves loading its translations to WordPress.
+	 *
+	 * @return void
+	 */
+	public function test_the_plugin_does_not_load_its_own_textdomain() {
+		// WordPress has loaded translations for wordpress.org plugins itself
+		// since 4.6, so a load_plugin_textdomain() call is dead weight that
+		// also fires before the plugin is on the translation server.
+		$this->assertStringNotContainsString(
+			'load_plugin_textdomain',
+			$this->metadata_source(),
+			'WordPress loads the textdomain itself since 4.6.'
+		);
+	}
+
+	/**
+	 * No build, editor or translation artefacts ship.
+	 *
+	 * @return void
+	 */
+	public function test_no_abandoned_build_or_translation_artefacts_ship() {
+		$root = $this->metadata_root();
+
+		$this->assertFileDoesNotExist( $root . '/.travis.yml', 'CI is GitHub Actions.' );
+		$this->assertFileDoesNotExist( $root . '/.wp-env.override.json', 'A personal wp-env override must not ship.' );
+		$this->assertDirectoryDoesNotExist( $root . '/languages', 'translate.wordpress.org builds the catalogue.' );
+		$this->assertDirectoryDoesNotExist( $root . '/.idea', 'Editor settings must not ship.' );
+
+		foreach ( array( 'pot', 'po', 'mo' ) as $extension ) {
+			$this->assertSame(
+				array(),
+				(array) glob( $root . '/*.' . $extension ),
+				"No .{$extension} files: translate.wordpress.org builds the catalogue."
+			);
+		}
+	}
 }
