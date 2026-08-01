@@ -55,8 +55,12 @@ jobs:
 
       # vitest + jsdom, loading the plugin's scripts the way the browser does.
       # No build step: the scripts ship to users exactly as they are in js/.
+      #
+      # --if-present because a plugin can have JavaScript worth linting and no
+      # vitest suite: the Playwright specs are JavaScript too, and a plugin whose
+      # only scripts are those has nothing for jsdom to load.
       - name: Run JS tests
-        run: npm run test:js
+        run: npm run test:js --if-present
 
   phpunit:
     name: PHPUnit (WP ${{ matrix.wordpress }}, PHP ${{ matrix.php }}, ${{ matrix.multisite && 'multisite' || 'single site' }})
