@@ -34,3 +34,10 @@ require_once __DIR__ . '/helper-creates-admins.php';
 require_once __DIR__ . '/helper-testcase.php';
 require_once __DIR__ . '/helper-wp-cli-command.php';
 require_once __DIR__ . '/helper-wp-cli.php';
+
+// The shared metadata contract, a byte-identical copy of
+// _standards/templates/helper-metadata-testcase.php. It extends Plugin_TestCase
+// because the nineteen copies have to be identical; the alias is the one line
+// per plugin the mechanism needs.
+class_alias( 'WP_Sweep_TestCase', 'Plugin_TestCase' );
+require_once __DIR__ . '/helper-metadata-testcase.php';

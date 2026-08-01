@@ -99,11 +99,12 @@ class WP_Sweep_Options_Test extends WP_Sweep_TestCase {
 
 		$this->assertNotEmpty( $this->stored_rows(), 'There should be rows to remove before uninstall runs.' );
 
-		if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
-			define( 'WP_UNINSTALL_PLUGIN', 'wp-sweep/wp-sweep.php' );
-		}
-
-		require dirname( __DIR__ ) . '/uninstall.php';
+		// Through the shared helper rather than a bare require. uninstall.php
+		// declares a global function, so a second test file requiring the same
+		// file fatals on redeclare - and a require_once that has already fired
+		// is a silent no-op, which proves nothing. run_uninstall() includes it
+		// once and drives the deletion by calling the function.
+		$this->run_uninstall();
 
 		wp_cache_flush();
 

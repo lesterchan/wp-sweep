@@ -378,6 +378,46 @@ abstract class WP_Sweep_TestCase extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Run uninstall.php the way WordPress does, repeatably.
+	 *
+	 * The uninstaller creates no schema and drops none - the plugin stores two
+	 * option rows that only a 2.0.0 beta ever wrote - so the file can safely be
+	 * included. It guards itself with a bare exit() when WP_UNINSTALL_PLUGIN is
+	 * missing, which would take the runner down with it, and it declares its
+	 * function unguarded, so the include has to be a require_once. That makes a
+	 * second caller's include a silent no-op, which proves nothing; the deletion
+	 * is therefore driven by calling the function afterwards, once per site.
+	 *
+	 * @return void
+	 */
+	protected function run_uninstall() {
+		if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
+			define( 'WP_UNINSTALL_PLUGIN', 'wp-sweep/wp-sweep.php' );
+		}
+
+		require_once WP_SWEEP_DIR . 'uninstall.php';
+
+		if ( is_multisite() ) {
+			$site_ids = get_sites(
+				array(
+					'fields' => 'ids',
+					'number' => 0,
+				)
+			);
+
+			foreach ( $site_ids as $site_id ) {
+				switch_to_blog( (int) $site_id );
+				wp_sweep_delete_options();
+				restore_current_blog();
+			}
+
+			return;
+		}
+
+		wp_sweep_delete_options();
+	}
+
+	/**
 	 * Counts rows in a meta table for a given meta key.
 	 *
 	 * @param string $table    One of postmeta, commentmeta, usermeta, termmeta.
