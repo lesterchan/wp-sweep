@@ -96,7 +96,12 @@ class WP_Sweep_List_Table extends WP_List_Table {
 				. esc_html__( 'Nothing to sweep', 'wp-sweep' ) . '</span>';
 		}
 
-		return $this->action_link( $item, 'sweep', __( 'Sweep', 'wp-sweep' ), 'button button-primary' )
+		// aria-controls names the region the script reports this sweep's result
+		// into. Naming it here is what stops the script having to find it by
+		// walking the markup: the region is above the form and the row is
+		// inside it, and the walk that used to bridge that gap never once
+		// found the region on a real screen.
+		return $this->action_link( $item, 'sweep', __( 'Sweep', 'wp-sweep' ), 'button button-primary', array( 'aria-controls' => WP_Sweep_Admin::MESSAGE_ID ) )
 			. ' '
 			. $this->action_link( $item, 'sweep_details', __( 'Details', 'wp-sweep' ), 'button', array( 'aria-expanded' => 'false' ) );
 	}

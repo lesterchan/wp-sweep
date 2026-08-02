@@ -57,25 +57,35 @@
 	}
 
 	/**
-	 * Find the message container that belongs to a row's table.
+	 * Find the region a row action reports its result into.
 	 *
-	 * @param {HTMLElement} row The table row.
-	 * @return {HTMLElement|null} The container, if there is one.
+	 * The screen prints one, above the form, and every Sweep link names it in
+	 * aria-controls -- so the id is written once, in PHP
+	 * (WP_Sweep_Admin::MESSAGE_ID), and this follows the association instead of
+	 * guessing at the markup between the two.
+	 *
+	 * That guess is what this used to be, and it had never once worked: it took
+	 * the row's .table-sweep and walked backwards through its previous siblings
+	 * looking for .sweep-message. Since the screen became one list table the
+	 * table is inside the <form> and the region is outside it, so the walk ran
+	 * out of siblings inside the form and returned null, showMessage() took its
+	 * early return, and no sweep told anyone what it had done. The sweeps
+	 * themselves ran correctly throughout, which is why nothing looked wrong
+	 * beyond a count quietly changing.
+	 *
+	 * It reached nobody only because 2.0.0 has not shipped. Nothing in the
+	 * plugin's own tests would have stopped it: the vitest fixture had been
+	 * written to suit the walk -- region and table as adjacent siblings, no
+	 * form -- so the assertion and the code agreed with each other and with
+	 * nothing else. It took a browser to find it.
+	 *
+	 * @param {HTMLElement} trigger The row action that was clicked.
+	 * @return {HTMLElement|null} The region, if the page has one.
 	 */
-	function messageContainer( row ) {
-		const table = row.closest( '.table-sweep' );
+	function messageContainer( trigger ) {
+		const id = trigger.getAttribute( 'aria-controls' );
 
-		if ( ! table ) {
-			return null;
-		}
-
-		let previous = table.previousElementSibling;
-
-		while ( previous && ! previous.classList.contains( 'sweep-message' ) ) {
-			previous = previous.previousElementSibling;
-		}
-
-		return previous;
+		return id ? document.getElementById( id ) : null;
 	}
 
 	/**
@@ -128,13 +138,13 @@
 	}
 
 	/**
-	 * Show the result of a sweep above its table.
+	 * Show the result of a sweep in the region the trigger names.
 	 *
-	 * @param {HTMLElement} row  The row that was swept.
-	 * @param {string}      text The message from the server.
+	 * @param {HTMLElement} trigger The Sweep row action that was clicked.
+	 * @param {string}      text    The message from the server.
 	 */
-	function showMessage( row, text ) {
-		const container = messageContainer( row );
+	function showMessage( trigger, text ) {
+		const container = messageContainer( trigger );
 
 		if ( ! container ) {
 			return;
@@ -193,7 +203,7 @@
 						} );
 				} );
 
-				showMessage( row, response.data.sweep );
+				showMessage( trigger, response.data.sweep );
 				hideDetails( row );
 
 				document.body.classList.remove( 'sweep-active' );

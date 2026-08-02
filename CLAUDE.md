@@ -164,6 +164,18 @@ the bulk action is a real form post, both handled in `handle_request()`. The
 script intercepts them so the screen updates in place. Do not add a control that
 only works with the script running.
 
+**A finished sweep reports into one region, found by id and nothing else.**
+`WP_Sweep_Admin::MESSAGE_ID` is printed once, on a `role="status"` div above the
+form, and every Sweep row action carries the same id in `aria-controls`; the
+script resolves the region through that attribute. It used to find it by walking
+back through `.table-sweep`'s previous siblings, which cannot work on this
+screen — the table is inside the `<form>` and the region is outside it, so the
+walk ran out of siblings inside the form, `showMessage()` returned early, and
+**no sweep reported its result at all.** That was true for the whole of the
+2.0.0 rewrite and only Playwright caught it. Do not print a second region, and
+do not replace the attribute with a walk: the distance between the two elements
+is a thing the markup is free to change, and the id is not.
+
 **Details entries are database values.** The script writes them with
 `textContent` and the no-JavaScript path escapes them. Comment author names are
 supplied by whoever left the comment; building that list with string
@@ -246,6 +258,19 @@ Notes that will save time:
   seed on every run, so a failure can be replayed exactly.
 - `phpunit.xml.dist` turns on `beStrictAboutTestsThatDoNotTestAnything`,
   `failOnWarning` and `failOnRisky`. A test without an assertion is fatal.
+- **`tests/js/helpers.js` is a transcription of what the screen renders, not a
+  convenient DOM.** `sweepSection()` must stay the shape `render_page()` and
+  `WP_List_Table::display()` actually produce, down to the form, the tablenav
+  and the table's own select-all checkboxes — an unscoped
+  `querySelector( 'input[type="checkbox"]' )` finds the header's, not the row's.
+  The fixture that hid the message-container bug was a plausible two-element DOM
+  the plugin has never emitted: the tests agreed with the script, the script
+  agreed with the tests, and neither agreed with the screen.
+  `tests/js/fixture.test.js` now pins the fixture to the PHP that produces it —
+  the id, the `aria-controls`, the region outside the form and the table inside
+  — and `WP_Sweep_Admin_Test::test_the_sweep_message_region_is_outside_the_form()`
+  asserts the same shape against real rendered output. Change the screen's
+  markup and those two are what tell you the fixture has gone stale.
 - Playground is not used here. It is SQLite, and this plugin is almost entirely
   `SHOW TABLES`, `OPTIMIZE TABLE`, `GROUP_CONCAT`, `HAVING` and correlated
   `NOT IN` subqueries.

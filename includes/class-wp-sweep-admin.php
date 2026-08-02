@@ -31,6 +31,21 @@ class WP_Sweep_Admin {
 	const PAGE = 'wp-sweep';
 
 	/**
+	 * The id of the region a finished sweep reports into.
+	 *
+	 * Written once, here, and used twice: on the region itself and in the
+	 * aria-controls of every Sweep link the list table draws. The script
+	 * follows that association rather than looking for the region in the
+	 * markup around the row, because the two are not near each other -- the
+	 * region sits above the form, the rows are inside it -- and a script that
+	 * navigates the gap breaks the day the gap changes. It did: see
+	 * messageContainer() in js/wp-sweep-admin.js.
+	 *
+	 * @var string
+	 */
+	const MESSAGE_ID = 'wp-sweep-message';
+
+	/**
 	 * The hook suffix WordPress handed back when the menu was registered.
 	 *
 	 * Recorded rather than assumed. get_plugin_page_hookname() derives the
@@ -194,7 +209,15 @@ class WP_Sweep_Admin {
 
 			<?php self::render_totals(); ?>
 
-			<div class="sweep-message"></div>
+			<?php
+			/*
+			 * One region per screen, and it is a live region: the script writes
+			 * the result of a sweep into it without the page reloading, so
+			 * role="status" is what tells a screen reader that anything
+			 * happened at all.
+			 */
+			?>
+			<div class="sweep-message" id="<?php echo esc_attr( self::MESSAGE_ID ); ?>" role="status"></div>
 
 			<?php $table->views(); ?>
 

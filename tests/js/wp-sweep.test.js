@@ -204,7 +204,13 @@ describe( 'the result of a sweep', () => {
 
 		await clickAndSettle( document.querySelector( '.btn-sweep' ) );
 
-		expect( document.querySelector( '.sweep-message script' ) ).toBeNull();
+		const message = document.querySelector( '.sweep-message' );
+
+		// Both halves. Asserting only that no script element arrived is a test
+		// that passes when nothing arrived at all, which is how this one sat
+		// green for the whole time no sweep reported anything.
+		expect( message.querySelector( 'script' ) ).toBeNull();
+		expect( message.textContent ).toBe( '<script>window.pwned = 1</script>' );
 		expect( window.pwned ).toBeUndefined();
 	} );
 
@@ -228,7 +234,13 @@ describe( 'the result of a sweep', () => {
 		// A swept row has to look like a reloaded one: column_actions() renders
 		// the same dash on a fresh page load, and every row keeps its checkbox
 		// whether it has anything to sweep or not.
-		expect( document.querySelector( 'input[type="checkbox"]' ) ).not.toBeNull();
+		//
+		// Scoped to the row: the table's own header and footer each carry a
+		// select-all checkbox, so an unscoped query answers yes whether the row
+		// kept its checkbox or lost it.
+		expect(
+			document.querySelector( '#the-list tr input[type="checkbox"]' ),
+		).not.toBeNull();
 	} );
 
 	it( 'leaves the row actions in place when items remain', async () => {
@@ -353,8 +365,10 @@ describe( 'when things go wrong', () => {
 	} );
 
 	it( 'does not throw when a row has no details container', async () => {
+		// Deliberately degenerate, and deliberately not a copy of the screen:
+		// the point is a row the plugin would never render. Anything that is
+		// meant to be the real screen comes from sweepSection().
 		document.body.innerHTML = `
-			<div class="sweep-message"></div>
 			<table class="widefat table-sweep"><tbody><tr>
 				<td><strong>Revisions</strong></td>
 				<td><span class="sweep-count">2</span></td>

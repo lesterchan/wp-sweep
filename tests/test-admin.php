@@ -789,6 +789,46 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 	}
 
 	/**
+	 * The region a sweep reports into sits outside the form the table is in,
+	 * and every Sweep row action names it.
+	 *
+	 * This is the shape tests/js/helpers.js transcribes, and it is asserted
+	 * here because the transcription was wrong for the whole of the 2.0.0 work
+	 * and nothing caught it. The script used to find the region by walking back
+	 * through the table's previous siblings; the table is inside the form and
+	 * the region is outside it, so the walk ran out of siblings inside the form
+	 * and no sweep ever reported its result. The
+	 * vitest suite agreed with the script because its fixture had been built to
+	 * suit it -- and it can never settle the question, having no WordPress to
+	 * render the screen with. This test is where that question is settled.
+	 */
+	public function test_the_sweep_message_region_is_outside_the_form() {
+		$this->make_revisions( 2 );
+		$html = $this->render_admin_page();
+
+		$id     = 'id="' . WP_Sweep_Admin::MESSAGE_ID . '"';
+		$region = strpos( $html, $id );
+		$form   = strpos( $html, '<form method="post"' );
+		$table  = strpos( $html, 'table-sweep' );
+
+		$this->assertNotFalse( $region, 'The screen rendered no region for a finished sweep to report into.' );
+		$this->assertSame( 1, substr_count( $html, $id ), 'The screen rendered the region more than once, and a repeated id decides for itself which one is written into.' );
+		$this->assertNotFalse( $form, 'The screen rendered no form, so there is nothing for the bulk sweep to post.' );
+		$this->assertLessThan( $form, $region, 'The message region has moved inside the form. tests/js/helpers.js transcribes it as outside; correct the fixture with it.' );
+		$this->assertGreaterThan( $form, $table, 'The list table is no longer inside the form. tests/js/helpers.js transcribes it as inside; correct the fixture with it.' );
+		$this->assertStringContainsString(
+			'role="status"',
+			$html,
+			'The region is not a live region, so a sweep finishing is announced to nobody using a screen reader.'
+		);
+		$this->assertStringContainsString(
+			'aria-controls="' . WP_Sweep_Admin::MESSAGE_ID . '"',
+			$html,
+			'A Sweep row action does not name the region it reports into, which is the only way the script finds it.'
+		);
+	}
+
+	/**
 	 * WP_Sweep_Admin::render_page() is the callback add_menu_page() registers,
 	 * and it renders the same screen.
 	 */
