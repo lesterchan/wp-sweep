@@ -28,8 +28,8 @@ class WP_Sweep_Filters_Test extends WP_Sweep_TestCase {
 			2
 		);
 
-		$this->assertSame( 4242, (int) $this->sweep()->count( 'revisions' ) );
-		$this->assertContains( 'revisions', $seen );
+		$this->assertSame( 4242, (int) $this->sweep()->count( 'revisions' ), 'The count filter replaces the count entirely.' );
+		$this->assertContains( 'revisions', $seen, 'And is told which sweep it is answering for.' );
 	}
 
 	/**
@@ -45,7 +45,7 @@ class WP_Sweep_Filters_Test extends WP_Sweep_TestCase {
 			2
 		);
 
-		$this->assertSame( 999, (int) $this->sweep()->total_count( 'posts' ) );
+		$this->assertSame( 999, (int) $this->sweep()->total_count( 'posts' ), 'The total count filter replaces the total.' );
 	}
 
 	/**
@@ -61,7 +61,7 @@ class WP_Sweep_Filters_Test extends WP_Sweep_TestCase {
 			2
 		);
 
-		$this->assertSame( array( 'replaced' ), $this->sweep()->details( 'revisions' ) );
+		$this->assertSame( array( 'replaced' ), $this->sweep()->details( 'revisions' ), 'The details filter replaces the sample.' );
 	}
 
 	/**
@@ -79,7 +79,7 @@ class WP_Sweep_Filters_Test extends WP_Sweep_TestCase {
 			2
 		);
 
-		$this->assertSame( 'rewritten', $this->sweep()->sweep( 'revisions' ) );
+		$this->assertSame( 'rewritten', $this->sweep()->sweep( 'revisions' ), 'And the sweep filter replaces the message, so the sweep itself is overridable.' );
 	}
 
 	/**
@@ -119,7 +119,7 @@ class WP_Sweep_Filters_Test extends WP_Sweep_TestCase {
 
 		$this->sweep()->count( 'orphan_term_relationships' );
 
-		$this->assertSame( array( 'link_category' ), $seen );
+		$this->assertSame( array( 'link_category' ), $seen, 'Link categories are excluded by default, since core hides them.' );
 	}
 
 	/**
@@ -163,7 +163,7 @@ class WP_Sweep_Filters_Test extends WP_Sweep_TestCase {
 
 		$this->sweep()->count( 'unused_terms' );
 
-		$this->assertContains( (int) get_option( 'default_category' ), array_map( 'intval', $seen ) );
+		$this->assertContains( (int) get_option( 'default_category' ), array_map( 'intval', $seen ), 'The default category is in the excluded ids by default, so it survives a sweep.' );
 	}
 
 	/**
@@ -191,7 +191,7 @@ class WP_Sweep_Filters_Test extends WP_Sweep_TestCase {
 
 		$this->sweep()->sweep( $sweep_name );
 
-		$this->assertSame( 2, $this->count_meta_rows( $table, 'sweep_protected' ) );
+		$this->assertSame( 2, $this->count_meta_rows( $table, 'sweep_protected' ), 'An exact key on the allow list is protected from the sweep.' );
 	}
 
 	/**
@@ -220,8 +220,8 @@ class WP_Sweep_Filters_Test extends WP_Sweep_TestCase {
 
 		$this->sweep()->sweep( $sweep_name );
 
-		$this->assertSame( 2, $this->count_meta_rows( $table, '_acme_setting' ) );
-		$this->assertSame( 0, $this->count_meta_rows( $table, 'unprotected_key' ) );
+		$this->assertSame( 2, $this->count_meta_rows( $table, '_acme_setting' ), 'A wildcard on the allow list protects the keys it matches.' );
+		$this->assertSame( 0, $this->count_meta_rows( $table, 'unprotected_key' ), 'While a key it does not match is still swept.' );
 	}
 
 	/**
@@ -241,8 +241,8 @@ class WP_Sweep_Filters_Test extends WP_Sweep_TestCase {
 
 		$details = $this->sweep()->details( 'orphan_postmeta' );
 
-		$this->assertNotContains( 'sweep_protected', $details );
-		$this->assertContains( 'sweep_visible', $details );
+		$this->assertNotContains( 'sweep_protected', $details, 'A protected key is hidden from the details too, not only from the sweep.' );
+		$this->assertContains( 'sweep_visible', $details, 'While an unprotected one is still listed.' );
 	}
 
 	/**
@@ -301,7 +301,7 @@ class WP_Sweep_Filters_Test extends WP_Sweep_TestCase {
 
 		$this->sweep()->count( $sweep_name );
 
-		$this->assertSame( array(), $seen );
+		$this->assertSame( array(), $seen, 'The allow lists ship empty, so nothing is protected until a site says so.' );
 	}
 	// -- The hooks as a published interface. --
 

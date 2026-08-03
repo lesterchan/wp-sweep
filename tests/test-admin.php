@@ -138,7 +138,7 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 	public function test_admin_page_renders_cleanly() {
 		$html = $this->render_admin_page();
 
-		$this->assertSame( array(), $this->admin_page_notices );
+		$this->assertSame( array(), $this->admin_page_notices, 'The screen raised no PHP notice while rendering.' );
 		$this->assertNotEmpty( $html, 'The screen rendered at all, or the markup assertions below are vacuous.' );
 	}
 
@@ -150,11 +150,11 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 		$this->make_revisions( 2 );
 		$html = $this->render_admin_page();
 
-		$this->assertStringNotContainsString( 'translators:', $html );
-		$this->assertStringNotContainsString( '<?php', $html );
-		$this->assertStringNotContainsString( '&amp;amp;', $html );
-		$this->assertStringNotContainsString( '&amp;nbsp;', $html );
-		$this->assertStringNotContainsString( 'Fatal error', $html );
+		$this->assertStringNotContainsString( 'translators:', $html, 'No translator comment leaked into the markup.' );
+		$this->assertStringNotContainsString( '<?php', $html, 'No PHP tag reached the page, which would mean a template was echoed unparsed.' );
+		$this->assertStringNotContainsString( '&amp;amp;', $html, 'No ampersand is encoded twice.' );
+		$this->assertStringNotContainsString( '&amp;nbsp;', $html, 'And no entity, which is what a second escaping pass would leave.' );
+		$this->assertStringNotContainsString( 'Fatal error', $html, 'No PHP diagnostic reached the page.' );
 		$this->assertDoesNotMatchRegularExpression( '/Warning<\/b>|Notice<\/b>/', $html, 'A PHP diagnostic leaked into the screen markup.' );
 	}
 
@@ -166,7 +166,7 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 	 * @param string $heading Heading text.
 	 */
 	public function test_admin_page_has_every_section( $heading ) {
-		$this->assertStringContainsString( $heading, $this->render_admin_page() );
+		$this->assertStringContainsString( $heading, $this->render_admin_page(), 'The ' . $heading . ' section is missing from the screen.' );
 	}
 
 	/**
@@ -193,10 +193,10 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 		$this->make_revisions( 2 );
 		$html = $this->render_admin_page();
 
-		$this->assertStringContainsString( 'data-sweep-name="revisions"', $html );
-		$this->assertStringContainsString( 'data-sweep-type="posts"', $html );
-		$this->assertStringContainsString( 'data-action="sweep"', $html );
-		$this->assertStringContainsString( 'data-action="sweep_details"', $html );
+		$this->assertStringContainsString( 'data-sweep-name="revisions"', $html, 'The row names the sweep it acts on.' );
+		$this->assertStringContainsString( 'data-sweep-type="posts"', $html, 'And the table it belongs to, which the stats read.' );
+		$this->assertStringContainsString( 'data-action="sweep"', $html, 'It offers the sweep action.' );
+		$this->assertStringContainsString( 'data-action="sweep_details"', $html, 'And the details action, so both are on a populated row.' );
 
 		$this->assertMatchesRegularExpression(
 			'/data-action="sweep"[^>]*data-sweep-name="revisions"[^>]*data-nonce="[a-f0-9]{10}"/',
@@ -214,11 +214,13 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 
 		$this->assertStringContainsString(
 			'data-nonce="' . wp_create_nonce( 'wp_sweep_revisions' ) . '"',
-			$html
+			$html,
+			'The sweep nonce is the one the sweep handler checks.'
 		);
 		$this->assertStringContainsString(
 			'data-nonce="' . wp_create_nonce( 'wp_sweep_details_revisions' ) . '"',
-			$html
+			$html,
+			'And the details nonce is its own, so one cannot authorise the other.'
 		);
 	}
 
@@ -228,7 +230,7 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 	public function test_empty_row_offers_no_row_action() {
 		$html = $this->render_admin_page();
 
-		$this->assertStringNotContainsString( 'data-sweep-name="revisions"', $html );
+		$this->assertStringNotContainsString( 'data-sweep-name="revisions"', $html, 'A row with nothing to sweep offers no action at all.' );
 	}
 
 	/**
@@ -255,7 +257,8 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 	public function test_markup_carries_the_stat_span_for_each_type( $type ) {
 		$this->assertStringContainsString(
 			'class="sweep-count-type-' . $type . '"',
-			$this->render_admin_page()
+			$this->render_admin_page(),
+			'The ' . $type . ' stat has no span for the script to update.'
 		);
 	}
 
@@ -326,9 +329,9 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 	public function test_backup_warning_is_shown() {
 		$html = $this->render_admin_page();
 
-		$this->assertStringContainsString( 'backup your database', $html );
-		$this->assertStringContainsString( 'irreversible', $html );
-		$this->assertStringContainsString( 'notice notice-warning', $html );
+		$this->assertStringContainsString( 'backup your database', $html, 'The screen tells the reader to back up first.' );
+		$this->assertStringContainsString( 'irreversible', $html, 'And says plainly that the sweeps cannot be undone.' );
+		$this->assertStringContainsString( 'notice notice-warning', $html, 'As a core warning notice, so it reads as one.' );
 	}
 
 	/**
@@ -339,7 +342,8 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 
 		$this->assertStringContainsString(
 			number_format_i18n( $this->sweep()->limit_details() ),
-			$html
+			$html,
+			'The stated cap is the cap the code actually applies.'
 		);
 	}
 
@@ -389,8 +393,8 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 
 		$script = wp_scripts()->registered['wp-sweep-admin'];
 
-		$this->assertSame( array(), $script->deps );
-		$this->assertNotContains( 'jquery', $script->deps );
+		$this->assertSame( array(), $script->deps, 'The script declares no dependencies.' );
+		$this->assertNotContains( 'jquery', $script->deps, 'jQuery least of all, which this plugin no longer uses.' );
 	}
 
 	/**
@@ -402,8 +406,8 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 
 		$script = wp_scripts()->registered['wp-sweep-admin'];
 
-		$this->assertStringEndsWith( '/js/wp-sweep-admin.js', $script->src );
-		$this->assertStringNotContainsString( '.min.js', $script->src );
+		$this->assertStringEndsWith( '/js/wp-sweep-admin.js', $script->src, 'The registered source is the shipped file.' );
+		$this->assertStringNotContainsString( '.min.js', $script->src, 'And not a minified twin, which would drift from it.' );
 		$this->assertFileDoesNotExist( dirname( __DIR__ ) . '/js/wp-sweep-admin.min.js', 'No minified twin ships; the registered file is the source.' );
 	}
 
@@ -413,8 +417,8 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 	public function test_script_source_uses_no_jquery() {
 		$source = file_get_contents( dirname( __DIR__ ) . '/js/wp-sweep-admin.js' );
 
-		$this->assertStringNotContainsString( 'jQuery', $source );
-		$this->assertStringNotContainsString( '$(', $source );
+		$this->assertStringNotContainsString( 'jQuery', $source, 'The shipped script is vanilla.' );
+		$this->assertStringNotContainsString( '$(', $source, 'With no jQuery shorthand either, which would fail silently without the library.' );
 	}
 
 	/**
@@ -425,8 +429,8 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 	public function test_script_never_assigns_innerhtml() {
 		$source = file_get_contents( dirname( __DIR__ ) . '/js/wp-sweep-admin.js' );
 
-		$this->assertStringNotContainsString( 'innerHTML', $source );
-		$this->assertStringContainsString( 'textContent', $source );
+		$this->assertStringNotContainsString( 'innerHTML', $source, 'The script never assigns innerHTML, which is how a sweep name would become markup.' );
+		$this->assertStringContainsString( 'textContent', $source, 'It writes text instead, which cannot be parsed as HTML.' );
 	}
 
 	/**
@@ -437,7 +441,7 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 
 		$data = wp_scripts()->registered['wp-sweep-admin']->extra['data'];
 
-		$this->assertStringContainsString( 'wpSweepL10n', $data );
+		$this->assertStringContainsString( 'wpSweepL10n', $data, 'The localised object is attached under the name the script reads.' );
 
 		foreach ( array( 'textCloseWarning', 'textSweep', 'textSweeping', 'textNa' ) as $key ) {
 			$this->assertStringContainsString( $key, $data, $key . ' is missing from the localised strings.' );
@@ -519,9 +523,9 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 		// a singleton, so an earlier test in this class has already set it.
 		$hook = $this->register_admin_menu();
 
-		$this->assertNotSame( '', $hook );
-		$this->assertStringEndsWith( '_page_' . WP_Sweep_Admin::PAGE, $hook );
-		$this->assertSame( $hook, WP_Sweep_Admin::get_hook_suffix() );
+		$this->assertNotSame( '', $hook, 'A hook suffix was recorded at all.' );
+		$this->assertStringEndsWith( '_page_' . WP_Sweep_Admin::PAGE, $hook, 'And it is the suffix core generated for this page.' );
+		$this->assertSame( $hook, WP_Sweep_Admin::get_hook_suffix(), 'Which is what the accessor hands back, so the two cannot drift.' );
 	}
 
 	/**
@@ -530,8 +534,8 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 	public function test_hook_suffix_is_not_hardcoded() {
 		$code = $this->source_without_comments( '/includes/class-wp-sweep-admin.php' );
 
-		$this->assertStringNotContainsString( 'toplevel_page_', $code );
-		$this->assertStringNotContainsString( 'admin_page_wp-sweep', $code );
+		$this->assertStringNotContainsString( 'toplevel_page_', $code, 'The suffix is not hardcoded as a top-level page.' );
+		$this->assertStringNotContainsString( 'admin_page_wp-sweep', $code, 'Nor as any other guess; core is asked rather than predicted.' );
 	}
 
 	/**
@@ -580,7 +584,8 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 
 		$this->assertSame(
 			plugins_url( 'js/wp-sweep-admin.js', WP_SWEEP_MAIN_FILE ),
-			wp_scripts()->registered['wp-sweep-admin']->src
+			wp_scripts()->registered['wp-sweep-admin']->src,
+			'The script URL is derived from the main file, so moving the plugin cannot break it.'
 		);
 	}
 
@@ -588,9 +593,9 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 	 * The path constants point at the real plugin directory.
 	 */
 	public function test_path_constants_are_consistent() {
-		$this->assertSame( dirname( __DIR__ ) . '/', WP_SWEEP_DIR );
-		$this->assertSame( 'wp-sweep', WP_SWEEP_SLUG );
-		$this->assertStringEndsWith( '/', WP_SWEEP_URL );
+		$this->assertSame( dirname( __DIR__ ) . '/', WP_SWEEP_DIR, 'The directory constant resolves to the plugin directory, with its trailing slash.' );
+		$this->assertSame( 'wp-sweep', WP_SWEEP_SLUG, 'The slug constant is the plugin slug.' );
+		$this->assertStringEndsWith( '/', WP_SWEEP_URL, 'The URL constant carries its trailing slash, so concatenation is safe.' );
 		$this->assertFileExists( WP_SWEEP_DIR . 'includes/class-wp-sweep-admin.php', 'WP_SWEEP_DIR points at the directory the classes actually live in.' );
 	}
 
@@ -604,7 +609,7 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 	public function test_plugin_does_not_load_its_own_textdomain() {
 		$code = $this->source_without_comments( '/includes/class-wp-sweep.php' );
 
-		$this->assertStringNotContainsString( 'load_plugin_textdomain(', $code );
+		$this->assertStringNotContainsString( 'load_plugin_textdomain(', $code, 'No textdomain is loaded by hand; WordPress has done that since 4.6.' );
 	}
 
 	/**
@@ -657,8 +662,8 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 		);
 
 		$this->assertNull( get_post( $revisions[0] ), 'The bulk action did not sweep the revisions.' );
-		$this->assertStringContainsString( 'Revisions Processed', $html );
-		$this->assertStringContainsString( 'Deleted Posts Processed', $html );
+		$this->assertStringContainsString( 'Revisions Processed', $html, 'A bulk sweep runs the first checked sweep.' );
+		$this->assertStringContainsString( 'Deleted Posts Processed', $html, 'And the second, so it is every checked one rather than the first.' );
 	}
 
 	/**
@@ -713,7 +718,7 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Post::class, get_post( $revisions[0] ), 'An unknown bulk name deleted something.' );
-		$this->assertStringContainsString( 'nothing was swept', $html );
+		$this->assertStringContainsString( 'nothing was swept', $html, 'An unknown name in a bulk sweep is reported rather than silently skipped.' );
 	}
 
 	/**
@@ -733,9 +738,9 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 		);
 
 		$this->assertNull( get_post( $revisions[0] ), 'The no-JavaScript form runs the sweep it names.' );
-		$this->assertStringContainsString( '2 Revisions Processed', $html );
-		$this->assertStringContainsString( 'notice notice-success', $html );
-		$this->assertSame( array(), $this->admin_page_notices );
+		$this->assertStringContainsString( '2 Revisions Processed', $html, 'The no-JavaScript path runs the sweep and reports the count.' );
+		$this->assertStringContainsString( 'notice notice-success', $html, 'As a core success notice.' );
+		$this->assertSame( array(), $this->admin_page_notices, 'And raises no PHP notice doing it.' );
 	}
 
 	/**
@@ -744,7 +749,7 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 	public function test_no_success_notice_without_a_sweep() {
 		$html = $this->render_admin_page();
 
-		$this->assertStringNotContainsString( 'notice notice-success', $html );
+		$this->assertStringNotContainsString( 'notice notice-success', $html, 'With no sweep asked for, no success notice is drawn.' );
 	}
 
 	/**
@@ -762,8 +767,8 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 		);
 
 		$this->assertInstanceOf( WP_Post::class, get_post( $revisions[0] ), 'An unknown sweep name from the no-JavaScript form deletes nothing.' );
-		$this->assertStringNotContainsString( 'notice notice-success', $html );
-		$this->assertSame( array(), $this->admin_page_notices );
+		$this->assertStringNotContainsString( 'notice notice-success', $html, 'An unknown name reports no success, since nothing was swept.' );
+		$this->assertSame( array(), $this->admin_page_notices, 'And raises no PHP notice either.' );
 	}
 
 	/**
@@ -786,8 +791,8 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 			)
 		);
 
-		$this->assertStringNotContainsString( '<script>window.pwned', $html );
-		$this->assertStringContainsString( '&lt;script&gt;', $html );
+		$this->assertStringNotContainsString( '<script>window.pwned', $html, 'A hostile sweep name never renders as markup in the notice.' );
+		$this->assertStringContainsString( '&lt;script&gt;', $html, 'It renders as text, so the reader can see what was asked for.' );
 	}
 
 	/**
@@ -839,7 +844,7 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 		WP_Sweep_Admin::render_page();
 		$html = ob_get_clean();
 
-		$this->assertStringContainsString( 'Post Sweep', $html );
-		$this->assertStringContainsString( 'table-sweep', $html );
+		$this->assertStringContainsString( 'Post Sweep', $html, 'The callback renders the screen headings.' );
+		$this->assertStringContainsString( 'table-sweep', $html, 'And the tables the script binds to.' );
 	}
 }

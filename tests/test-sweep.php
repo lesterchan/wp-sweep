@@ -22,7 +22,7 @@ class WP_Sweep_Sweep_Test extends WP_Sweep_TestCase {
 		$message = $this->sweep()->sweep( 'revisions' );
 
 		$this->assertSweepDelta( 0, 'revisions' );
-		$this->assertStringContainsString( 'Revisions Processed', $message );
+		$this->assertStringContainsString( 'Revisions Processed', $message, 'The message names what was swept.' );
 		$this->assertInstanceOf( WP_Post::class, get_post( $parent ), 'The parent post survives its revisions being swept.' );
 
 		foreach ( $revisions as $id ) {
@@ -40,7 +40,7 @@ class WP_Sweep_Sweep_Test extends WP_Sweep_TestCase {
 		$message = $this->sweep()->sweep( 'auto_drafts' );
 
 		$this->assertSweepDelta( 0, 'auto_drafts' );
-		$this->assertStringContainsString( 'Auto Drafts Processed', $message );
+		$this->assertStringContainsString( 'Auto Drafts Processed', $message, 'Each sweep has its own message rather than a shared one.' );
 
 		foreach ( $ids as $id ) {
 			$this->assertNull( get_post( $id ), 'The auto draft is swept.' );
@@ -106,12 +106,12 @@ class WP_Sweep_Sweep_Test extends WP_Sweep_TestCase {
 	 */
 	public function test_sweeps_transient_options() {
 		set_transient( 'sweep_me', 'value', HOUR_IN_SECONDS );
-		$this->assertSame( 'value', get_transient( 'sweep_me' ) );
+		$this->assertSame( 'value', get_transient( 'sweep_me' ), 'The transient is live before the sweep, or the removal below proves nothing.' );
 
 		$message = $this->sweep()->sweep( 'transient_options' );
 
 		$this->assertFalse( get_transient( 'sweep_me' ), 'The transient is swept.' );
-		$this->assertStringContainsString( 'Transient Options Processed', $message );
+		$this->assertStringContainsString( 'Transient Options Processed', $message, 'And the message names what was swept.' );
 	}
 
 	/**
@@ -129,13 +129,13 @@ class WP_Sweep_Sweep_Test extends WP_Sweep_TestCase {
 		$this->baseline( $sweep_name );
 		$this->make_orphan_meta( $table, 'sweep_orphan' );
 
-		$this->assertSame( 2, $this->count_meta_rows( $table, 'sweep_orphan' ) );
+		$this->assertSame( 2, $this->count_meta_rows( $table, 'sweep_orphan' ), 'Both orphan rows exist before the sweep, including the one on post zero.' );
 
 		$message = $this->sweep()->sweep( $sweep_name );
 
 		$this->assertSweepDelta( 0, $sweep_name );
-		$this->assertSame( 0, $this->count_meta_rows( $table, 'sweep_orphan' ) );
-		$this->assertStringContainsString( $label, $message );
+		$this->assertSame( 0, $this->count_meta_rows( $table, 'sweep_orphan' ), 'And both are gone after it.' );
+		$this->assertStringContainsString( $label, $message, 'With a message naming the ' . $label . ' that was swept.' );
 	}
 
 	/**
@@ -162,7 +162,7 @@ class WP_Sweep_Sweep_Test extends WP_Sweep_TestCase {
 		$this->make_orphan_meta( 'postmeta' );
 		$this->sweep()->sweep( 'orphan_postmeta' );
 
-		$this->assertSame( 'important', get_post_meta( $post_id, 'keep_me', true ) );
+		$this->assertSame( 'important', get_post_meta( $post_id, 'keep_me', true ), 'Meta on a live post is left alone; only orphans go.' );
 	}
 
 	/**
@@ -178,12 +178,12 @@ class WP_Sweep_Sweep_Test extends WP_Sweep_TestCase {
 		$this->baseline( $sweep_name );
 		$this->make_duplicate_meta( $type );
 
-		$this->assertSame( 2, $this->count_meta_rows( $table, 'sweep_dupe' ) );
+		$this->assertSame( 2, $this->count_meta_rows( $table, 'sweep_dupe' ), 'Both duplicates exist before the sweep.' );
 
 		$this->sweep()->sweep( $sweep_name );
 
 		$this->assertSweepDelta( 0, $sweep_name );
-		$this->assertSame( 1, $this->count_meta_rows( $table, 'sweep_dupe' ) );
+		$this->assertSame( 1, $this->count_meta_rows( $table, 'sweep_dupe' ), 'And one survives, since the point is to deduplicate rather than delete.' );
 	}
 
 	/**
@@ -208,7 +208,7 @@ class WP_Sweep_Sweep_Test extends WP_Sweep_TestCase {
 
 		$this->sweep()->sweep( 'duplicated_postmeta' );
 
-		$this->assertSame( array( 'same' ), get_post_meta( $post_id, 'sweep_dupe', false ) );
+		$this->assertSame( array( 'same' ), get_post_meta( $post_id, 'sweep_dupe', false ), 'The survivor keeps its value, so the row that remains is usable.' );
 	}
 
 	/**
@@ -236,7 +236,7 @@ class WP_Sweep_Sweep_Test extends WP_Sweep_TestCase {
 		$message = $this->sweep()->sweep( 'orphan_term_relationships' );
 
 		$this->assertSweepDelta( 0, 'orphan_term_relationships' );
-		$this->assertStringContainsString( 'Orphaned Term Relationships Processed', $message );
+		$this->assertStringContainsString( 'Orphaned Term Relationships Processed', $message, 'The message names what was swept.' );
 
 		$remaining = (int) $wpdb->get_var(
 			$wpdb->prepare(
@@ -245,7 +245,7 @@ class WP_Sweep_Sweep_Test extends WP_Sweep_TestCase {
 				$term_taxonomy_id
 			)
 		);
-		$this->assertSame( 0, $remaining );
+		$this->assertSame( 0, $remaining, 'And the orphaned relationships are actually gone.' );
 	}
 
 	/**
@@ -261,7 +261,7 @@ class WP_Sweep_Sweep_Test extends WP_Sweep_TestCase {
 		$message = $this->sweep()->sweep( 'unused_terms' );
 
 		$this->assertSweepDelta( 0, 'unused_terms' );
-		$this->assertStringContainsString( 'Unused Terms Processed', $message );
+		$this->assertStringContainsString( 'Unused Terms Processed', $message, 'The message names what was swept.' );
 
 		foreach ( $unused as $term_id ) {
 			$this->assertNull( get_term( $term_id, 'post_tag' ), 'An unused term is swept.' );
@@ -311,8 +311,8 @@ class WP_Sweep_Sweep_Test extends WP_Sweep_TestCase {
 		$message = $this->sweep()->sweep( 'oembed_postmeta' );
 
 		$this->assertSweepDelta( 0, 'oembed_postmeta' );
-		$this->assertStringContainsString( 'oEmbed Caches In Post Meta Processed', $message );
-		$this->assertSame( 'keep', get_post_meta( $post_id, 'not_an_oembed', true ) );
+		$this->assertStringContainsString( 'oEmbed Caches In Post Meta Processed', $message, 'The message names what was swept.' );
+		$this->assertSame( 'keep', get_post_meta( $post_id, 'not_an_oembed', true ), 'And meta that is not an oEmbed cache is left alone.' );
 	}
 
 	/**
@@ -327,12 +327,13 @@ class WP_Sweep_Sweep_Test extends WP_Sweep_TestCase {
 
 		$message = $this->sweep()->sweep( 'optimize_database' );
 
-		$this->assertStringContainsString( 'Tables Processed', $message );
+		$this->assertStringContainsString( 'Tables Processed', $message, 'The message names what was optimised.' );
 		$this->assertStringContainsString(
 			number_format_i18n( $this->sweep()->total_count( 'tables' ) ),
-			$message
+			$message,
+			'With the count localised.'
 		);
-		$this->assertSame( 'sweep-survives-optimize', get_post( $post_id )->post_title );
+		$this->assertSame( 'sweep-survives-optimize', get_post( $post_id )->post_title, 'And the data survives, since optimizing is not deleting.' );
 	}
 
 	/**
@@ -342,14 +343,14 @@ class WP_Sweep_Sweep_Test extends WP_Sweep_TestCase {
 	public function test_sweeping_nothing_returns_an_empty_message() {
 		$this->sweep()->sweep( 'revisions' );
 
-		$this->assertSame( '', $this->sweep()->sweep( 'revisions' ) );
+		$this->assertSame( '', $this->sweep()->sweep( 'revisions' ), 'Sweeping nothing returns an empty message rather than one reporting zero.' );
 	}
 
 	/**
 	 * An unknown sweep name is a no-op rather than an error.
 	 */
 	public function test_unknown_sweep_name_is_a_no_op() {
-		$this->assertSame( '', $this->sweep()->sweep( 'no_such_sweep' ) );
+		$this->assertSame( '', $this->sweep()->sweep( 'no_such_sweep' ), 'An unknown name does nothing and says nothing.' );
 	}
 
 	/**
@@ -361,6 +362,6 @@ class WP_Sweep_Sweep_Test extends WP_Sweep_TestCase {
 
 		$message = $this->sweep()->sweep( 'revisions' );
 
-		$this->assertStringContainsString( number_format_i18n( 2 ), $message );
+		$this->assertStringContainsString( number_format_i18n( 2 ), $message, 'Counts in the message are localised, so a large number reads as the site would write it.' );
 	}
 }

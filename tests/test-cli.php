@@ -47,7 +47,7 @@ class WP_Sweep_CLI_Test extends WP_Sweep_TestCase {
 
 		$this->assertNull( get_post( $revisions[0] ), 'wp sweep all removed the revisions.' );
 		$this->assertNull( get_post( $drafts[0] ), 'wp sweep all removed the auto drafts too.' );
-		$this->assertContains( 'Sweep Complete', $messages );
+		$this->assertContains( 'Sweep Complete', $messages, 'The command reports completion.' );
 	}
 
 	/**
@@ -58,7 +58,7 @@ class WP_Sweep_CLI_Test extends WP_Sweep_TestCase {
 
 		$messages = $this->run_command( array(), array( 'all' => true ) );
 
-		$this->assertContains( '2 Revisions Processed', $messages );
+		$this->assertContains( '2 Revisions Processed', $messages, 'And reports each sweep it ran, with its count.' );
 	}
 
 	/**
@@ -72,8 +72,8 @@ class WP_Sweep_CLI_Test extends WP_Sweep_TestCase {
 
 		$this->assertNull( get_post( $revisions[0] ), 'The named item was swept.' );
 		$this->assertInstanceOf( WP_Post::class, get_post( $drafts[0] ), 'Only the named item was swept; the drafts survive.' );
-		$this->assertContains( '2 Revisions Processed', $messages );
-		$this->assertContains( 'Sweep Complete!', $messages );
+		$this->assertContains( '2 Revisions Processed', $messages, 'A named item reports its own count.' );
+		$this->assertContains( 'Sweep Complete!', $messages, 'And completion, so the run is not left open-ended.' );
 	}
 
 	/**
@@ -120,7 +120,7 @@ class WP_Sweep_CLI_Test extends WP_Sweep_TestCase {
 		$messages = $this->run_command( array( 'no_such_sweep' ) );
 
 		$this->assertInstanceOf( WP_Post::class, get_post( $revisions[0] ), 'An unknown name sweeps nothing rather than everything.' );
-		$this->assertSame( array( 'Sweep Complete!' ), $messages );
+		$this->assertSame( array( 'Sweep Complete!' ), $messages, 'An unknown name reports completion and nothing else.' );
 	}
 
 	/**
@@ -133,7 +133,7 @@ class WP_Sweep_CLI_Test extends WP_Sweep_TestCase {
 		$messages = $this->run_command();
 
 		$this->assertInstanceOf( WP_Post::class, get_post( $revisions[0] ), 'No arguments sweeps nothing rather than everything.' );
-		$this->assertSame( array( 'Sweep Complete!' ), $messages );
+		$this->assertSame( array( 'Sweep Complete!' ), $messages, 'No arguments does the same rather than sweeping everything.' );
 	}
 
 	/**
@@ -143,8 +143,8 @@ class WP_Sweep_CLI_Test extends WP_Sweep_TestCase {
 	public function test_empty_item_is_skipped() {
 		$messages = $this->run_command( array( 'revisions' ) );
 
-		$this->assertSame( array( 'Sweep Complete!' ), $messages );
-		$this->assertNotContains( '', $messages );
+		$this->assertSame( array( 'Sweep Complete!' ), $messages, 'An empty item is skipped rather than run.' );
+		$this->assertNotContains( '', $messages, 'And produces no empty message line.' );
 	}
 
 	/**
@@ -157,7 +157,7 @@ class WP_Sweep_CLI_Test extends WP_Sweep_TestCase {
 		$command->run_sweep( array( 'revisions' ) );
 
 		$this->assertNull( get_post( $revisions[0] ), 'run_sweep accepts a list and sweeps what it names.' );
-		$this->assertContains( '1 Revisions Processed', WP_CLI::$successes );
+		$this->assertContains( '1 Revisions Processed', WP_CLI::$successes, 'run_sweep accepts a list and reports what it swept.' );
 	}
 
 	/**
@@ -177,7 +177,7 @@ class WP_Sweep_CLI_Test extends WP_Sweep_TestCase {
 
 		$this->run_command( array( 'orphan_postmeta' ) );
 
-		$this->assertSame( 2, $this->count_meta_rows( 'postmeta', 'sweep_protected' ) );
+		$this->assertSame( 2, $this->count_meta_rows( 'postmeta', 'sweep_protected' ), 'The protection filters apply to the CLI as well as the browser.' );
 	}
 
 	/**
@@ -190,9 +190,9 @@ class WP_Sweep_CLI_Test extends WP_Sweep_TestCase {
 	public function test_command_is_registered_under_the_plugin_slug() {
 		$code = $this->source_without_comments( '/includes/class-wp-sweep.php' );
 
-		$this->assertStringContainsString( "require_once WP_SWEEP_DIR . 'includes/class-wp-sweep-command.php';", $code );
-		$this->assertStringContainsString( "WP_CLI::add_command( WP_SWEEP_SLUG, 'WP_Sweep_Command' );", $code );
-		$this->assertStringContainsString( "defined( 'WP_CLI' )", $code );
+		$this->assertStringContainsString( "require_once WP_SWEEP_DIR . 'includes/class-wp-sweep-command.php';", $code, 'The command class is required before it is registered.' );
+		$this->assertStringContainsString( "WP_CLI::add_command( WP_SWEEP_SLUG, 'WP_Sweep_Command' );", $code, 'And registered under the plugin slug, not a bare noun.' );
+		$this->assertStringContainsString( "defined( 'WP_CLI' )", $code, 'Guarded on WP_CLI, so a web request never loads it.' );
 		$this->assertSame( 'wp-sweep', WP_SWEEP_SLUG, 'The command name is the plugin slug.' );
 	}
 }

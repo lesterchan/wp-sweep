@@ -48,7 +48,7 @@ class WP_Sweep_Sweep_Names_Test extends WP_Sweep_TestCase {
 	 * for the post meta that deletion just orphaned.
 	 */
 	public function test_canonical_list_holds_every_sweep() {
-		$this->assertSame( self::$expected, $this->sweep()->get_sweep_names() );
+		$this->assertSame( self::$expected, $this->sweep()->get_sweep_names(), 'The canonical list is exactly the expected set, in order and with nothing extra.' );
 	}
 
 	/**

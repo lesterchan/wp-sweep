@@ -122,7 +122,8 @@ class WP_Sweep_Edge_Cases_Test extends WP_Sweep_TestCase {
 
 		$this->assertSame(
 			'0',
-			$wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$wpdb->term_relationships} WHERE term_taxonomy_id = %d", $ttid ) )
+			$wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$wpdb->term_relationships} WHERE term_taxonomy_id = %d", $ttid ) ),
+			'The orphan relationship is swept even though its taxonomy is not registered.'
 		);
 	}
 
@@ -155,7 +156,8 @@ class WP_Sweep_Edge_Cases_Test extends WP_Sweep_TestCase {
 
 		$this->assertSame(
 			'0',
-			$wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->postmeta} WHERE post_id = 0 AND meta_key LIKE '\_oembed\_%'" )
+			$wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->postmeta} WHERE post_id = 0 AND meta_key LIKE '\_oembed\_%'" ),
+			'oEmbed meta attached to post zero is swept; it belongs to no post at all.'
 		);
 	}
 
@@ -241,7 +243,7 @@ class WP_Sweep_Edge_Cases_Test extends WP_Sweep_TestCase {
 	public function test_details_list_duplicated_meta_keys( $sweep_name, $type ) {
 		$this->make_duplicate_meta( $type );
 
-		$this->assertContains( 'sweep_dupe', $this->sweep()->details( $sweep_name ) );
+		$this->assertContains( 'sweep_dupe', $this->sweep()->details( $sweep_name ), 'The ' . $sweep_name . ' details list the duplicated key.' );
 	}
 
 	/**

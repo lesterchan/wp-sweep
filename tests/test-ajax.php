@@ -198,8 +198,8 @@ class WP_Sweep_Ajax_Test extends WP_Ajax_UnitTestCase {
 		$response = $this->run_ajax( 'sweep' );
 
 		$this->assertTrue( $response['success'], 'An administrator may sweep.' );
-		$this->assertSame( 0, (int) $response['data']['count'] );
-		$this->assertStringContainsString( 'Revisions Processed', $response['data']['sweep'] );
+		$this->assertSame( 0, (int) $response['data']['count'], 'The response reports nothing left, since the sweep just emptied it.' );
+		$this->assertStringContainsString( 'Revisions Processed', $response['data']['sweep'], 'And carries the message naming what was swept.' );
 		$this->assertNull( get_post( $revisions[0] ), 'The sweep deleted the revision it reported on.' );
 	}
 
@@ -217,7 +217,7 @@ class WP_Sweep_Ajax_Test extends WP_Ajax_UnitTestCase {
 		$this->assertArrayHasKey( 'percentage', $response['data'], 'The response carries the percentage.' );
 		$this->assertArrayHasKey( 'posts', $response['data']['stats'], 'The response stats cover the posts table.' );
 		$this->assertArrayHasKey( 'postmeta', $response['data']['stats'], 'The response stats cover the postmeta table.' );
-		$this->assertStringEndsWith( '%', $response['data']['percentage'] );
+		$this->assertStringEndsWith( '%', $response['data']['percentage'], 'The percentage is formatted as a percentage, ready to render.' );
 	}
 
 	/**
@@ -231,7 +231,7 @@ class WP_Sweep_Ajax_Test extends WP_Ajax_UnitTestCase {
 		$response = $this->run_ajax( 'sweep_details' );
 
 		$this->assertTrue( $response['success'], 'An administrator may read the details.' );
-		$this->assertContains( 'sweep-revision-0', $response['data'] );
+		$this->assertContains( 'sweep-revision-0', $response['data'], 'The details response carries the sample rows themselves.' );
 	}
 
 	/**
@@ -361,7 +361,7 @@ class WP_Sweep_Ajax_Test extends WP_Ajax_UnitTestCase {
 		$response = $this->run_ajax( 'sweep' );
 
 		$this->assertTrue( $response['success'], 'The stats request succeeded, or the shape assertions below are vacuous.' );
-		$this->assertSame( $expected, array_keys( $response['data']['stats'] ) );
+		$this->assertSame( $expected, array_keys( $response['data']['stats'] ), 'The stats cover every table in the group, in order.' );
 
 		foreach ( $response['data']['stats'] as $value ) {
 			$this->assertIsNumeric( $value, 'Every stat in the group is a number the screen can format.' );
@@ -502,7 +502,7 @@ class WP_Sweep_Ajax_Test extends WP_Ajax_UnitTestCase {
 
 		remove_filter( 'wp_doing_ajax', '__return_false' );
 
-		$this->assertSame( $expected, $this->last_die_exception );
+		$this->assertSame( $expected, $this->last_die_exception, 'The failure dies the way the calling context expects, which differs between the two.' );
 		$this->assertInstanceOf( WP_Post::class, get_post( $revisions[0] ), 'A failed referer check deletes nothing, in either context.' );
 	}
 

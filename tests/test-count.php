@@ -202,7 +202,7 @@ class WP_Sweep_Count_Test extends WP_Sweep_TestCase {
 		$details = $this->sweep()->details( 'unused_terms' );
 		$name    = get_term( $default, 'category' )->name;
 
-		$this->assertNotContains( $name, $details );
+		$this->assertNotContains( $name, $details, 'The default category is never counted as an unused term.' );
 	}
 
 	/**
@@ -221,7 +221,8 @@ class WP_Sweep_Count_Test extends WP_Sweep_TestCase {
 	public function test_counts_tables_for_optimize_database() {
 		$this->assertSame(
 			(int) $this->sweep()->total_count( 'tables' ),
-			(int) $this->sweep()->count( 'optimize_database' )
+			(int) $this->sweep()->count( 'optimize_database' ),
+			'The optimize count is the table count; the two are the same question.'
 		);
 		$this->assertGreaterThan( 0, (int) $this->sweep()->count( 'optimize_database' ), 'There are tables to optimise, or the count is answering about nothing.' );
 	}
@@ -230,8 +231,8 @@ class WP_Sweep_Count_Test extends WP_Sweep_TestCase {
 	 * An unknown sweep name counts zero rather than erroring.
 	 */
 	public function test_unknown_sweep_name_counts_zero() {
-		$this->assertSame( 0, (int) $this->sweep()->count( 'no_such_sweep' ) );
-		$this->assertSame( 0, (int) $this->sweep()->total_count( 'no_such_table' ) );
+		$this->assertSame( 0, (int) $this->sweep()->count( 'no_such_sweep' ), 'An unknown sweep name counts zero rather than raising.' );
+		$this->assertSame( 0, (int) $this->sweep()->total_count( 'no_such_table' ), 'And an unknown table.' );
 	}
 
 	/**
@@ -288,17 +289,17 @@ class WP_Sweep_Count_Test extends WP_Sweep_TestCase {
 		$before = (int) $this->sweep()->total_count( 'posts' );
 		self::factory()->post->create();
 
-		$this->assertSame( $before + 1, (int) $this->sweep()->total_count( 'posts' ) );
+		$this->assertSame( $before + 1, (int) $this->sweep()->total_count( 'posts' ), 'The total tracks the table, so a new row moves it.' );
 	}
 
 	/**
 	 * Percentages are rounded to two places and never divide by zero.
 	 */
 	public function test_format_percentage() {
-		$this->assertSame( '50%', $this->sweep()->format_percentage( 5, 10 ) );
-		$this->assertSame( '33.33%', $this->sweep()->format_percentage( 1, 3 ) );
-		$this->assertSame( '0%', $this->sweep()->format_percentage( 5, 0 ) );
-		$this->assertSame( '0%', $this->sweep()->format_percentage( 0, 0 ) );
-		$this->assertSame( '100%', $this->sweep()->format_percentage( 7, 7 ) );
+		$this->assertSame( '50%', $this->sweep()->format_percentage( 5, 10 ), 'A half is fifty per cent.' );
+		$this->assertSame( '33.33%', $this->sweep()->format_percentage( 1, 3 ), 'A recurring fraction is rounded to two places rather than printed in full.' );
+		$this->assertSame( '0%', $this->sweep()->format_percentage( 5, 0 ), 'A zero total is nought per cent rather than a division by zero.' );
+		$this->assertSame( '0%', $this->sweep()->format_percentage( 0, 0 ), 'And zero of zero too.' );
+		$this->assertSame( '100%', $this->sweep()->format_percentage( 7, 7 ), 'All of them is a hundred per cent, with no trailing decimals.' );
 	}
 }

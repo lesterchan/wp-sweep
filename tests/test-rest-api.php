@@ -102,7 +102,7 @@ class WP_Sweep_REST_API_Test extends WP_Sweep_TestCase {
 	public function test_routes_reject_anonymous_requests( $method, $route ) {
 		wp_set_current_user( 0 );
 
-		$this->assertSame( 401, $this->dispatch( $method, $route )->get_status() );
+		$this->assertSame( 401, $this->dispatch( $method, $route )->get_status(), 'An anonymous request is refused as unauthorised.' );
 	}
 
 	/**
@@ -116,7 +116,7 @@ class WP_Sweep_REST_API_Test extends WP_Sweep_TestCase {
 	public function test_routes_reject_users_without_the_capability( $method, $route ) {
 		wp_set_current_user( self::$subscriber );
 
-		$this->assertSame( 403, $this->dispatch( $method, $route )->get_status() );
+		$this->assertSame( 403, $this->dispatch( $method, $route )->get_status(), 'A logged-in reader without the capability is refused as forbidden.' );
 	}
 
 	/**
@@ -154,9 +154,9 @@ class WP_Sweep_REST_API_Test extends WP_Sweep_TestCase {
 		$response = $this->dispatch( 'GET', '/wp-sweep/v1/count/revisions' );
 		$data     = $response->get_data();
 
-		$this->assertSame( 200, $response->get_status() );
-		$this->assertSame( 'revisions', $data['name'] );
-		$this->assertSame( 3, $data['count'] );
+		$this->assertSame( 200, $response->get_status(), 'The count route answers.' );
+		$this->assertSame( 'revisions', $data['name'], 'Naming which sweep it counted.' );
+		$this->assertSame( 3, $data['count'], 'And the count itself.' );
 		$this->assertIsInt( $data['count'], 'The count route answers with an integer.' );
 	}
 
@@ -169,9 +169,9 @@ class WP_Sweep_REST_API_Test extends WP_Sweep_TestCase {
 
 		$data = $this->dispatch( 'GET', '/wp-sweep/v1/details/revisions' )->get_data();
 
-		$this->assertSame( 'revisions', $data['name'] );
-		$this->assertSame( 2, $data['count'] );
-		$this->assertContains( 'sweep-revision-0', $data['data'] );
+		$this->assertSame( 'revisions', $data['name'], 'The details route names which sweep it sampled.' );
+		$this->assertSame( 2, $data['count'], 'Reports how many it found.' );
+		$this->assertContains( 'sweep-revision-0', $data['data'], 'And carries the sample rows.' );
 	}
 
 	/**
@@ -184,8 +184,8 @@ class WP_Sweep_REST_API_Test extends WP_Sweep_TestCase {
 		$data = $this->dispatch( 'DELETE', '/wp-sweep/v1/sweep/revisions' )->get_data();
 
 		$this->assertTrue( $data['success'], 'The sweep route reports success.' );
-		$this->assertSame( 'revisions', $data['name'] );
-		$this->assertStringContainsString( 'Revisions Processed', $data['message'] );
+		$this->assertSame( 'revisions', $data['name'], 'The sweep route names which sweep it ran.' );
+		$this->assertStringContainsString( 'Revisions Processed', $data['message'], 'And carries the message naming what it swept.' );
 		$this->assertNull( get_post( $revisions[0] ), 'The sweep route actually deleted the revision.' );
 	}
 
@@ -200,7 +200,7 @@ class WP_Sweep_REST_API_Test extends WP_Sweep_TestCase {
 		$data = $this->dispatch( 'DELETE', '/wp-sweep/v1/sweep/revisions' )->get_data();
 
 		$this->assertFalse( $data['success'], 'With nothing to sweep the route reports that rather than a success.' );
-		$this->assertSame( 'No items left to sweep.', $data['message'] );
+		$this->assertSame( 'No items left to sweep.', $data['message'], 'With nothing to do it says so rather than reporting a sweep of zero.' );
 	}
 
 	/**
@@ -217,7 +217,7 @@ class WP_Sweep_REST_API_Test extends WP_Sweep_TestCase {
 		$route    = str_replace( 'revisions', 'no_such_sweep', $route );
 		$response = $this->dispatch( $method, $route );
 
-		$this->assertSame( 400, $response->get_status() );
+		$this->assertSame( 400, $response->get_status(), 'An unknown sweep name is refused as a bad request.' );
 	}
 
 	/**

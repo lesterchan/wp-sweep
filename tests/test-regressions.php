@@ -110,8 +110,8 @@ class WP_Sweep_Regressions_Test extends WP_Sweep_TestCase {
 		$names = $this->sweep()->get_sweep_names();
 
 		$this->assertIsArray( $names, 'The canonical sweep name list is an array.' );
-		$this->assertContains( 'revisions', $names );
-		$this->assertContains( 'oembed_postmeta', $names );
+		$this->assertContains( 'revisions', $names, 'The canonical list holds the oldest sweep.' );
+		$this->assertContains( 'oembed_postmeta', $names, 'And the newest, so nothing was dropped when the list moved.' );
 		$this->assertCount( 19, $names, 'The canonical list holds all nineteen sweeps.' );
 	}
 
@@ -257,7 +257,7 @@ class WP_Sweep_Regressions_Test extends WP_Sweep_TestCase {
 	public function test_uninstall_guards_against_direct_access() {
 		$source = file_get_contents( dirname( __DIR__ ) . '/uninstall.php' );
 
-		$this->assertStringContainsString( 'WP_UNINSTALL_PLUGIN', $source );
+		$this->assertStringContainsString( 'WP_UNINSTALL_PLUGIN', $source, 'uninstall.php refuses to run outside the uninstall context.' );
 	}
 
 	/**
@@ -327,7 +327,7 @@ class WP_Sweep_Regressions_Test extends WP_Sweep_TestCase {
 		$default = (int) get_option( 'default_category' );
 
 		$this->assertNotNull( term_exists( $default, 'category' ), 'The live default category is protected.' );
-		$this->assertContains( $default, $this->excluded_termids() );
+		$this->assertContains( $default, $this->excluded_termids(), 'The live default category id is in the exclusion list.' );
 	}
 
 	/**
@@ -344,7 +344,7 @@ class WP_Sweep_Regressions_Test extends WP_Sweep_TestCase {
 			)
 		);
 
-		$this->assertNotContains( $term_id, $excluded );
+		$this->assertNotContains( $term_id, $excluded, 'A term holding a stale default id is not, so it can be swept.' );
 
 		$this->sweep()->sweep( 'unused_terms' );
 

@@ -19,8 +19,8 @@ class WP_Sweep_Details_Test extends WP_Sweep_TestCase {
 
 		$details = $this->sweep()->details( 'revisions' );
 
-		$this->assertContains( 'sweep-revision-0', $details );
-		$this->assertContains( 'sweep-revision-1', $details );
+		$this->assertContains( 'sweep-revision-0', $details, 'The details list the first revision by title.' );
+		$this->assertContains( 'sweep-revision-1', $details, 'And the second, so it is a list rather than one example.' );
 	}
 
 	/**
@@ -29,7 +29,7 @@ class WP_Sweep_Details_Test extends WP_Sweep_TestCase {
 	public function test_details_lists_comment_authors() {
 		$this->make_comments( 'spam', 1 );
 
-		$this->assertContains( 'sweep-author-spam-0', $this->sweep()->details( 'spam_comments' ) );
+		$this->assertContains( 'sweep-author-spam-0', $this->sweep()->details( 'spam_comments' ), 'Spam comment details are listed by author.' );
 	}
 
 	/**
@@ -40,7 +40,7 @@ class WP_Sweep_Details_Test extends WP_Sweep_TestCase {
 
 		$details = $this->sweep()->details( 'orphan_postmeta' );
 
-		$this->assertContains( 'sweep_orphan_detail', $details );
+		$this->assertContains( 'sweep_orphan_detail', $details, 'Orphan meta details are listed by key.' );
 	}
 
 	/**
@@ -49,7 +49,7 @@ class WP_Sweep_Details_Test extends WP_Sweep_TestCase {
 	public function test_details_lists_duplicated_meta_keys() {
 		$this->make_duplicate_meta( 'post' );
 
-		$this->assertContains( 'sweep_dupe', $this->sweep()->details( 'duplicated_postmeta' ) );
+		$this->assertContains( 'sweep_dupe', $this->sweep()->details( 'duplicated_postmeta' ), 'Duplicated meta details are listed by key.' );
 	}
 
 	/**
@@ -58,7 +58,7 @@ class WP_Sweep_Details_Test extends WP_Sweep_TestCase {
 	public function test_details_lists_unused_term_names() {
 		$this->make_unused_terms( 1 );
 
-		$this->assertContains( 'sweep-unused-term-0', $this->sweep()->details( 'unused_terms' ) );
+		$this->assertContains( 'sweep-unused-term-0', $this->sweep()->details( 'unused_terms' ), 'Unused term details are listed by name.' );
 	}
 
 	/**
@@ -67,7 +67,7 @@ class WP_Sweep_Details_Test extends WP_Sweep_TestCase {
 	public function test_details_lists_transient_option_names() {
 		set_transient( 'sweep_detail_transient', 'x', HOUR_IN_SECONDS );
 
-		$this->assertContains( '_transient_sweep_detail_transient', $this->sweep()->details( 'transient_options' ) );
+		$this->assertContains( '_transient_sweep_detail_transient', $this->sweep()->details( 'transient_options' ), 'Transient details are listed by option name.' );
 	}
 
 	/**
@@ -76,7 +76,7 @@ class WP_Sweep_Details_Test extends WP_Sweep_TestCase {
 	public function test_details_lists_orphan_relationship_taxonomies() {
 		$this->make_orphan_term_relationship( 'post_tag' );
 
-		$this->assertContains( 'post_tag', $this->sweep()->details( 'orphan_term_relationships' ) );
+		$this->assertContains( 'post_tag', $this->sweep()->details( 'orphan_term_relationships' ), 'Orphan relationship details are listed by taxonomy.' );
 	}
 
 	/**
@@ -87,8 +87,8 @@ class WP_Sweep_Details_Test extends WP_Sweep_TestCase {
 
 		$details = $this->sweep()->details( 'optimize_database' );
 
-		$this->assertContains( $wpdb->posts, $details );
-		$this->assertContains( $wpdb->options, $details );
+		$this->assertContains( $wpdb->posts, $details, 'Optimize details list the posts table.' );
+		$this->assertContains( $wpdb->options, $details, 'And every other table, not only the first.' );
 	}
 
 	/**
@@ -114,14 +114,14 @@ class WP_Sweep_Details_Test extends WP_Sweep_TestCase {
 	 * The documented default cap is 500.
 	 */
 	public function test_default_details_limit_is_500() {
-		$this->assertSame( 500, $this->sweep()->limit_details() );
+		$this->assertSame( 500, $this->sweep()->limit_details(), 'The sample is capped at 500, so a large site does not build a huge array.' );
 	}
 
 	/**
 	 * An unknown sweep name yields an empty list rather than an error.
 	 */
 	public function test_unknown_sweep_name_has_no_details() {
-		$this->assertSame( array(), $this->sweep()->details( 'no_such_sweep' ) );
+		$this->assertSame( array(), $this->sweep()->details( 'no_such_sweep' ), 'An unknown name has no details rather than raising.' );
 	}
 
 	/**
