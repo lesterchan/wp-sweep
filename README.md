@@ -66,7 +66,7 @@ These plugins keep data in places WP-Sweep reads as orphaned. Protect their meta
 I spent most of my free time creating, updating, maintaining and supporting these plugins, if you really love my plugins and could spare me a couple of bucks, I will really appreciate it. If not feel free to use it without any obligations.
 
 ## Usage
-Upload the plugin folder to `/wp-content/plugins/`, activate it through the Plugins menu, and the screen appears at **Tools → WP-Sweep**. Every sweep is irreversible, so back your database up first.
+Upload the plugin folder to `/wp-content/plugins/`, activate it through the Plugins menu, and the screen appears at **Tools -> WP-Sweep**. Every sweep is irreversible, so back your database up first.
 
 The screen lists every sweep with a short description of what it removes, how many items that is, and what proportion of the table they are. Tick the ones you want and use the **Sweep** bulk action, or use each row's **Sweep** and **Details** buttons one at a time. Nothing on the screen needs JavaScript: the buttons are ordinary links and the bulk action is an ordinary form.
 
