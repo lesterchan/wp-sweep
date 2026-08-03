@@ -197,10 +197,10 @@ class WP_Sweep_Ajax_Test extends WP_Ajax_UnitTestCase {
 		$this->set_request( 'sweep', 'revisions', 'posts' );
 		$response = $this->run_ajax( 'sweep' );
 
-		$this->assertTrue( $response['success'] );
+		$this->assertTrue( $response['success'], 'An administrator may sweep.' );
 		$this->assertSame( 0, (int) $response['data']['count'] );
 		$this->assertStringContainsString( 'Revisions Processed', $response['data']['sweep'] );
-		$this->assertNull( get_post( $revisions[0] ) );
+		$this->assertNull( get_post( $revisions[0] ), 'The sweep deleted the revision it reported on.' );
 	}
 
 	/**
@@ -213,10 +213,10 @@ class WP_Sweep_Ajax_Test extends WP_Ajax_UnitTestCase {
 		$this->set_request( 'sweep', 'revisions', 'posts' );
 		$response = $this->run_ajax( 'sweep' );
 
-		$this->assertArrayHasKey( 'total', $response['data'] );
-		$this->assertArrayHasKey( 'percentage', $response['data'] );
-		$this->assertArrayHasKey( 'posts', $response['data']['stats'] );
-		$this->assertArrayHasKey( 'postmeta', $response['data']['stats'] );
+		$this->assertArrayHasKey( 'total', $response['data'], 'The response carries the total.' );
+		$this->assertArrayHasKey( 'percentage', $response['data'], 'The response carries the percentage.' );
+		$this->assertArrayHasKey( 'posts', $response['data']['stats'], 'The response stats cover the posts table.' );
+		$this->assertArrayHasKey( 'postmeta', $response['data']['stats'], 'The response stats cover the postmeta table.' );
 		$this->assertStringEndsWith( '%', $response['data']['percentage'] );
 	}
 
@@ -230,7 +230,7 @@ class WP_Sweep_Ajax_Test extends WP_Ajax_UnitTestCase {
 		$this->set_request( 'sweep_details', 'revisions' );
 		$response = $this->run_ajax( 'sweep_details' );
 
-		$this->assertTrue( $response['success'] );
+		$this->assertTrue( $response['success'], 'An administrator may read the details.' );
 		$this->assertContains( 'sweep-revision-0', $response['data'] );
 	}
 
@@ -248,8 +248,8 @@ class WP_Sweep_Ajax_Test extends WP_Ajax_UnitTestCase {
 		$this->set_request( $action, 'revisions' );
 		$response = $this->run_ajax( $action );
 
-		$this->assertFalse( $response['success'] );
-		$this->assertInstanceOf( WP_Post::class, get_post( $revisions[0] ) );
+		$this->assertFalse( $response['success'], 'A subscriber is refused.' );
+		$this->assertInstanceOf( WP_Post::class, get_post( $revisions[0] ), 'The refused subscriber deleted nothing.' );
 	}
 
 	/**
@@ -267,7 +267,7 @@ class WP_Sweep_Ajax_Test extends WP_Ajax_UnitTestCase {
 
 		$response = $this->run_ajax( $action );
 
-		$this->assertFalse( $response['success'] );
+		$this->assertFalse( $response['success'], 'A request with no sweep name is refused.' );
 	}
 
 	/**
@@ -284,7 +284,7 @@ class WP_Sweep_Ajax_Test extends WP_Ajax_UnitTestCase {
 		$this->set_request( $action, 'revisions', 'posts', 'not-a-real-nonce' );
 		$this->run_ajax( $action );
 
-		$this->assertInstanceOf( WP_Post::class, get_post( $revisions[0] ) );
+		$this->assertInstanceOf( WP_Post::class, get_post( $revisions[0] ), 'A bad nonce deletes nothing.' );
 	}
 
 	/**
@@ -297,7 +297,7 @@ class WP_Sweep_Ajax_Test extends WP_Ajax_UnitTestCase {
 		$this->set_request( 'sweep', 'revisions', 'posts', wp_create_nonce( 'wp_sweep_auto_drafts' ) );
 		$this->run_ajax( 'sweep' );
 
-		$this->assertInstanceOf( WP_Post::class, get_post( $revisions[0] ) );
+		$this->assertInstanceOf( WP_Post::class, get_post( $revisions[0] ), 'A nonce for another sweep does not authorise this one.' );
 	}
 
 	/**
@@ -311,7 +311,7 @@ class WP_Sweep_Ajax_Test extends WP_Ajax_UnitTestCase {
 		$this->set_request( 'sweep', 'revisions', 'posts', wp_create_nonce( 'wp_sweep_details_revisions' ) );
 		$this->run_ajax( 'sweep' );
 
-		$this->assertInstanceOf( WP_Post::class, get_post( $revisions[0] ) );
+		$this->assertInstanceOf( WP_Post::class, get_post( $revisions[0] ), 'The details nonce does not authorise a sweep.' );
 	}
 
 	/**
@@ -330,16 +330,16 @@ class WP_Sweep_Ajax_Test extends WP_Ajax_UnitTestCase {
 	 * Both endpoints are wired up under the actions the script posts to.
 	 */
 	public function test_endpoints_are_registered() {
-		$this->assertNotFalse( has_action( 'wp_ajax_sweep' ) );
-		$this->assertNotFalse( has_action( 'wp_ajax_sweep_details' ) );
+		$this->assertNotFalse( has_action( 'wp_ajax_sweep' ), 'The sweep endpoint is registered.' );
+		$this->assertNotFalse( has_action( 'wp_ajax_sweep_details' ), 'The details endpoint is registered.' );
 	}
 
 	/**
 	 * Neither endpoint is exposed to logged out visitors.
 	 */
 	public function test_endpoints_are_not_public() {
-		$this->assertFalse( has_action( 'wp_ajax_nopriv_sweep' ) );
-		$this->assertFalse( has_action( 'wp_ajax_nopriv_sweep_details' ) );
+		$this->assertFalse( has_action( 'wp_ajax_nopriv_sweep' ), 'The sweep endpoint has no nopriv twin.' );
+		$this->assertFalse( has_action( 'wp_ajax_nopriv_sweep_details' ), 'The details endpoint has no nopriv twin.' );
 	}
 
 	/**
@@ -360,11 +360,11 @@ class WP_Sweep_Ajax_Test extends WP_Ajax_UnitTestCase {
 		$this->set_request( 'sweep', $sweep_name, $sweep_type );
 		$response = $this->run_ajax( 'sweep' );
 
-		$this->assertTrue( $response['success'] );
+		$this->assertTrue( $response['success'], 'The stats request succeeded, or the shape assertions below are vacuous.' );
 		$this->assertSame( $expected, array_keys( $response['data']['stats'] ) );
 
 		foreach ( $response['data']['stats'] as $value ) {
-			$this->assertIsNumeric( $value );
+			$this->assertIsNumeric( $value, 'Every stat in the group is a number the screen can format.' );
 		}
 	}
 
@@ -403,8 +403,8 @@ class WP_Sweep_Ajax_Test extends WP_Ajax_UnitTestCase {
 		$this->set_request( 'sweep', 'revisions', 'no_such_table' );
 		$response = $this->run_ajax( 'sweep' );
 
-		$this->assertFalse( $response['success'] );
-		$this->assertInstanceOf( WP_Post::class, get_post( $revisions[0] ) );
+		$this->assertFalse( $response['success'], 'An unknown sweep type is refused.' );
+		$this->assertInstanceOf( WP_Post::class, get_post( $revisions[0] ), 'The refused request deleted nothing.' );
 	}
 
 	/**
@@ -420,7 +420,7 @@ class WP_Sweep_Ajax_Test extends WP_Ajax_UnitTestCase {
 		);
 		$_REQUEST = $_GET;
 
-		$this->assertFalse( $this->run_ajax( 'sweep' )['success'] );
+		$this->assertFalse( $this->run_ajax( 'sweep' )['success'], 'A request with no sweep type is refused.' );
 	}
 
 	/**
@@ -448,10 +448,10 @@ class WP_Sweep_Ajax_Test extends WP_Ajax_UnitTestCase {
 		// or by the referer check, which dies and answers with nothing. What
 		// matters is that neither one deleted anything.
 		if ( null !== $response ) {
-			$this->assertFalse( $response['success'] );
+			$this->assertFalse( $response['success'], 'A hostile sweep name is refused.' );
 		}
 
-		$this->assertInstanceOf( WP_Post::class, get_post( $revisions[0] ) );
+		$this->assertInstanceOf( WP_Post::class, get_post( $revisions[0] ), 'The hostile name deleted nothing.' );
 	}
 
 	/**
@@ -503,7 +503,7 @@ class WP_Sweep_Ajax_Test extends WP_Ajax_UnitTestCase {
 		remove_filter( 'wp_doing_ajax', '__return_false' );
 
 		$this->assertSame( $expected, $this->last_die_exception );
-		$this->assertInstanceOf( WP_Post::class, get_post( $revisions[0] ) );
+		$this->assertInstanceOf( WP_Post::class, get_post( $revisions[0] ), 'A failed referer check deletes nothing, in either context.' );
 	}
 
 	/**
@@ -523,7 +523,7 @@ class WP_Sweep_Ajax_Test extends WP_Ajax_UnitTestCase {
 	 * so catching the parent really does cover all of them.
 	 */
 	public function test_die_exceptions_share_a_parent() {
-		$this->assertTrue( is_subclass_of( 'WPAjaxDieStopException', 'WPDieException' ) );
-		$this->assertTrue( is_subclass_of( 'WPAjaxDieContinueException', 'WPDieException' ) );
+		$this->assertTrue( is_subclass_of( 'WPAjaxDieStopException', 'WPDieException' ), 'The stop exception descends from WPDieException, so one catch covers both.' );
+		$this->assertTrue( is_subclass_of( 'WPAjaxDieContinueException', 'WPDieException' ), 'The continue exception descends from WPDieException, so one catch covers both.' );
 	}
 }

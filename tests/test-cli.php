@@ -45,8 +45,8 @@ class WP_Sweep_CLI_Test extends WP_Sweep_TestCase {
 
 		$messages = $this->run_command( array(), array( 'all' => true ) );
 
-		$this->assertNull( get_post( $revisions[0] ) );
-		$this->assertNull( get_post( $drafts[0] ) );
+		$this->assertNull( get_post( $revisions[0] ), 'wp sweep all removed the revisions.' );
+		$this->assertNull( get_post( $drafts[0] ), 'wp sweep all removed the auto drafts too.' );
 		$this->assertContains( 'Sweep Complete', $messages );
 	}
 
@@ -70,8 +70,8 @@ class WP_Sweep_CLI_Test extends WP_Sweep_TestCase {
 
 		$messages = $this->run_command( array( 'revisions' ) );
 
-		$this->assertNull( get_post( $revisions[0] ) );
-		$this->assertInstanceOf( WP_Post::class, get_post( $drafts[0] ) );
+		$this->assertNull( get_post( $revisions[0] ), 'The named item was swept.' );
+		$this->assertInstanceOf( WP_Post::class, get_post( $drafts[0] ), 'Only the named item was swept; the drafts survive.' );
 		$this->assertContains( '2 Revisions Processed', $messages );
 		$this->assertContains( 'Sweep Complete!', $messages );
 	}
@@ -86,9 +86,9 @@ class WP_Sweep_CLI_Test extends WP_Sweep_TestCase {
 
 		$this->run_command( array( 'revisions', 'auto_drafts' ) );
 
-		$this->assertNull( get_post( $revisions[0] ) );
-		$this->assertNull( get_post( $drafts[0] ) );
-		$this->assertInstanceOf( WP_Post::class, get_post( $trashed[0] ) );
+		$this->assertNull( get_post( $revisions[0] ), 'The first named item was swept.' );
+		$this->assertNull( get_post( $drafts[0] ), 'The second named item was swept.' );
+		$this->assertInstanceOf( WP_Post::class, get_post( $trashed[0] ), 'An item that was not named survives.' );
 	}
 
 	/**
@@ -106,9 +106,9 @@ class WP_Sweep_CLI_Test extends WP_Sweep_TestCase {
 		$revision_index = array_search( '1 Revisions Processed', $messages, true );
 		$draft_index    = array_search( '1 Auto Drafts Processed', $messages, true );
 
-		$this->assertNotFalse( $revision_index );
-		$this->assertNotFalse( $draft_index );
-		$this->assertLessThan( $draft_index, $revision_index );
+		$this->assertNotFalse( $revision_index, 'Revisions ran at all, or the ordering assertion below is vacuous.' );
+		$this->assertNotFalse( $draft_index, 'Drafts ran at all, or the ordering assertion below is vacuous.' );
+		$this->assertLessThan( $draft_index, $revision_index, 'Items run in the canonical order, revisions before drafts.' );
 	}
 
 	/**
@@ -119,7 +119,7 @@ class WP_Sweep_CLI_Test extends WP_Sweep_TestCase {
 
 		$messages = $this->run_command( array( 'no_such_sweep' ) );
 
-		$this->assertInstanceOf( WP_Post::class, get_post( $revisions[0] ) );
+		$this->assertInstanceOf( WP_Post::class, get_post( $revisions[0] ), 'An unknown name sweeps nothing rather than everything.' );
 		$this->assertSame( array( 'Sweep Complete!' ), $messages );
 	}
 
@@ -132,7 +132,7 @@ class WP_Sweep_CLI_Test extends WP_Sweep_TestCase {
 
 		$messages = $this->run_command();
 
-		$this->assertInstanceOf( WP_Post::class, get_post( $revisions[0] ) );
+		$this->assertInstanceOf( WP_Post::class, get_post( $revisions[0] ), 'No arguments sweeps nothing rather than everything.' );
 		$this->assertSame( array( 'Sweep Complete!' ), $messages );
 	}
 
@@ -156,7 +156,7 @@ class WP_Sweep_CLI_Test extends WP_Sweep_TestCase {
 		$command = new WP_Sweep_Command();
 		$command->run_sweep( array( 'revisions' ) );
 
-		$this->assertNull( get_post( $revisions[0] ) );
+		$this->assertNull( get_post( $revisions[0] ), 'run_sweep accepts a list and sweeps what it names.' );
 		$this->assertContains( '1 Revisions Processed', WP_CLI::$successes );
 	}
 

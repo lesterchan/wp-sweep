@@ -143,7 +143,7 @@ class WP_Sweep_Filters_Test extends WP_Sweep_TestCase {
 		$this->sweep()->sweep( 'unused_terms' );
 
 		foreach ( $terms as $term_id ) {
-			$this->assertInstanceOf( WP_Term::class, get_term( $term_id, 'post_tag' ) );
+			$this->assertInstanceOf( WP_Term::class, get_term( $term_id, 'post_tag' ), 'A term named by the excluded_termids filter survives the sweep.' );
 		}
 	}
 

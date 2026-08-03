@@ -223,7 +223,7 @@ class WP_Sweep_Count_Test extends WP_Sweep_TestCase {
 			(int) $this->sweep()->total_count( 'tables' ),
 			(int) $this->sweep()->count( 'optimize_database' )
 		);
-		$this->assertGreaterThan( 0, (int) $this->sweep()->count( 'optimize_database' ) );
+		$this->assertGreaterThan( 0, (int) $this->sweep()->count( 'optimize_database' ), 'There are tables to optimise, or the count is answering about nothing.' );
 	}
 
 	/**
@@ -250,16 +250,16 @@ class WP_Sweep_Count_Test extends WP_Sweep_TestCase {
 		$count = $this->sweep()->total_count( $type );
 
 		$this->assertNotNull( $count, "total_count( '{$type}' ) did not recognise the table." );
-		$this->assertGreaterThanOrEqual( 0, (int) $count );
+		$this->assertGreaterThanOrEqual( 0, (int) $count, 'A table count is never negative.' );
 	}
 
 	/**
 	 * The tables and options shorthands always have something to report.
 	 */
 	public function test_total_count_is_positive_for_tables_and_options() {
-		$this->assertGreaterThan( 0, (int) $this->sweep()->total_count( 'tables' ) );
-		$this->assertGreaterThan( 0, (int) $this->sweep()->total_count( 'options' ) );
-		$this->assertGreaterThan( 0, (int) $this->sweep()->total_count( 'users' ) );
+		$this->assertGreaterThan( 0, (int) $this->sweep()->total_count( 'tables' ), 'The tables total is positive; a site always has tables.' );
+		$this->assertGreaterThan( 0, (int) $this->sweep()->total_count( 'options' ), 'The options total is positive; a site always has options.' );
+		$this->assertGreaterThan( 0, (int) $this->sweep()->total_count( 'users' ), 'The users total is positive; a site always has a user.' );
 	}
 
 	/**

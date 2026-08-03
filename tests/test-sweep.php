@@ -23,10 +23,10 @@ class WP_Sweep_Sweep_Test extends WP_Sweep_TestCase {
 
 		$this->assertSweepDelta( 0, 'revisions' );
 		$this->assertStringContainsString( 'Revisions Processed', $message );
-		$this->assertInstanceOf( WP_Post::class, get_post( $parent ) );
+		$this->assertInstanceOf( WP_Post::class, get_post( $parent ), 'The parent post survives its revisions being swept.' );
 
 		foreach ( $revisions as $id ) {
-			$this->assertNull( get_post( $id ) );
+			$this->assertNull( get_post( $id ), 'The revision is swept.' );
 		}
 	}
 
@@ -43,7 +43,7 @@ class WP_Sweep_Sweep_Test extends WP_Sweep_TestCase {
 		$this->assertStringContainsString( 'Auto Drafts Processed', $message );
 
 		foreach ( $ids as $id ) {
-			$this->assertNull( get_post( $id ) );
+			$this->assertNull( get_post( $id ), 'The auto draft is swept.' );
 		}
 	}
 
@@ -58,8 +58,8 @@ class WP_Sweep_Sweep_Test extends WP_Sweep_TestCase {
 		$this->sweep()->sweep( 'deleted_posts' );
 
 		$this->assertSweepDelta( 0, 'deleted_posts' );
-		$this->assertNull( get_post( $trashed[0] ) );
-		$this->assertInstanceOf( WP_Post::class, get_post( $published ) );
+		$this->assertNull( get_post( $trashed[0] ), 'A trashed post is swept.' );
+		$this->assertInstanceOf( WP_Post::class, get_post( $published ), 'A published post is not.' );
 	}
 
 	/**
@@ -84,8 +84,8 @@ class WP_Sweep_Sweep_Test extends WP_Sweep_TestCase {
 		$this->sweep()->sweep( $sweep_name );
 
 		$this->assertSweepDelta( 0, $sweep_name );
-		$this->assertNull( get_comment( $doomed[0] ) );
-		$this->assertInstanceOf( WP_Comment::class, get_comment( $survivor ) );
+		$this->assertNull( get_comment( $doomed[0] ), 'A comment in the swept state goes.' );
+		$this->assertInstanceOf( WP_Comment::class, get_comment( $survivor ), 'A comment in another state stays.' );
 	}
 
 	/**
@@ -110,7 +110,7 @@ class WP_Sweep_Sweep_Test extends WP_Sweep_TestCase {
 
 		$message = $this->sweep()->sweep( 'transient_options' );
 
-		$this->assertFalse( get_transient( 'sweep_me' ) );
+		$this->assertFalse( get_transient( 'sweep_me' ), 'The transient is swept.' );
 		$this->assertStringContainsString( 'Transient Options Processed', $message );
 	}
 
@@ -264,10 +264,10 @@ class WP_Sweep_Sweep_Test extends WP_Sweep_TestCase {
 		$this->assertStringContainsString( 'Unused Terms Processed', $message );
 
 		foreach ( $unused as $term_id ) {
-			$this->assertNull( get_term( $term_id, 'post_tag' ) );
+			$this->assertNull( get_term( $term_id, 'post_tag' ), 'An unused term is swept.' );
 		}
 
-		$this->assertInstanceOf( WP_Term::class, get_term( $used, 'post_tag' ) );
+		$this->assertInstanceOf( WP_Term::class, get_term( $used, 'post_tag' ), 'A term still in use is not.' );
 	}
 
 	/**
@@ -278,7 +278,7 @@ class WP_Sweep_Sweep_Test extends WP_Sweep_TestCase {
 
 		$this->sweep()->sweep( 'unused_terms' );
 
-		$this->assertInstanceOf( WP_Term::class, get_term( $default, 'category' ) );
+		$this->assertInstanceOf( WP_Term::class, get_term( $default, 'category' ), 'The default category survives even with nothing assigned to it.' );
 	}
 
 	/**
@@ -296,7 +296,7 @@ class WP_Sweep_Sweep_Test extends WP_Sweep_TestCase {
 
 		$this->sweep()->sweep( 'unused_terms' );
 
-		$this->assertInstanceOf( WP_Term::class, get_term( $parent, 'category' ) );
+		$this->assertInstanceOf( WP_Term::class, get_term( $parent, 'category' ), 'A parent term survives even with nothing assigned to it.' );
 	}
 
 	/**

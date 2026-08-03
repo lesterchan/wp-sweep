@@ -52,7 +52,7 @@ class WP_Sweep_Regressions_Test extends WP_Sweep_TestCase {
 		$result           = $this->sweep()->$method( 'unused_terms' );
 
 		$this->assertSame( '', $wpdb->last_error, 'The unused terms query errored.' );
-		$this->assertNotNull( $result );
+		$this->assertNotNull( $result, 'An empty exclusion list leaves a query that still runs.' );
 	}
 
 	/**
@@ -78,7 +78,7 @@ class WP_Sweep_Regressions_Test extends WP_Sweep_TestCase {
 		$terms = $this->make_unused_terms( 2 );
 		$this->sweep()->sweep( 'unused_terms' );
 
-		$this->assertNull( get_term( $terms[0], 'post_tag' ) );
+		$this->assertNull( get_term( $terms[0], 'post_tag' ), 'An empty exclusion list still sweeps what it should.' );
 	}
 
 	/**
@@ -96,8 +96,8 @@ class WP_Sweep_Regressions_Test extends WP_Sweep_TestCase {
 
 		$this->sweep()->sweep( 'unused_terms' );
 
-		$this->assertInstanceOf( WP_Term::class, get_term( $terms[0], 'post_tag' ) );
-		$this->assertNull( get_term( $terms[1], 'post_tag' ) );
+		$this->assertInstanceOf( WP_Term::class, get_term( $terms[0], 'post_tag' ), 'A single excluded id is honoured and that term survives.' );
+		$this->assertNull( get_term( $terms[1], 'post_tag' ), 'The term that was not excluded is still swept.' );
 	}
 
 	// -- The sweep name from the request was never validated. --
@@ -109,10 +109,10 @@ class WP_Sweep_Regressions_Test extends WP_Sweep_TestCase {
 	public function test_plugin_exposes_a_canonical_sweep_name_list() {
 		$names = $this->sweep()->get_sweep_names();
 
-		$this->assertIsArray( $names );
+		$this->assertIsArray( $names, 'The canonical sweep name list is an array.' );
 		$this->assertContains( 'revisions', $names );
 		$this->assertContains( 'oembed_postmeta', $names );
-		$this->assertCount( 19, $names );
+		$this->assertCount( 19, $names, 'The canonical list holds all nineteen sweeps.' );
 	}
 
 	/**
@@ -123,20 +123,20 @@ class WP_Sweep_Regressions_Test extends WP_Sweep_TestCase {
 		$reflection = new ReflectionMethod( $api, 'is_sweep_name_valid' );
 
 		foreach ( $this->sweep()->get_sweep_names() as $name ) {
-			$this->assertTrue( $reflection->invoke( $api, $name ) );
+			$this->assertTrue( $reflection->invoke( $api, $name ), 'The REST API rejects ' . $name . ', which is on the canonical list.' );
 		}
 
-		$this->assertFalse( $reflection->invoke( $api, 'no_such_sweep' ) );
+		$this->assertFalse( $reflection->invoke( $api, 'no_such_sweep' ), 'The REST API rejects a name that is not on the canonical list.' );
 	}
 
 	/**
 	 * A name that is not on the list is rejected outright.
 	 */
 	public function test_unknown_sweep_names_are_rejected() {
-		$this->assertFalse( $this->sweep()->is_sweep_name_valid( 'no_such_sweep' ) );
-		$this->assertFalse( $this->sweep()->is_sweep_name_valid( '' ) );
-		$this->assertFalse( $this->sweep()->is_sweep_name_valid( 'revisions; DROP TABLE' ) );
-		$this->assertTrue( $this->sweep()->is_sweep_name_valid( 'revisions' ) );
+		$this->assertFalse( $this->sweep()->is_sweep_name_valid( 'no_such_sweep' ), 'An unknown sweep name is rejected.' );
+		$this->assertFalse( $this->sweep()->is_sweep_name_valid( '' ), 'An empty sweep name is rejected.' );
+		$this->assertFalse( $this->sweep()->is_sweep_name_valid( 'revisions; DROP TABLE' ), 'A sweep name carrying SQL is rejected.' );
+		$this->assertTrue( $this->sweep()->is_sweep_name_valid( 'revisions' ), 'A real sweep name is still accepted.' );
 	}
 
 	// -- What the plugin stores, and what uninstall has to remove. --
@@ -286,7 +286,7 @@ class WP_Sweep_Regressions_Test extends WP_Sweep_TestCase {
 			}
 		}
 
-		$this->assertNotEmpty( $sources );
+		$this->assertNotEmpty( $sources, 'The provider found no sources, so every test it drives would pass vacuously.' );
 
 		return $sources;
 	}
@@ -326,7 +326,7 @@ class WP_Sweep_Regressions_Test extends WP_Sweep_TestCase {
 	public function test_live_default_option_still_protects_its_term() {
 		$default = (int) get_option( 'default_category' );
 
-		$this->assertNotNull( term_exists( $default, 'category' ) );
+		$this->assertNotNull( term_exists( $default, 'category' ), 'The live default category is protected.' );
 		$this->assertContains( $default, $this->excluded_termids() );
 	}
 
@@ -348,7 +348,7 @@ class WP_Sweep_Regressions_Test extends WP_Sweep_TestCase {
 
 		$this->sweep()->sweep( 'unused_terms' );
 
-		$this->assertNull( get_term( $term_id, 'post_tag' ) );
+		$this->assertNull( get_term( $term_id, 'post_tag' ), 'A term holding a stale default id is swept rather than protected forever.' );
 	}
 
 	/**

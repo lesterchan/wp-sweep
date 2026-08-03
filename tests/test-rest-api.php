@@ -75,9 +75,9 @@ class WP_Sweep_REST_API_Test extends WP_Sweep_TestCase {
 	public function test_routes_are_registered() {
 		$routes = rest_get_server()->get_routes();
 
-		$this->assertArrayHasKey( '/wp-sweep/v1/count/(?P<name>\w+)', $routes );
-		$this->assertArrayHasKey( '/wp-sweep/v1/details/(?P<name>\w+)', $routes );
-		$this->assertArrayHasKey( '/wp-sweep/v1/sweep/(?P<name>\w+)', $routes );
+		$this->assertArrayHasKey( '/wp-sweep/v1/count/(?P<name>\w+)', $routes, 'The count route is registered.' );
+		$this->assertArrayHasKey( '/wp-sweep/v1/details/(?P<name>\w+)', $routes, 'The details route is registered.' );
+		$this->assertArrayHasKey( '/wp-sweep/v1/sweep/(?P<name>\w+)', $routes, 'The sweep route is registered.' );
 	}
 
 	/**
@@ -87,8 +87,8 @@ class WP_Sweep_REST_API_Test extends WP_Sweep_TestCase {
 		$routes = rest_get_server()->get_routes();
 		$route  = $routes['/wp-sweep/v1/sweep/(?P<name>\w+)'];
 
-		$this->assertTrue( $route[0]['methods']['DELETE'] );
-		$this->assertArrayNotHasKey( 'GET', $route[0]['methods'] );
+		$this->assertTrue( $route[0]['methods']['DELETE'], 'The sweep route answers DELETE, which is what a destructive route should take.' );
+		$this->assertArrayNotHasKey( 'GET', $route[0]['methods'], 'The sweep route does not answer GET, which a browser could be made to send.' );
 	}
 
 	/**
@@ -141,7 +141,7 @@ class WP_Sweep_REST_API_Test extends WP_Sweep_TestCase {
 		wp_set_current_user( self::$subscriber );
 		$this->dispatch( 'DELETE', '/wp-sweep/v1/sweep/revisions' );
 
-		$this->assertInstanceOf( WP_Post::class, get_post( $revisions[0] ) );
+		$this->assertInstanceOf( WP_Post::class, get_post( $revisions[0] ), 'A subscriber sweeps nothing through the REST route either.' );
 	}
 
 	/**
@@ -157,7 +157,7 @@ class WP_Sweep_REST_API_Test extends WP_Sweep_TestCase {
 		$this->assertSame( 200, $response->get_status() );
 		$this->assertSame( 'revisions', $data['name'] );
 		$this->assertSame( 3, $data['count'] );
-		$this->assertIsInt( $data['count'] );
+		$this->assertIsInt( $data['count'], 'The count route answers with an integer.' );
 	}
 
 	/**
@@ -183,10 +183,10 @@ class WP_Sweep_REST_API_Test extends WP_Sweep_TestCase {
 
 		$data = $this->dispatch( 'DELETE', '/wp-sweep/v1/sweep/revisions' )->get_data();
 
-		$this->assertTrue( $data['success'] );
+		$this->assertTrue( $data['success'], 'The sweep route reports success.' );
 		$this->assertSame( 'revisions', $data['name'] );
 		$this->assertStringContainsString( 'Revisions Processed', $data['message'] );
-		$this->assertNull( get_post( $revisions[0] ) );
+		$this->assertNull( get_post( $revisions[0] ), 'The sweep route actually deleted the revision.' );
 	}
 
 	/**
@@ -199,7 +199,7 @@ class WP_Sweep_REST_API_Test extends WP_Sweep_TestCase {
 
 		$data = $this->dispatch( 'DELETE', '/wp-sweep/v1/sweep/revisions' )->get_data();
 
-		$this->assertFalse( $data['success'] );
+		$this->assertFalse( $data['success'], 'With nothing to sweep the route reports that rather than a success.' );
 		$this->assertSame( 'No items left to sweep.', $data['message'] );
 	}
 

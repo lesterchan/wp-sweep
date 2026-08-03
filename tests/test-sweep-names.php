@@ -67,9 +67,9 @@ class WP_Sweep_Sweep_Names_Test extends WP_Sweep_TestCase {
 
 		$api = new WP_Sweep_API();
 		foreach ( self::$expected as $name ) {
-			$this->assertTrue( $api->is_sweep_name_valid( $name ) );
+			$this->assertTrue( $api->is_sweep_name_valid( $name ), 'The REST API rejects ' . $name . ', which is on the canonical list.' );
 		}
-		$this->assertFalse( $api->is_sweep_name_valid( 'no_such_sweep' ) );
+		$this->assertFalse( $api->is_sweep_name_valid( 'no_such_sweep' ), 'The REST API rejects a name that is not on the canonical list.' );
 	}
 
 	/**

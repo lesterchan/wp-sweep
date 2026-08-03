@@ -40,7 +40,7 @@ class WP_Sweep_Edge_Cases_Test extends WP_Sweep_TestCase {
 
 		unregister_taxonomy( $taxonomy );
 
-		$this->assertFalse( taxonomy_exists( $taxonomy ) );
+		$this->assertFalse( taxonomy_exists( $taxonomy ), 'The taxonomy really was unregistered, or the fixture is not a forgotten one.' );
 
 		return $term_ids;
 	}
@@ -87,8 +87,8 @@ class WP_Sweep_Edge_Cases_Test extends WP_Sweep_TestCase {
 
 		$this->sweep()->sweep( 'unused_terms' );
 
-		$this->assertInstanceOf( WP_Term::class, get_term( $live, 'post_tag' ) );
-		$this->assertInstanceOf( WP_Term::class, get_term( (int) get_option( 'default_category' ), 'category' ) );
+		$this->assertInstanceOf( WP_Term::class, get_term( $live, 'post_tag' ), 'A term in a live taxonomy is spared.' );
+		$this->assertInstanceOf( WP_Term::class, get_term( (int) get_option( 'default_category' ), 'category' ), 'The default category is spared.' );
 	}
 
 	/**
@@ -215,7 +215,7 @@ class WP_Sweep_Edge_Cases_Test extends WP_Sweep_TestCase {
 
 		$this->sweep()->sweep( 'unused_terms' );
 
-		$this->assertInstanceOf( WP_Term::class, get_term( $parent, $taxonomy ) );
+		$this->assertInstanceOf( WP_Term::class, get_term( $parent, $taxonomy ), 'A term with children is protected from the sweep.' );
 		$this->assertNull( get_term( $child, $taxonomy ), 'The unused child should still go.' );
 	}
 
@@ -266,6 +266,6 @@ class WP_Sweep_Edge_Cases_Test extends WP_Sweep_TestCase {
 	public function test_excluded_termids_survives_a_non_array_filter() {
 		add_filter( 'wp_sweep_excluded_termids', '__return_false' );
 
-		$this->assertNotNull( $this->sweep()->count( 'unused_terms' ) );
+		$this->assertNotNull( $this->sweep()->count( 'unused_terms' ), 'A non-array from the filter is survivable and the count still answers.' );
 	}
 }

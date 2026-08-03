@@ -133,7 +133,7 @@ class WP_Sweep_Details_Test extends WP_Sweep_TestCase {
 	 * @param string $name Sweep name.
 	 */
 	public function test_details_are_always_an_array( $name ) {
-		$this->assertIsArray( $this->sweep()->details( $name ) );
+		$this->assertIsArray( $this->sweep()->details( $name ), 'details( ' . $name . ' ) did not answer with an array.' );
 	}
 
 	/**
