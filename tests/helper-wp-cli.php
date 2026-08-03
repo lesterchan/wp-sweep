@@ -8,7 +8,7 @@
  * helper-wp-cli-command.php, because the coding standard allows one class per
  * file and that rule is not relaxed for the suite.
  *
- * @package wp-sweep
+ * @package WP-Sweep
  */
 
 if ( ! class_exists( 'WP_CLI' ) ) {

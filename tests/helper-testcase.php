@@ -2,7 +2,7 @@
 /**
  * The base class every WP-Sweep test extends.
  *
- * @package wp-sweep
+ * @package WP-Sweep
  */
 
 /**

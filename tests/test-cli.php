@@ -2,7 +2,7 @@
 /**
  * Tests for the `wp sweep` WP-CLI command.
  *
- * @package wp-sweep
+ * @package WP-Sweep
  */
 
 /**

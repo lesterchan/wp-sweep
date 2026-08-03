@@ -2,7 +2,7 @@
 /**
  * Tests for WP_Sweep::sweep() — the half that actually deletes things.
  *
- * @package wp-sweep
+ * @package WP-Sweep
  */
 
 /**

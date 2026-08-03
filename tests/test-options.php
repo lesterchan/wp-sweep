@@ -2,7 +2,7 @@
 /**
  * Tests that WP-Sweep stores nothing at all.
  *
- * @package wp-sweep
+ * @package WP-Sweep
  */
 
 /**

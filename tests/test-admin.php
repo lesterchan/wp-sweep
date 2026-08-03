@@ -2,7 +2,7 @@
 /**
  * Tests for the Tools -> Sweep admin screen.
  *
- * @package wp-sweep
+ * @package WP-Sweep
  */
 
 /**

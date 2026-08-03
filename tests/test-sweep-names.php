@@ -2,7 +2,7 @@
 /**
  * Guards against the several lists of sweep names drifting apart.
  *
- * @package wp-sweep
+ * @package WP-Sweep
  */
 
 /**

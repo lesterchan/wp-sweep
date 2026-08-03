@@ -2,7 +2,7 @@
 /**
  * Tests for the list of sweeps.
  *
- * @package wp-sweep
+ * @package WP-Sweep
  */
 
 /**

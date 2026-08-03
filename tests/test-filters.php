@@ -2,7 +2,7 @@
 /**
  * Tests for the filters and actions WP-Sweep exposes.
  *
- * @package wp-sweep
+ * @package WP-Sweep
  */
 
 /**

@@ -2,7 +2,7 @@
 /**
  * Tests for bugs found while modernizing the plugin.
  *
- * @package wp-sweep
+ * @package WP-Sweep
  */
 
 /**

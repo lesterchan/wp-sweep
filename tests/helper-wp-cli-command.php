@@ -7,7 +7,7 @@
  * plugin gates on the WP_CLI *constant*, which is deliberately left undefined,
  * so nothing else in the suite changes behaviour because the class exists.
  *
- * @package wp-sweep
+ * @package WP-Sweep
  */
 
 if ( ! class_exists( 'WP_CLI_Command' ) ) {

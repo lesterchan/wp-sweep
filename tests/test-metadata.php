@@ -9,7 +9,7 @@
  * the checks that are genuinely this plugin's - all of which follow from the
  * same fact: WP-Sweep stores nothing at all.
  *
- * @package wp-sweep
+ * @package WP-Sweep
  */
 
 /**

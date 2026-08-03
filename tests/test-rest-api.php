@@ -2,7 +2,7 @@
 /**
  * Tests for the wp-sweep/v1 REST routes.
  *
- * @package wp-sweep
+ * @package WP-Sweep
  */
 
 /**

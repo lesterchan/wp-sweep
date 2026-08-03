@@ -2,7 +2,7 @@
 /**
  * Tests for the admin-ajax.php endpoints the admin screen drives.
  *
- * @package wp-sweep
+ * @package WP-Sweep
  */
 
 /**

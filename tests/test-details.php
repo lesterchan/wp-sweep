@@ -2,7 +2,7 @@
 /**
  * Tests for WP_Sweep::details().
  *
- * @package wp-sweep
+ * @package WP-Sweep
  */
 
 /**

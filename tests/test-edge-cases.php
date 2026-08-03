@@ -3,7 +3,7 @@
  * Tests for the fallback branches that only run when the WordPress APIs
  * refuse to act.
  *
- * @package wp-sweep
+ * @package WP-Sweep
  */
 
 /**

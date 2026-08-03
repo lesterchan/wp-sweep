@@ -2,7 +2,7 @@
 /**
  * A privileged user, on a single site and on a network alike.
  *
- * @package wp-sweep
+ * @package WP-Sweep
  */
 
 /**

@@ -2,7 +2,7 @@
 /**
  * PHPUnit bootstrap for WP-Sweep.
  *
- * @package wp-sweep
+ * @package WP-Sweep
  */
 
 $_tests_dir = getenv( 'WP_TESTS_DIR' );
