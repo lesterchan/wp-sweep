@@ -18,7 +18,7 @@
  * opt-outs below.
  *
  * The parent class is reached through the Plugin_TestCase alias, which each
- * plugin's tests/bootstrap.php sets to its own {{CLASS}}_TestCase immediately
+ * plugin's tests/bootstrap.php sets to its own fixture base class immediately
  * before requiring this file. That indirection is what lets the nineteen
  * copies be identical: the fixture base class is named after the plugin, and
  * this file must not be.
@@ -189,7 +189,7 @@ abstract class Plugin_Metadata_TestCase extends Plugin_TestCase {
 	abstract protected function upgrade_notice_subjects();
 
 	/**
-	 * Whether the plugin keeps a {{UNDER}}_version marker row (§2.1).
+	 * Whether the plugin keeps a version marker row (§2.1).
 	 *
 	 * The documented opt-out. Four plugins store nothing at all - they have no
 	 * settings, no schema and no migration, so there is nothing for a marker
@@ -202,7 +202,7 @@ abstract class Plugin_Metadata_TestCase extends Plugin_TestCase {
 	}
 
 	/**
-	 * Whether the plugin keeps a {{UNDER}}_options settings row (§2.1).
+	 * Whether the plugin keeps an options settings row (§2.1).
 	 *
 	 * The same four plugins override this to false. §7.2 says so out loud:
 	 * the plugins with no settings row have no sanitiser, and assert instead
@@ -227,7 +227,7 @@ abstract class Plugin_Metadata_TestCase extends Plugin_TestCase {
 	protected function seed_option_rows() {}
 
 	/**
-	 * Write the {{UNDER}}_version marker row.
+	 * Write the version marker row.
 	 *
 	 * Whatever the plugin calls its upgrade routine - maybe_upgrade(),
 	 * update_markers(), save_markers(). Not called when has_version_row() is
