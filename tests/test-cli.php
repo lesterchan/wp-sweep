@@ -187,12 +187,12 @@ class WP_Sweep_CLI_Test extends WP_Sweep_TestCase {
 	 * here without changing what every other test sees, so the registration
 	 * is asserted against the source.
 	 */
-	public function test_command_is_registered_under_the_plugin_slug() {
+	public function test_command_is_registered_under_the_name_1_2_0_shipped() {
 		$code = $this->source_without_comments( '/includes/class-wp-sweep.php' );
 
 		$this->assertStringContainsString( "require_once WP_SWEEP_DIR . 'includes/class-wp-sweep-command.php';", $code, 'The command class is required before it is registered.' );
-		$this->assertStringContainsString( "WP_CLI::add_command( WP_SWEEP_SLUG, 'WP_Sweep_Command' );", $code, 'And registered under the plugin slug, not a bare noun.' );
+		$this->assertStringContainsString( "WP_CLI::add_command( 'sweep', 'WP_Sweep_Command' );", $code, 'And registered as the bare noun the released 1.2.0 shipped, not the plugin slug.' );
 		$this->assertStringContainsString( "defined( 'WP_CLI' )", $code, 'Guarded on WP_CLI, so a web request never loads it.' );
-		$this->assertSame( 'wp-sweep', WP_SWEEP_SLUG, 'The command name is the plugin slug.' );
+		$this->assertStringNotContainsString( 'add_command( WP_SWEEP_SLUG', $code, 'The slug constant names the directory, not the command; wp wp-sweep stutters.' );
 	}
 }

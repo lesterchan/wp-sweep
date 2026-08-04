@@ -38,9 +38,11 @@ class WP_Sweep_Metadata_Test extends Plugin_Metadata_TestCase {
 	/**
 	 * Every break a site owner updating from the released 1.2.0 would notice.
 	 *
-	 * The screen's address changed, Sweep All is gone, and every scripted
-	 * caller - WP-CLI, REST, and code holding the singleton - has to be edited,
-	 * because the old spellings fail rather than falling back.
+	 * The screen's address changed, Sweep All is gone, and code holding the
+	 * singleton has to be edited, because the old spellings fail rather than
+	 * falling back. The WP-CLI command and the REST namespace are deliberately
+	 * absent: 2.0.0 keeps the names 1.2.0 shipped, so a scripted caller of
+	 * either goes on working and there is nothing to notice.
 	 *
 	 * @return string[]
 	 */
@@ -53,12 +55,6 @@ class WP_Sweep_Metadata_Test extends Plugin_Metadata_TestCase {
 			'tools.php?page=wp-sweep',
 			// The control that went away.
 			'Sweep All',
-			// The WP-CLI command, old spelling and new.
-			'wp sweep',
-			'wp wp-sweep',
-			// The REST namespace, old and new.
-			'/wp-json/sweep/v1/',
-			'/wp-json/wp-sweep/v1/',
 			// The class rename and the property that became a method.
 			'WPSweep::get_instance()',
 			'WP_Sweep::get_instance()',

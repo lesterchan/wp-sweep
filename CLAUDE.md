@@ -43,15 +43,15 @@ suppressions in this plugin. A sniff firing in `includes/` is a bug in the code.
 
 **WP-CLI (requires a running WordPress install):**
 ```bash
-wp wp-sweep --all
-wp wp-sweep revisions auto_drafts
+wp sweep --all
+wp sweep revisions auto_drafts
 ```
 
 **REST API (requires the `activate_plugins` capability):**
 ```
-GET    /wp-json/wp-sweep/v1/count/<name>
-GET    /wp-json/wp-sweep/v1/details/<name>
-DELETE /wp-json/wp-sweep/v1/sweep/<name>
+GET    /wp-json/sweep/v1/count/<name>
+GET    /wp-json/sweep/v1/details/<name>
+DELETE /wp-json/sweep/v1/sweep/<name>
 ```
 
 wp-env runs on ports 8924 (dev) and 8925 (tests); every other plugin in the
@@ -71,8 +71,21 @@ one call. No logic.
 has to keep working when it is installed under a different directory name, and a
 hardcoded slug fails silently — the script 404s while the markup still looks
 well-formed. `WP_Sweep_Admin_Test` asserts on this. `WP_SWEEP_SLUG` is the
-literal slug on purpose: it names the WP-CLI command, which must not change
-because someone unzipped the plugin into a differently named directory.
+literal slug on purpose, but nothing in `includes/` reads it any more: §2.3 of
+the standard asks all nineteen plugins to declare the same six constants, and
+this is the one WP-Sweep happens not to need. Do not reach for it to save
+typing a literal — its last caller was `add_command()`, and see below for why
+that stopped.
+
+**The WP-CLI command and the REST namespace are bare nouns, not the slug**:
+`wp sweep` and `sweep/v1`, which is what the released 1.2.0 shipped. A `wp-`
+prefix is a wordpress.org directory convention rather than a naming rule for
+what a plugin registers — `wp wp-sweep` stutters, and the ecosystem norm is the
+brand (`wp wc`, `wp yoast`, `wp jetpack`). A bare noun is claimable by another
+plugin, and that is the accepted trade. **Do not pass `WP_SWEEP_SLUG` to
+`add_command()`**; `WP_Sweep_CLI_Test` fails if you do. Note that
+`_standards/STANDARDS.md` §13.3 still asks for `{{SLUG}}/v1` and is being
+updated separately.
 
 ### `includes/class-wp-sweep.php` — the engine
 

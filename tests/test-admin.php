@@ -547,11 +547,10 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 	 * the rendered markup cannot catch this, because a 404 URL is still
 	 * well-formed markup.
 	 *
-	 * One 'wp-sweep/…' literal is legitimate and is named here rather than
-	 * matched around: the REST namespace, which §13.3 of the standard fixes at
-	 * {{SLUG}}/v1 precisely so that no two plugins in the collection can claim
-	 * the same one. It is an identifier a client sends, not a path anything is
-	 * read from, so the directory could be renamed and it would still be right.
+	 * There is no exception to this. The REST namespace used to be one - it is
+	 * an identifier a client sends rather than a path anything is read from, so
+	 * it could carry the slug safely - but it is `sweep/v1` now, the name the
+	 * released 1.2.0 shipped, and so it matches nothing here either.
 	 */
 	public function test_no_php_file_hardcodes_the_directory_name() {
 		$root  = dirname( __DIR__ );
@@ -560,8 +559,6 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 			glob( $root . '/includes/*.php' )
 		);
 
-		$allowed = array( "'" . WP_Sweep_API::REST_NAMESPACE . "'" );
-
 		foreach ( $files as $file ) {
 			$code = $this->source_without_comments( str_replace( $root, '', $file ) );
 
@@ -569,7 +566,7 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 
 			$this->assertSame(
 				array(),
-				array_values( array_diff( array_unique( $matches[0] ), $allowed ) ),
+				array_values( array_unique( $matches[0] ) ),
 				basename( $file ) . ' builds a path from the literal directory name.'
 			);
 		}

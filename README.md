@@ -74,18 +74,18 @@ There is no settings screen. The one thing worth tuning — how many items **Det
 
 ### WP-CLI
 ```
-wp wp-sweep --all
-wp wp-sweep revisions
-wp wp-sweep revisions auto_drafts deleted_posts
+wp sweep --all
+wp sweep revisions
+wp sweep revisions auto_drafts deleted_posts
 ```
 
 ### REST API
 All three routes need the `activate_plugins` capability.
 
 ```
-GET    /wp-json/wp-sweep/v1/count/<name>
-GET    /wp-json/wp-sweep/v1/details/<name>
-DELETE /wp-json/wp-sweep/v1/sweep/<name>
+GET    /wp-json/sweep/v1/count/<name>
+GET    /wp-json/sweep/v1/details/<name>
+DELETE /wp-json/sweep/v1/sweep/<name>
 ```
 
 ### Item names
@@ -151,14 +151,6 @@ So `WPSweep::get_instance()->sweep( 'revisions' )` becomes `WP_Sweep::get_instan
 
 Every filter and every `wp_sweep_admin_*_sweep` action keeps the name it had.
 
-### My script calls wp sweep and WP-CLI says there is no such command
-
-The command is `wp wp-sweep` in 2.0.0. `sweep` was a name any plugin could have claimed, and WP-CLI hands that collision to whichever plugin registered last; naming it after the plugin makes the clash impossible. Everything after the command name is unchanged, so `wp sweep --all` becomes `wp wp-sweep --all`.
-
-### My REST client gets a 404 from sweep/v1
-
-The namespace is `wp-sweep/v1` in 2.0.0, for the same reason as the WP-CLI command. The three routes, their methods and their responses are otherwise identical, so only that part of the URL changes.
-
 ### Which filters can I use to protect data from being swept?
 
 Four per-type filters take a list of meta keys that must never be deleted, and each supports `*` as a wildcard:
@@ -192,8 +184,6 @@ Nothing. WP-Sweep stores no option rows, creates no database tables, registers n
 ### 2.0.0
 * BREAKING: Requires WordPress 6.8 and PHP 8.2, up from 6.0 and 7.4.
 * BREAKING: The screen stays under Tools but its address changed, from `tools.php?page=wp-sweep/admin.php` to `tools.php?page=wp-sweep`. The old form put the installation directory name into the URL.
-* BREAKING: The WP-CLI command is `wp wp-sweep`, not `wp sweep`.
-* BREAKING: The REST namespace is `wp-sweep/v1`, not `sweep/v1`. The routes are otherwise unchanged.
 * BREAKING: The classes are renamed `WPSweep` -> `WP_Sweep`, `WPSweep_Api` -> `WP_Sweep_API` and `WPSweep_Command` -> `WP_Sweep_Command`. Every filter and action keeps its name.
 * BREAKING: `WP_Sweep::$limit_details` is gone. Read it with `limit_details()` and change it with the `wp_sweep_limit_details` filter.
 * BREAKING: The six `wp_sweep_admin_*_sweep` actions fire below the single sweep table, in the order they always had, rather than below six separate ones.
@@ -227,6 +217,6 @@ Requires WordPress 6.8 and PHP 8.2.
 
 **Sweep All is gone.** Every row has a checkbox; tick the one in the header and apply the **Sweep** bulk action for the same effect, with the option of leaving rows out.
 
-**Scripted callers need editing.** The WP-CLI command is `wp wp-sweep`, not `wp sweep`, and the REST routes are under `/wp-json/wp-sweep/v1/`, not `/wp-json/sweep/v1/`. The old spellings fail rather than falling back. `WPSweep::get_instance()` is now `WP_Sweep::get_instance()`, and the `$sweep->limit_details` property is now the `$sweep->limit_details()` method. Filter and action names are unchanged.
+**Code holding the singleton needs editing.** `WPSweep::get_instance()` is now `WP_Sweep::get_instance()`, and the `$sweep->limit_details` property is now the `$sweep->limit_details()` method. The old spellings fail rather than falling back. Filter and action names are unchanged, as are the `wp sweep` command and the `/wp-json/sweep/v1/` routes.
 
 **Two sweeps remove less than they did, deliberately.** Meta keys protected by the whitelist filters are honoured by the duplicated meta sweeps as well as the orphaned ones, which is what the documentation always said. Matching also moved out of SQL, so an underscore in a protected key is matched literally rather than as a wildcard: `_my_key` protects that key and nothing else. Review your list if you relied on the old behaviour.

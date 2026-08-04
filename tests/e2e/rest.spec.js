@@ -23,7 +23,7 @@ const {
 } = require( './helpers.js' );
 
 /** Every route lives under this namespace. */
-const NAMESPACE = '/wp-sweep/v1';
+const NAMESPACE = '/sweep/v1';
 
 test.describe( 'The REST routes', () => {
 	let ids;
@@ -41,7 +41,7 @@ test.describe( 'The REST routes', () => {
 		// reason.
 		const index = await requestUtils.rest( { path: '/' } );
 
-		expect( index.namespaces ).toContain( 'wp-sweep/v1' );
+		expect( index.namespaces ).toContain( 'sweep/v1' );
 	} );
 
 	test( 'count answers with the same number the engine reports', async ( { requestUtils } ) => {

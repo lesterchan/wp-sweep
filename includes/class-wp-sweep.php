@@ -107,7 +107,7 @@ class WP_Sweep {
 		if ( defined( 'WP_CLI' ) && WP_CLI ) {
 			require_once WP_SWEEP_DIR . 'includes/class-wp-sweep-command.php';
 
-			WP_CLI::add_command( WP_SWEEP_SLUG, 'WP_Sweep_Command' );
+			WP_CLI::add_command( 'sweep', 'WP_Sweep_Command' );
 		}
 	}
 

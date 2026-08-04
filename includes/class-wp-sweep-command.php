@@ -10,10 +10,15 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Cleans up unused, orphaned and duplicated data from the command line.
  *
- * Registered as `wp wp-sweep` rather than `wp sweep`, for the same reason the
- * REST namespace carries the plugin slug: a bare noun is a name any plugin
- * could have claimed, and WP-CLI gives the collision to whichever plugin
- * happened to register last.
+ * Registered as `wp sweep` rather than `wp wp-sweep`. A `wp-` prefix is a
+ * wordpress.org directory convention for keeping one plugin's download page
+ * apart from another's, not a command-naming one, and after the `wp` binary it
+ * only stutters; WP-CLI's own ecosystem names commands after the brand -- `wp
+ * wc`, `wp yoast`, `wp jetpack`. It is also the name the released 1.2.0
+ * shipped, so no script that already calls WP-Sweep has to be edited. WP-CLI
+ * gives a collision to whichever plugin registered last and a bare noun is
+ * claimable by anyone; that is the accepted trade for a word as distinctive as
+ * `sweep`.
  */
 class WP_Sweep_Command extends WP_CLI_Command {
 
@@ -40,13 +45,13 @@ class WP_Sweep_Command extends WP_CLI_Command {
 	 * ## EXAMPLES
 	 *
 	 *     # Sweep everything.
-	 *     $ wp wp-sweep --all
+	 *     $ wp sweep --all
 	 *
 	 *     # Sweep one item.
-	 *     $ wp wp-sweep revisions
+	 *     $ wp sweep revisions
 	 *
 	 *     # Sweep several items.
-	 *     $ wp wp-sweep revisions auto_drafts deleted_posts
+	 *     $ wp sweep revisions auto_drafts deleted_posts
 	 *
 	 * @since 1.0.8
 	 *

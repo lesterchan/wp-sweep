@@ -10,10 +10,14 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Exposes count, details and sweep over the REST API.
  *
- * The namespace is the plugin slug rather than a bare noun, for the same
- * reason every hook carries the plugin prefix: `sweep/v1` is a name any plugin
- * could have claimed, and two plugins claiming it is not something WordPress
- * detects.
+ * The namespace is the bare noun `sweep/v1` rather than the plugin slug. A
+ * `wp-` prefix is a wordpress.org directory convention for keeping one
+ * plugin's download page apart from another's; it says nothing about what the
+ * plugin should call the things it registers, and the ecosystem names those
+ * after the brand rather than the directory entry. It is also the namespace the
+ * released 1.2.0 shipped, so no client that already talks to WP-Sweep has to be
+ * edited. Another plugin can claim the same bare noun and WordPress will not
+ * detect it; that is the accepted trade for a word as distinctive as `sweep`.
  */
 class WP_Sweep_API {
 
@@ -22,7 +26,7 @@ class WP_Sweep_API {
 	 *
 	 * @var string
 	 */
-	const REST_NAMESPACE = 'wp-sweep/v1';
+	const REST_NAMESPACE = 'sweep/v1';
 
 	/**
 	 * Register the routes once the REST API is up.
