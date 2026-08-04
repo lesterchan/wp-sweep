@@ -11,9 +11,7 @@
  *
  * @group ajax
  */
-class WP_Sweep_Ajax_Test extends WP_Ajax_UnitTestCase {
-
-	use WP_Sweep_Creates_Admins;
+class WP_Sweep_Ajax_Test extends WP_Sweep_Ajax_TestCase {
 
 	/**
 	 * Administrator user ID.
