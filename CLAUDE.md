@@ -83,9 +83,13 @@ prefix is a wordpress.org directory convention rather than a naming rule for
 what a plugin registers — `wp wp-sweep` stutters, and the ecosystem norm is the
 brand (`wp wc`, `wp yoast`, `wp jetpack`). A bare noun is claimable by another
 plugin, and that is the accepted trade. **Do not pass `WP_SWEEP_SLUG` to
-`add_command()`**; `WP_Sweep_CLI_Test` fails if you do. Note that
-`_standards/STANDARDS.md` §13.3 still asks for `{{SLUG}}/v1` and is being
-updated separately.
+`add_command()`**; `WP_Sweep_CLI_Test` fails if you do.
+
+**This is not a divergence from the standard — it is the standard.**
+`_standards/STANDARDS.md` §13.3 was rewritten the same day to require the bare
+noun, and wp-sweep is still its reference implementation. §13.3 leaves `email`,
+`print` and `stats` deliberately unsettled, because those three are names a
+dozen plugins might want; `sweep` is not one of them.
 
 ### `includes/class-wp-sweep.php` — the engine
 
