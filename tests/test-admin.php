@@ -240,8 +240,11 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 		$this->make_revisions( 3 );
 		$html = $this->render_admin_page();
 
+		// A <strong> carrying the class rather than a <span> wrapping one: a
+		// non-zero count is emphasised, and the emphasis has to be the element
+		// the script updates or it is stripped by the first sweep.
 		$this->assertMatchesRegularExpression(
-			'/<span class="sweep-count">' . preg_quote( number_format_i18n( 3 ), '/' ) . '<\/span>/',
+			'/<strong class="sweep-count">' . preg_quote( number_format_i18n( 3 ), '/' ) . '<\/strong>/',
 			$html,
 			'The count is rendered through number_format_i18n rather than raw.'
 		);

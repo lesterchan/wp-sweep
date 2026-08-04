@@ -172,6 +172,40 @@ describe( 'the result of a sweep', () => {
 		);
 	} );
 
+	it( 'drops the emphasis once a row has nothing left in it', async () => {
+		document.body.innerHTML = sweepSection( { count: 2, percentage: '20%' } );
+		stubFetch( sweepResponse( { count: 0, percentage: '0%' } ) );
+
+		expect( document.querySelector( '.sweep-count' ).tagName ).toBe(
+			'STRONG',
+		);
+
+		await clickAndSettle( document.querySelector( '.btn-sweep' ) );
+
+		// A bold nought draws the eye to the one row there is nothing to do
+		// about. The PHP renders a <span> for a zero count; after a sweep the
+		// script has to reach the same shape, or the screen disagrees with
+		// itself until somebody reloads it.
+		expect( document.querySelector( '.sweep-count' ).tagName ).toBe( 'SPAN' );
+		expect( document.querySelector( '.sweep-count' ).textContent ).toBe(
+			'0',
+		);
+	} );
+
+	it( 'keeps the totals emphasised when it rewrites them', async () => {
+		document.body.innerHTML = sweepSection();
+		stubFetch( sweepResponse( { stats: { posts: 8 } } ) );
+
+		await clickAndSettle( document.querySelector( '.btn-sweep' ) );
+
+		// The totals are updated with textContent, so the emphasis has to be
+		// the element carrying the class rather than a tag nested inside it --
+		// nested, it would survive exactly until the first sweep.
+		expect(
+			document.querySelector( '.sweep-count-type-posts' ).tagName,
+		).toBe( 'STRONG' );
+	} );
+
 	it( 'updates the running totals for the whole section', async () => {
 		document.body.innerHTML = sweepSection();
 		stubFetch( sweepResponse( { stats: { posts: 8, postmeta: 3 } } ) );

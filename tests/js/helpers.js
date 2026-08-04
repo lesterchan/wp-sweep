@@ -178,7 +178,7 @@ export function sweepSection( {
 				<tbody>
 					<tr>
 						<th scope="row">Posts</th>
-						<td><span class="sweep-count-type-posts">10</span> Posts, <span class="sweep-count-type-postmeta">2</span> Post Meta</td>
+						<td><strong class="sweep-count-type-posts">10</strong> Posts, <strong class="sweep-count-type-postmeta">2</strong> Post Meta</td>
 					</tr>
 				</tbody>
 			</table>
@@ -223,7 +223,14 @@ export function sweepSection( {
 								<button type="button" class="toggle-row"><span class="screen-reader-text">Show more details</span></button>
 							</td>
 							<td class="group column-group" data-colname="Group">Post Sweep</td>
-							<td class="count column-count" data-colname="Count"><span class="sweep-count">${ count }</span></td>
+							<td class="count column-count" data-colname="Count">${
+	// The emphasis is the element itself, matching column_count():
+	// a <strong> while there is something to sweep, a <span>
+	// once there is not.
+	count > 0
+		? `<strong class="sweep-count">${ count }</strong>`
+		: `<span class="sweep-count">${ count }</span>`
+}</td>
 							<td class="percentage column-percentage" data-colname="%"><span class="sweep-percentage">${ percentage }</span></td>
 							<td class="actions column-actions" data-colname="Actions">
 								<a href="tools.php?page=wp-sweep&sweep=${ name }&_wpnonce=abc123" class="btn-sweep button button-primary" data-action="sweep" data-sweep-name="${ name }" data-sweep-type="${ type }" data-nonce="NONCE" aria-controls="${ MESSAGE_ID }">Sweep</a>

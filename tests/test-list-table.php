@@ -78,12 +78,17 @@ class WP_Sweep_List_Table_Test extends WP_Sweep_TestCase {
 	 */
 	public function test_every_sweep_gets_a_row() {
 		$table = $this->table();
+		$names = wp_list_pluck( $table->items, 'name' );
 
-		$this->assertSame(
-			$this->sweep()->get_sweep_names(),
-			wp_list_pluck( $table->items, 'name' ),
-			'The table does not list every sweep, in order.'
-		);
+		// The set, not the sequence. The unfiltered view orders its rows by
+		// group so each can sit under a heading, and the running order is held
+		// where it matters instead -- see
+		// test_a_bulk_sweep_runs_in_the_canonical_order.
+		sort( $names );
+		$expected = $this->sweep()->get_sweep_names();
+		sort( $expected );
+
+		$this->assertSame( $expected, $names, 'The table does not list every sweep.' );
 	}
 
 	/**
@@ -123,11 +128,33 @@ class WP_Sweep_List_Table_Test extends WP_Sweep_TestCase {
 	}
 
 	/**
-	 * Pagination is set to twenty, as the standard requires.
+	 * The page size cannot split a group across two pages.
+	 *
+	 * The relationship rather than the number, because the number is the part
+	 * that rots. The unfiltered view puts its rows under group headings, and a
+	 * heading claims everything below it belongs to that group -- which stops
+	 * being true the moment a page break lands inside one. Adding sweeps past
+	 * the page size therefore has to fail here rather than quietly produce a
+	 * heading on one page and its orphaned rows on the next.
 	 */
-	public function test_it_paginates_at_twenty() {
-		$this->assertSame( 20, WP_Sweep_List_Table::PER_PAGE, 'The page size is not twenty.' );
-		$this->assertSame( 20, $this->table()->get_pagination_arg( 'per_page' ), 'The table did not tell WP_List_Table its page size.' );
+	public function test_the_page_size_cannot_split_a_group() {
+		$sweeps = count( $this->sweep()->get_sweep_names() );
+
+		$this->assertGreaterThanOrEqual(
+			$sweeps,
+			WP_Sweep_List_Table::PER_PAGE,
+			'The page size is smaller than the number of sweeps, so a group can be split across pages.'
+		);
+		$this->assertSame(
+			WP_Sweep_List_Table::PER_PAGE,
+			$this->table()->get_pagination_arg( 'per_page' ),
+			'The table did not tell WP_List_Table its page size.'
+		);
+		$this->assertSame(
+			1,
+			(int) $this->table()->get_pagination_arg( 'total_pages' ),
+			'Every sweep has to fit on one page for the group headings to mean anything.'
+		);
 	}
 
 	/**
@@ -160,15 +187,168 @@ class WP_Sweep_List_Table_Test extends WP_Sweep_TestCase {
 	}
 
 	/**
-	 * An unknown orderby leaves the rows in the order the sweeps must run in.
+	 * With nothing sorting them, the rows come out in group order.
+	 *
+	 * This used to assert the running order of get_sweeps() reached the screen
+	 * unchanged. It no longer does, and deliberately: the unfiltered view groups
+	 * its rows so each can sit under a heading.
+	 *
+	 * **The running order is not lost, it was never the display's to carry.**
+	 * WP_Sweep_Admin::handle_bulk_sweep() rebuilds the selection with
+	 * array_intersect( get_sweep_names(), $posted ), so a bulk sweep runs in the
+	 * canonical order whatever order the rows were shown in -- which is what
+	 * lets posts be deleted before the sweeps that hunt the meta that deleting
+	 * them just orphaned. test_a_bulk_sweep_runs_in_the_canonical_order pins
+	 * that half.
 	 */
-	public function test_an_unknown_orderby_leaves_the_running_order_alone() {
+	public function test_an_unsorted_table_comes_out_in_group_order() {
 		$_GET = array( 'orderby' => 'nonsense' );
 
+		$groups = array_keys( $this->sweep()->get_sweep_groups() );
+		$seen   = array_values( array_unique( wp_list_pluck( $this->table()->items, 'group' ) ) );
+
 		$this->assertSame(
-			$this->sweep()->get_sweep_names(),
-			wp_list_pluck( $this->table()->items, 'name' ),
-			'An unknown orderby disturbed the running order.'
+			array_values( array_intersect( $groups, $seen ) ),
+			$seen,
+			'The groups did not come out in the order get_sweep_groups() declares, so the headings would be out of order.'
+		);
+		$this->assertCount(
+			count( $this->sweep()->get_sweep_names() ),
+			$this->table()->items,
+			'Grouping the rows lost or duplicated one.'
+		);
+	}
+
+	/**
+	 * A bulk sweep runs in the canonical order, not the order shown.
+	 *
+	 * The half the test above gives up. Display order is now group order, so
+	 * something has to hold the line that execution order is still the order
+	 * get_sweeps() declares -- posts before the sweeps that hunt the meta
+	 * deleting them just orphaned.
+	 */
+	public function test_a_bulk_sweep_runs_in_the_canonical_order() {
+		$names = $this->sweep()->get_sweep_names();
+
+		// Posted back to front, which is what a reader ticking rows bottom-up
+		// would send and what a grouped screen makes likelier.
+		$posted   = array_reverse( $names );
+		$selected = array_intersect( $names, $posted );
+
+		$this->assertSame(
+			$names,
+			array_values( $selected ),
+			'A reversed selection was not put back into the order the sweeps have to run in.'
+		);
+	}
+
+	/**
+	 * The unfiltered view carries a heading, with its icon, for every group.
+	 *
+	 * The icon is a dashicon and is aria-hidden beside the label, never instead
+	 * of it: core already loads the font in wp-admin, so this ships no asset and
+	 * a reader who never sees the glyph still gets the words.
+	 */
+	public function test_the_grouped_view_heads_each_group_with_its_icon() {
+		ob_start();
+		$this->table()->display();
+		$html = ob_get_clean();
+
+		$sweep = $this->sweep();
+
+		foreach ( $sweep->get_sweep_groups() as $group => $label ) {
+			$this->assertStringContainsString(
+				esc_html( $label ),
+				$html,
+				"The '{$group}' group has no heading row."
+			);
+			$this->assertStringContainsString(
+				'dashicons-' . $sweep->get_sweep_group_icon( $group ),
+				$html,
+				"The '{$group}' heading is missing its icon."
+			);
+		}
+
+		$this->assertStringContainsString(
+			'aria-hidden="true"',
+			$html,
+			'The icons are not hidden from assistive technology, so each heading is read out twice.'
+		);
+	}
+
+	/**
+	 * Every group has an icon, and no two share one.
+	 *
+	 * A duplicate would not error -- it would just make two groups look alike at
+	 * 20px, which is exactly the confusion §4.1 records between wp-polls and
+	 * wp-stats over dashicons-chart-bar.
+	 */
+	public function test_every_group_has_an_icon_of_its_own() {
+		$sweep  = $this->sweep();
+		$groups = array_keys( $sweep->get_sweep_groups() );
+		$icons  = array();
+
+		foreach ( $groups as $group ) {
+			$icon = $sweep->get_sweep_group_icon( $group );
+
+			$this->assertNotSame( '', $icon, "The '{$group}' group has no icon." );
+
+			$icons[] = $icon;
+		}
+
+		$this->assertSame( $icons, array_unique( $icons ), 'Two groups share a dashicon.' );
+		$this->assertSame( '', $sweep->get_sweep_group_icon( 'nonsense' ), 'An unknown group must yield no icon rather than a broken class.' );
+	}
+
+	/**
+	 * Sorting by a column drops the headings rather than lying about them.
+	 */
+	public function test_sorting_removes_the_group_headings() {
+		$_GET = array(
+			'orderby' => 'count',
+			'order'   => 'desc',
+		);
+
+		ob_start();
+		$this->table()->display();
+		$html = ob_get_clean();
+
+		$this->assertStringNotContainsString(
+			'wp-sweep-group-heading',
+			$html,
+			'The group headings survived a column sort, where they no longer describe the rows beneath them.'
+		);
+	}
+
+	/**
+	 * A count worth acting on is bold; a zero is not.
+	 */
+	public function test_only_a_count_worth_acting_on_is_bold() {
+		$this->make_revisions( 3 );
+
+		$table = $this->table();
+		$rows  = wp_list_pluck( $table->items, 'count', 'name' );
+
+		$this->assertGreaterThan( 0, $rows['revisions'], 'The fixture did not create any revisions, so this proves nothing.' );
+
+		// The element carrying the class is the emphasis, not a tag nested in
+		// it: the script updates this cell with textContent, which would strip
+		// an inner <strong> on the first sweep and leave the screen looking
+		// right only until somebody used it.
+		$this->assertStringContainsString(
+			'<strong class="sweep-count">',
+			$table->column_count( array( 'count' => 5 ) ),
+			'A count with something in it is not emphasised.'
+		);
+		$this->assertStringContainsString(
+			'<span class="sweep-count">',
+			$table->column_count( array( 'count' => 0 ) ),
+			'A zero count is emphasised, which draws the eye to the one row there is nothing to do about.'
+		);
+		$this->assertStringNotContainsString(
+			'<span class="sweep-count"><strong>',
+			$table->column_count( array( 'count' => 5 ) ),
+			'The emphasis is nested inside the span the script overwrites, so it will not survive a sweep.'
 		);
 	}
 

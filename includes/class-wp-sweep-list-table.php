@@ -28,9 +28,26 @@ class WP_Sweep_List_Table extends WP_List_Table {
 	/**
 	 * Rows per page.
 	 *
+	 * **It must stay larger than the number of sweeps the plugin ships**, and
+	 * that is a requirement rather than a preference. The unfiltered view groups
+	 * its rows under headings, and a heading means "everything below me is a
+	 * Post Sweep" -- which stops being true the moment a group is split across a
+	 * page boundary. The reader would see a heading on page one and its
+	 * remaining rows on page two under no heading at all.
+	 *
+	 * It is also what keeps "select all" meaning all. §4.3 records the same
+	 * reasoning for why wp-dbmanager refuses to paginate its tables list:
+	 * paging reduces a select-all to select-this-page, silently.
+	 *
+	 * The sweep list is a fixed set this plugin ships -- nineteen today -- not
+	 * user data that grows, so there is no page size a site can outgrow. Fifty
+	 * leaves room for a good many more. `test_the_page_size_cannot_split_a_group`
+	 * asserts the relationship rather than the number, so adding sweeps past it
+	 * fails the suite instead of quietly breaking the headings.
+	 *
 	 * @var int
 	 */
-	const PER_PAGE = 20;
+	const PER_PAGE = 50;
 
 	/**
 	 * Build the table.
@@ -154,6 +171,104 @@ class WP_Sweep_List_Table extends WP_List_Table {
 	}
 
 	/**
+	 * Whether the rows are shown under group headings.
+	 *
+	 * Only in the unfiltered view, and only while no column is doing the
+	 * ordering. Inside a single group the heading would repeat the filter the
+	 * reader just clicked, and under a column sort it would be a lie.
+	 *
+	 * @return bool
+	 */
+	private function is_grouped() {
+		$args = self::request_args();
+
+		return 'all' === self::current_group()
+			&& ! array_key_exists( $args['orderby'], $this->get_sortable_columns() );
+	}
+
+	/**
+	 * Put the rows in group order, keeping each group's own order intact.
+	 *
+	 * The order of get_sweep_groups() rather than alphabetical, so the headings
+	 * read Post, Comment, User, Term, Option, Database -- the order the groups
+	 * are declared in and the order the screen has always listed them. Within a
+	 * group the rows keep the order get_sweeps() gave them, which is dependency
+	 * order: posts are swept before the sweeps that hunt the meta deleting them
+	 * just orphaned.
+	 *
+	 * @param array $rows Rows to order.
+	 * @return array
+	 */
+	private function order_by_group( $rows ) {
+		$ordered = array();
+
+		foreach ( array_keys( WP_Sweep::get_instance()->get_sweep_groups() ) as $group ) {
+			foreach ( $rows as $row ) {
+				if ( $row['group'] === $group ) {
+					$ordered[] = $row;
+				}
+			}
+		}
+
+		// A row whose group is not one of the six would vanish otherwise. There
+		// is no such row today and nothing should add one, but silently dropping
+		// it would be a worse way to find out.
+		foreach ( $rows as $row ) {
+			if ( ! array_key_exists( $row['group'], WP_Sweep::get_instance()->get_sweep_groups() ) ) {
+				$ordered[] = $row;
+			}
+		}
+
+		return $ordered;
+	}
+
+	/**
+	 * The rows, with a heading before each group.
+	 *
+	 * WP_List_Table has no notion of row groups, so the heading is emitted as an
+	 * ordinary row spanning every column. It carries `role="presentation"` on
+	 * the cell's checkbox position rather than an empty `<th>`, so the table's
+	 * column count stays honest for assistive technology.
+	 *
+	 * Deliberately one `<tbody>` and not one per group: core's common.js binds
+	 * select-all to `#the-list`, and splitting the body would leave the header
+	 * checkbox toggling only whichever group came first.
+	 *
+	 * @return void
+	 */
+	public function display_rows() {
+		if ( ! $this->is_grouped() ) {
+			parent::display_rows();
+
+			return;
+		}
+
+		$sweep   = WP_Sweep::get_instance();
+		$groups  = $sweep->get_sweep_groups();
+		$columns = count( $this->get_columns() );
+		$current = null;
+
+		foreach ( $this->items as $item ) {
+			if ( $item['group'] !== $current ) {
+				$current = $item['group'];
+				$icon    = $sweep->get_sweep_group_icon( $current );
+				$label   = isset( $groups[ $current ] ) ? $groups[ $current ] : $current;
+
+				printf(
+					'<tr class="wp-sweep-group-heading"><td colspan="%1$s"><strong>%2$s%3$s</strong></td></tr>',
+					esc_attr( $columns ),
+					'' === $icon
+						? ''
+						: '<span class="dashicons dashicons-' . esc_attr( $icon ) . '" aria-hidden="true"></span> ',
+					esc_html( $label )
+				);
+			}
+
+			$this->single_row( $item );
+		}
+	}
+
+	/**
 	 * The group filters above the table.
 	 *
 	 * @return array
@@ -269,6 +384,13 @@ class WP_Sweep_List_Table extends WP_List_Table {
 
 		$rows = $this->sort( $rows );
 
+		// Group the rows only when nothing else is ordering them. A reader who
+		// has clicked Count wants the biggest sweep first, and headings under
+		// that order would claim a grouping the rows no longer have.
+		if ( $this->is_grouped() ) {
+			$rows = $this->order_by_group( $rows );
+		}
+
 		$total = count( $rows );
 		$page  = $this->get_pagenum();
 
@@ -377,10 +499,6 @@ class WP_Sweep_List_Table extends WP_List_Table {
 			$name .= '<p class="description">' . esc_html( $item['description'] ) . '</p>';
 		}
 
-		if ( 'unused_terms' === $item['name'] ) {
-			$name .= '<p class="description">' . esc_html__( 'Some unused terms belong to drafts that have not been published yet. Only sweep this when you have no draft posts.', 'wp-sweep' ) . '</p>';
-		}
-
 		$details = WP_Sweep_Admin::requested_details();
 
 		if ( isset( $details[ $item['name'] ] ) && ! empty( $details[ $item['name'] ] ) ) {
@@ -475,7 +593,25 @@ class WP_Sweep_List_Table extends WP_List_Table {
 	 * @return string
 	 */
 	public function column_count( $item ) {
-		return '<span class="sweep-count">' . esc_html( number_format_i18n( $item['count'] ) ) . '</span>';
+		// Bold only a count there is something to do about. A run of bold zeroes
+		// reads as emphasis on nothing, and the whole point of this column is to
+		// show at a glance which rows are worth ticking. <strong> rather than a
+		// stylesheet: this plugin ships no CSS, and one rule does not earn the
+		// first file.
+		//
+		// The emphasis is the element carrying the class, never a tag nested
+		// inside it. js/wp-sweep-admin.js updates this cell after a sweep with
+		// `.textContent =`, which replaces everything between the tags -- so a
+		// <strong> *within* the span would survive exactly until the first sweep
+		// and then vanish, on a screen nobody reloads. The script demotes the
+		// element to a <span> itself once the count reaches zero.
+		$tag = $item['count'] > 0 ? 'strong' : 'span';
+
+		return sprintf(
+			'<%1$s class="sweep-count">%2$s</%1$s>',
+			$tag,
+			esc_html( number_format_i18n( $item['count'] ) )
+		);
 	}
 
 	/**

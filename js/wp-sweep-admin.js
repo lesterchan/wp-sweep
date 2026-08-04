@@ -184,6 +184,22 @@
 				const countCell = row.querySelector( '.sweep-count' );
 				if ( countCell ) {
 					countCell.textContent = count.toLocaleString();
+
+					// The cell is rendered as a <strong> while there is
+					// something in it and a <span> once there is not, so the
+					// emphasis has to come off here too. Setting textContent
+					// leaves the element itself alone, which is the whole
+					// reason the emphasis is the element rather than a tag
+					// inside it -- but it does mean a swept row would keep a
+					// bold zero until somebody reloaded the page.
+					if ( 0 === count && 'STRONG' === countCell.tagName ) {
+						const plain = document.createElement( 'span' );
+
+						plain.className = countCell.className;
+						plain.textContent = countCell.textContent;
+
+						countCell.replaceWith( plain );
+					}
 				}
 
 				const percentageCell = row.querySelector( '.sweep-percentage' );

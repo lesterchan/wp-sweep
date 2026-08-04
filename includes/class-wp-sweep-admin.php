@@ -274,8 +274,14 @@ class WP_Sweep_Admin {
 			$parts = array();
 
 			foreach ( $types as $type => $type_label ) {
+				// Bold unconditionally here, unlike the sweep list's Count
+				// column. There a zero means "nothing to do about this row" and
+				// emphasising it would draw the eye to the one thing not worth
+				// looking at; here the number is simply the content of the cell,
+				// and a site with none of something is as much a fact as a site
+				// with a thousand.
 				$parts[] = sprintf(
-					'<span class="sweep-count-type-%1$s">%2$s</span> %3$s',
+					'<strong class="sweep-count-type-%1$s">%2$s</strong> %3$s',
 					esc_attr( $type ),
 					esc_html( number_format_i18n( $sweep->total_count( $type ) ) ),
 					esc_html( $type_label )

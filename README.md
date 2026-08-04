@@ -189,11 +189,12 @@ Nothing. WP-Sweep stores no option rows, creates no database tables, registers n
 * BREAKING: The six `wp_sweep_admin_*_sweep` actions fire below the single sweep table, in the order they always had, rather than below six separate ones.
 * BREAKING: Sweep All is gone. Tick the header checkbox and apply the `Sweep` bulk action instead, which does the same thing and lets you leave rows out.
 * NEW: Bulk sweeping. Tick the sweeps you want and run them in one go instead of one click at a time.
-* NEW: Group filters, sortable columns and pagination, from a real `WP_List_Table`.
+* NEW: The sweeps are grouped on screen. The unfiltered view puts each under a heading with an icon -- Post, Comment, User, Term, Option, Database -- while staying one table, so a single bulk sweep still runs everything you tick. Sorting a column drops the headings rather than leaving them describing rows they no longer group.
+* NEW: Group filters and sortable columns, from a real `WP_List_Table`.
 * NEW: The whole screen works with JavaScript turned off. The row actions are ordinary nonced links and the bulk action is an ordinary form post.
 * NEW: The meta key whitelists protect the duplicated meta sweeps as well as the orphaned ones, which the readme always claimed and the code never did.
 * NEW: `wp_sweep_capability` and `wp_sweep_limit_details` filters. WP-Sweep has no settings screen: `wp_sweep_limit_details` is how the Details cap is changed.
-* NEW: Every sweep carries a description of what it removes, shown under its name.
+* NEW: Every sweep carries a description of what it removes, shown under its name, and counts worth acting on are emphasised.
 * NEW: An `uninstall.php` that cleans up across a whole network rather than the first hundred sites. WP-Sweep itself stores nothing: no option rows, no tables, no capabilities and no scheduled events.
 * NEW: Restructured into `includes/`, following the Plugin Handbook.
 * NEW: PHPUnit and vitest suites, and GitHub Actions CI across six WordPress and PHP combinations, single site and multisite.

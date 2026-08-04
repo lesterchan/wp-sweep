@@ -248,7 +248,7 @@ class WP_Sweep {
 			),
 			'unused_terms'              => array(
 				'label'       => __( 'Unused Terms', 'wp-sweep' ),
-				'description' => __( 'Categories and tags attached to nothing.', 'wp-sweep' ),
+				'description' => __( 'Terms used only by drafts look unused, so check your drafts first.', 'wp-sweep' ),
 				'type'        => 'terms',
 				'group'       => 'terms',
 			),
@@ -278,7 +278,7 @@ class WP_Sweep {
 			),
 			'optimize_database'         => array(
 				'label'       => __( 'Optimize Tables', 'wp-sweep' ),
-				'description' => __( 'Reclaims space MySQL is still holding after deletions. Removes nothing of yours.', 'wp-sweep' ),
+				'description' => __( 'Reclaims space MySQL is still holding after deletions.', 'wp-sweep' ),
 				'type'        => 'tables',
 				'group'       => 'database',
 			),
@@ -356,6 +356,39 @@ class WP_Sweep {
 			'options'  => __( 'Option Sweep', 'wp-sweep' ),
 			'database' => __( 'Database Sweep', 'wp-sweep' ),
 		);
+	}
+
+	/**
+	 * The dashicon shown beside a group.
+	 *
+	 * A dashicon rather than an SVG of our own: core already loads the font in
+	 * wp-admin, so this ships no asset at all, inherits the admin colour scheme
+	 * without a stylesheet, and cannot fall foul of §11's ban on raster images.
+	 * All six exist in the WordPress 6.8 floor.
+	 *
+	 * Kept apart from get_sweep_groups() rather than folded into it. That method
+	 * returns group => label and two tests read it with array_keys(); widening
+	 * the value to an array would break every `as $group => $label` loop for the
+	 * sake of one more field.
+	 *
+	 * The icon is decoration. Every caller prints it `aria-hidden` beside the
+	 * label, never instead of it -- a screen reader gets the words, and so does
+	 * anyone whose browser has not loaded the font.
+	 *
+	 * @param string $group Group name.
+	 * @return string Dashicon class suffix, or an empty string for an unknown group.
+	 */
+	public function get_sweep_group_icon( $group ) {
+		$icons = array(
+			'posts'    => 'admin-post',
+			'comments' => 'admin-comments',
+			'users'    => 'admin-users',
+			'terms'    => 'tag',
+			'options'  => 'admin-settings',
+			'database' => 'database',
+		);
+
+		return isset( $icons[ $group ] ) ? $icons[ $group ] : '';
 	}
 
 	/**
