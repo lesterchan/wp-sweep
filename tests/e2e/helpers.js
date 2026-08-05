@@ -528,6 +528,22 @@ function row( page, name ) {
 }
 
 /**
+ * Every sweep row, and only the sweep rows.
+ *
+ * The unfiltered table puts a heading row before each group, so a bare
+ * `#the-list tr` counts six rows that are not sweeps. Under a group filter or a
+ * column sort there are no headings and this matches every row, which is why
+ * the tests can use it everywhere rather than remembering which view they are
+ * in.
+ *
+ * @param {import('@playwright/test').Page} page Page showing the screen.
+ * @return {import('@playwright/test').Locator} The sweep rows.
+ */
+function sweepRows( page ) {
+	return page.locator( '#the-list tr:not(.wp-sweep-group-heading)' );
+}
+
+/**
  * Click a row's Sweep button and wait for the row to settle.
  *
  * The button is a real, nonced link that works with the script turned off; the
@@ -653,6 +669,7 @@ module.exports = {
 	sweepDetails,
 	sweepDirectly,
 	sweepRow,
+	sweepRows,
 	survivors,
 	totalCount,
 	uniqueTitle,

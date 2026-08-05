@@ -32,6 +32,7 @@ const {
 	row,
 	sweepCount,
 	sweepDirectly,
+	sweepRows,
 	survivors,
 } = require( './helpers.js' );
 
@@ -64,7 +65,7 @@ test.describe( 'The Sweep screen', () => {
 
 		await expect( page.getByRole( 'heading', { name: 'Sweep', exact: true } ) ).toBeVisible();
 		expect( page.url() ).toContain( 'tools.php?page=wp-sweep' );
-		await expect( page.locator( '#the-list tr' ) ).toHaveCount( SWEEPS.length );
+		await expect( sweepRows( page ) ).toHaveCount( SWEEPS.length );
 		// Nineteen sweeps and twenty rows to a page, so there is exactly one
 		// page and nothing below is ever overleaf.
 		await expect( page.locator( '.tablenav-pages .displaying-num' ).first() ).toContainText(
@@ -104,7 +105,7 @@ test.describe( 'The Sweep screen', () => {
 
 		// And the one that needs a second warning has it: unused terms include
 		// the ones belonging to drafts nobody has published yet.
-		await expect( row( page, 'unused_terms' ) ).toContainText( 'have no draft posts' );
+		await expect( row( page, 'unused_terms' ) ).toContainText( 'check your drafts first' );
 	} );
 
 	test( 'the totals table counts what is really in the database', async ( { page } ) => {
@@ -136,7 +137,7 @@ test.describe( 'The Sweep screen', () => {
 		for ( const [ group, count ] of Object.entries( expected ) ) {
 			await page.locator( `.subsubsub a[href*="group=${ group }"]` ).click();
 
-			await expect( page.locator( '#the-list tr' ) ).toHaveCount( count );
+			await expect( sweepRows( page ) ).toHaveCount( count );
 			await expect( page.locator( `.subsubsub a[href*="group=${ group }"]` ) ).toHaveClass(
 				/current/,
 			);
@@ -149,7 +150,7 @@ test.describe( 'The Sweep screen', () => {
 		}
 
 		await page.locator( '.subsubsub a[href*="group=all"]' ).click();
-		await expect( page.locator( '#the-list tr' ) ).toHaveCount( SWEEPS.length );
+		await expect( sweepRows( page ) ).toHaveCount( SWEEPS.length );
 	} );
 
 	test( 'the sortable columns reorder the table both ways', async ( { page } ) => {
@@ -157,8 +158,10 @@ test.describe( 'The Sweep screen', () => {
 
 		// The default is the order the sweeps have to run in -- posts before
 		// the sweeps that hunt for the meta deleting them just orphaned -- so
-		// the first row is Revisions until something is clicked.
-		await expect( page.locator( '#the-list tr' ).first() ).toContainText( 'Revisions' );
+		// the first sweep row is Revisions until something is clicked. It is the
+		// first sweep row and not the first row: the unsorted view is grouped,
+		// and the Post Sweep heading sits above it.
+		await expect( sweepRows( page ).first() ).toContainText( 'Revisions' );
 
 		await page.locator( 'thead #name a' ).click();
 		const ascending = await page.locator( '#the-list .column-name strong' ).allTextContents();
@@ -494,7 +497,7 @@ add_filter( 'wp_sweep_capability', function () { return 'edit_pages'; } );
 		try {
 			await other.goto( SWEEP_URL );
 			await expect( other.getByRole( 'heading', { name: 'Sweep', exact: true } ) ).toBeVisible();
-			await expect( other.locator( '#the-list tr' ) ).toHaveCount( SWEEPS.length );
+			await expect( sweepRows( other ) ).toHaveCount( SWEEPS.length );
 		} finally {
 			await other.context().close();
 		}
