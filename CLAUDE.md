@@ -2,10 +2,6 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-WP-Sweep follows `_standards/STANDARDS.md` in the parent folder, which is the
-contract for all nineteen plugins in the collection. Where this file and that
-one disagree, that one wins.
-
 ## Commands
 
 **Run the PHP test suite (Docker is the only prerequisite):**
@@ -36,10 +32,10 @@ $(composer global config bin-dir --absolute)/phpcs -q .
 $(composer global config bin-dir --absolute)/phpcbf -q .
 ```
 
-`phpcs.xml` is copied verbatim from `_standards/templates/phpcs.xml`. Do not add
-a local rule to it and do not add a `phpcs:ignore`: the collection-wide
-exclusions live in the template, and there are currently zero inline
-suppressions in this plugin. A sniff firing in `includes/` is a bug in the code.
+`phpcs.xml` is shared wording rather than a per-plugin ruleset. Do not add a
+local rule to it and do not add a `phpcs:ignore`: there are currently zero
+inline suppressions in this plugin, and a sniff firing in `includes/` is a bug
+in the code rather than a rule to silence.
 
 **WP-CLI (requires a running WordPress install):**
 ```bash
@@ -71,11 +67,10 @@ one call. No logic.
 has to keep working when it is installed under a different directory name, and a
 hardcoded slug fails silently — the script 404s while the markup still looks
 well-formed. `WP_Sweep_Admin_Test` asserts on this. `WP_SWEEP_SLUG` is the
-literal slug on purpose, but nothing in `includes/` reads it any more: §2.3 of
-the standard asks all nineteen plugins to declare the same six constants, and
-this is the one WP-Sweep happens not to need. Do not reach for it to save
-typing a literal — its last caller was `add_command()`, and see below for why
-that stopped.
+literal slug on purpose, and nothing in `includes/` reads it any more — it is
+declared for consistency with the other constants rather than because anything
+needs it. Do not reach for it to save typing a literal: its last caller was
+`add_command()`, and see below for why that stopped.
 
 **The WP-CLI command and the REST namespace are bare nouns, not the slug**:
 `wp sweep` and `sweep/v1`, which is what the released 1.2.0 shipped. A `wp-`
@@ -85,11 +80,8 @@ brand (`wp wc`, `wp yoast`, `wp jetpack`). A bare noun is claimable by another
 plugin, and that is the accepted trade. **Do not pass `WP_SWEEP_SLUG` to
 `add_command()`**; `WP_Sweep_CLI_Test` fails if you do.
 
-**This is not a divergence from the standard — it is the standard.**
-`_standards/STANDARDS.md` §13.3 was rewritten the same day to require the bare
-noun, and wp-sweep is still its reference implementation. §13.3 leaves `email`,
-`print` and `stats` deliberately unsettled, because those three are names a
-dozen plugins might want; `sweep` is not one of them.
+`sweep` is a specific enough noun to claim. Names like `email`, `print` and
+`stats` are not, and a plugin registering one of those should qualify it.
 
 ### `includes/class-wp-sweep.php` — the engine
 
@@ -126,10 +118,9 @@ syntax error rather than a match-nothing clause.
 ### What WP-Sweep stores: nothing
 
 No settings row, no version row, no tables, no capabilities, no scheduled
-events. It has no settings and nothing to migrate, so under STANDARDS.md 2.1 it
-writes nothing at all — there is no options class and no upgrade routine.
-`WP_Sweep_Options_Test` boots the plugin and fails if any `wp_sweep_*` row
-appears.
+events. It has no settings and nothing to migrate, so it writes nothing at all —
+there is no options class and no upgrade routine. `WP_Sweep_Options_Test` boots
+the plugin and fails if any `wp_sweep_*` row appears.
 
 The one tunable is the `wp_sweep_limit_details` filter, defaulting to
 `WP_Sweep::DEFAULT_LIMIT_DETAILS` (500). It was briefly the single field of a
@@ -151,9 +142,8 @@ One screen, `add_management_page()` at `tools.php?page=wp-sweep`, where the
 plugin sat for its whole released life. Sweeping is maintenance against the
 installation, which is what Tools is for. **This only works because there is no
 settings screen** — Tools has no submenus, so a second screen would have to
-become a tab of this one, making WP-Sweep the only plugin of the nineteen where
-a data screen and a settings screen share a page. That was tried and reverted;
-see STANDARDS.md 4.1 before proposing it again.
+become a tab of this one, putting a data screen and a settings form on the same
+page. That was tried and reverted; do not propose it again without reading why.
 
 The rows come from `WP_Sweep_List_Table`: pagination at 20, sortable columns,
 group views, a bulk sweep and a `no_items()` message. Every sweep carries a
@@ -295,7 +285,5 @@ Notes that will save time:
 ## Known gap
 
 Roughly 290 of the suite's 1,100-odd assertions still carry no failure message.
-§7.1 asks for one on every assertion; new and rewritten tests have them, the
-older ones do not. Worth a uniform pass across the whole collection rather than
-plugin by plugin — the measured spread is 0% in freemyinternet to 95% in
-wp-email.
+Every assertion should carry one — not only the ones PHPUnit would report
+opaquely — and new or rewritten tests here do. The older ones are the backlog.
