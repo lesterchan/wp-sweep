@@ -1,10 +1,13 @@
 /**
  * The REST routes.
  *
- * Three routes -- count, details and sweep -- under a namespace that carries
- * the plugin slug rather than a bare noun, because `sweep/v1` is a name any
- * plugin could have claimed and two plugins claiming it is not something
- * WordPress detects.
+ * Three routes -- count, details and sweep -- under `sweep/v1`, the bare noun
+ * rather than the plugin slug. A `wp-` prefix is a wordpress.org directory
+ * convention for keeping one plugin's download page apart from another's, and
+ * says nothing about what a plugin should call what it registers. Another
+ * plugin can claim the same bare noun and WordPress will not detect it; that is
+ * the accepted trade, and it is the namespace the released 1.2.0 already
+ * shipped.
  *
  * They are the same three calls the screen makes, so what is worth testing here
  * is what only the REST layer decides: that a name it does not implement is
