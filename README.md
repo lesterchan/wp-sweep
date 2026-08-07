@@ -176,9 +176,10 @@ Before 2.0.0 the exclusion was a SQL `LIKE` clause, and `LIKE` treats an undersc
 Nothing. WP-Sweep stores no option rows, creates no database tables, registers no capabilities and schedules no events. `uninstall.php` runs anyway and sweeps up after itself across a whole network rather than the first hundred sites.
 
 ## Screenshots
-1. Tools -> WP-Sweep, listing every sweep with what it removes
-2. The same screen after a bulk sweep
-3. A Details list, showing a sample of what a sweep would remove
+
+1. Tools -> WP-Sweep, listing every sweep with what it removes and how much of it there is
+2. A Details list, showing a sample of what one sweep would remove
+3. The same screen after a bulk sweep, reporting what went
 
 ## Changelog
 ### 2.0.0
