@@ -202,8 +202,9 @@ class WP_Sweep_Term_Safety_Test extends WP_Sweep_TestCase {
 	 * @return array Taxonomy names.
 	 */
 	protected function excluded_taxonomies() {
+		// No setAccessible() call: it has done nothing since PHP 8.1 and is
+		// deprecated in 8.5, which phpunit.xml.dist turns into a test error.
 		$method = new ReflectionMethod( WP_Sweep::class, 'excluded_taxonomies_for_sql' );
-		$method->setAccessible( true );
 
 		return $method->invoke( $this->sweep() );
 	}
