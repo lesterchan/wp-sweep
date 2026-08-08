@@ -56,4 +56,16 @@ echo "==> Installing the browser if it is missing"
 npx playwright install chromium
 
 echo "==> Running Playwright against ${WP_BASE_URL}"
-exec npx playwright test "$@"
+
+# Not exec'd, so the clean-up below runs whichever way the suite ends.
+npx playwright test "$@"
+STATUS=$?
+
+# The saved session is a real logged-in WordPress cookie. It is scoped to the
+# ephemeral wp-env container and worthless once that is gone, but leaving it on
+# disk is how it ends up somewhere it was never meant to be: the release copies
+# the working tree rather than a clean export, and CI used to upload the whole
+# of artifacts/. global-setup.js writes it again on the next run.
+rm -rf "${WP_ARTIFACTS_PATH:-artifacts}/storage-states"
+
+exit $STATUS

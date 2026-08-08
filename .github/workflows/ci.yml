@@ -86,12 +86,18 @@ jobs:
 
       # Traces and screenshots, kept only when something failed. A passing run
       # uploads nothing.
+      #
+      # test-results/ rather than the whole of artifacts/, because the sibling
+      # storage-states/admin.json is a logged-in WordPress session. It is
+      # scoped to the ephemeral wp-env container and dies with it, so nothing
+      # real leaks either way -- but a session cookie is not a diagnostic, and
+      # uploading one for seven days is a habit rather than a decision.
       - name: Upload artifacts on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-artifacts
-          path: artifacts/
+          path: artifacts/test-results/
           retention-days: 7
 
   phpunit:
