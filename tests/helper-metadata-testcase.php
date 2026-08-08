@@ -131,6 +131,7 @@ abstract class Plugin_Metadata_TestCase extends Plugin_TestCase {
 	 */
 	const README_SECTIONS = array(
 		'Description',
+		'Installation',
 		'Usage',
 		'Frequently Asked Questions',
 		'Screenshots',
