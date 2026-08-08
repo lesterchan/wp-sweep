@@ -816,20 +816,30 @@ class WP_Sweep {
 			case 'unused_terms':
 				$query = $this->unused_terms();
 				if ( $query ) {
-					$check_wp_terms = false;
+					$orphaned = array();
 					foreach ( $query as $tax ) {
 						if ( taxonomy_exists( $tax->taxonomy ) ) {
 							wp_delete_term( (int) $tax->term_id, $tax->taxonomy );
 						} else {
 							$this->db( 'query', $wpdb->prepare( "DELETE FROM $wpdb->term_taxonomy WHERE term_taxonomy_id = %d", (int) $tax->term_taxonomy_id ) );
-							$check_wp_terms = true;
+							$orphaned[] = (int) $tax->term_id;
 						}
 					}
 
 					// A term row left behind by an invalid taxonomy has nothing
 					// pointing at it any more and wp_delete_term() never saw it.
-					if ( $check_wp_terms ) {
-						$this->db( 'query', "DELETE FROM $wpdb->terms WHERE term_id NOT IN ( SELECT term_id FROM $wpdb->term_taxonomy )" );
+					// Only the terms this pass just orphaned: an unqualified
+					// NOT IN deletes every stray wp_terms row on the site,
+					// which is neither what was counted nor what was ticked.
+					$orphaned = array_values( array_unique( $orphaned ) );
+					if ( $orphaned ) {
+						$this->db(
+							'query',
+							$wpdb->prepare(
+								"DELETE FROM $wpdb->terms WHERE term_id IN (" . implode( ', ', array_fill( 0, count( $orphaned ), '%d' ) ) . ") AND term_id NOT IN ( SELECT term_id FROM $wpdb->term_taxonomy )",
+								$orphaned
+							)
+						);
 					}
 
 					// translators: %s is the number of unused terms.
@@ -1190,6 +1200,18 @@ class WP_Sweep {
 	 * was rendered as a blank cell. A taxonomy name can never be the empty
 	 * string, so carrying one keeps the list valid and excludes nothing.
 	 *
+	 * The taxonomies of non-post objects are added to it, because the sweep's
+	 * test for an orphan is "no row in wp_posts with this ID" — and for a
+	 * taxonomy registered against users or comments, object_id is a user or a
+	 * comment ID. Those numbers collide with post IDs by accident and nothing
+	 * else, so every relationship whose user happened to outnumber the posts
+	 * looked orphaned and was deleted. link_category is the case core ships and
+	 * the reason the hardcoded exclusion above exists; this generalises it to
+	 * whatever the site has registered.
+	 *
+	 * A taxonomy nothing has registered is still swept. Its object type is
+	 * unknowable and a leftover row is exactly what the sweep is for.
+	 *
 	 * @return array Taxonomy names, never empty.
 	 */
 	private function excluded_taxonomies_for_sql() {
@@ -1197,11 +1219,49 @@ class WP_Sweep {
 
 		$excluded[] = '';
 
-		return array_values( array_unique( $excluded ) );
+		return array_values( array_unique( array_merge( $excluded, $this->non_post_taxonomies() ) ) );
+	}
+
+	/**
+	 * Registered taxonomies attached to something other than a post type.
+	 *
+	 * A taxonomy with no object type at all counts as one: nothing says its
+	 * object IDs are posts either.
+	 *
+	 * @return array Taxonomy names.
+	 */
+	private function non_post_taxonomies() {
+		$names = array();
+
+		foreach ( get_taxonomies( array(), 'objects' ) as $taxonomy ) {
+			$objects = (array) $taxonomy->object_type;
+
+			if ( ! $objects ) {
+				$names[] = $taxonomy->name;
+				continue;
+			}
+
+			foreach ( $objects as $object ) {
+				if ( ! post_type_exists( $object ) ) {
+					$names[] = $taxonomy->name;
+					break;
+				}
+			}
+		}
+
+		return $names;
 	}
 
 	/**
 	 * Terms attached to nothing, minus the ones that must be kept.
+	 *
+	 * A count of zero is not on its own the question. Core's own counter,
+	 * _update_post_term_count(), counts posts that are published, so a term
+	 * used only by drafts, pending posts, private posts or posts in the trash
+	 * has a count of zero while being very much in use — and wp_delete_term()
+	 * takes its relationships with it, so those posts come back from the trash
+	 * uncategorised. Requiring the relationship table to be empty too is the
+	 * literal reading of "attached to nothing".
 	 *
 	 * The exclusions are applied here rather than in SQL because the list is
 	 * filterable and can legitimately be empty, and because the terms tables
@@ -1212,7 +1272,7 @@ class WP_Sweep {
 	private function unused_terms() {
 		global $wpdb;
 
-		$rows = (array) $this->db( 'get_results', "SELECT tt.term_taxonomy_id, t.term_id, t.name, tt.taxonomy FROM $wpdb->terms AS t INNER JOIN $wpdb->term_taxonomy AS tt ON t.term_id = tt.term_id WHERE tt.count = 0" );
+		$rows = (array) $this->db( 'get_results', "SELECT tt.term_taxonomy_id, t.term_id, t.name, tt.taxonomy FROM $wpdb->terms AS t INNER JOIN $wpdb->term_taxonomy AS tt ON t.term_id = tt.term_id WHERE tt.count = 0 AND NOT EXISTS ( SELECT 1 FROM $wpdb->term_relationships AS tr WHERE tr.term_taxonomy_id = tt.term_taxonomy_id )" );
 
 		$excluded = array_flip( array_filter( array_map( 'intval', (array) $this->get_excluded_termids() ) ) );
 
