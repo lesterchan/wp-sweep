@@ -290,6 +290,140 @@ abstract class Plugin_Metadata_TestCase extends Plugin_TestCase {
 	}
 
 	/**
+	 * Script handles the block registry owns, for blocks this plugin registers.
+	 *
+	 * These handles are not the plugin's to write: core mints them from
+	 * block.json, and the dependency array behind them is whatever the build
+	 * wrote into the asset manifest beside the script. They are held to the
+	 * block rule below rather than to the empty-array rule §6 puts on a script
+	 * the plugin hand-registers.
+	 *
+	 * @return string[]
+	 */
+	protected function block_script_handles() {
+		$handles = array();
+
+		if ( ! class_exists( 'WP_Block_Type_Registry' ) ) {
+			return $handles;
+		}
+
+		$fields = array( 'editor_script_handles', 'script_handles', 'view_script_handles' );
+
+		foreach ( WP_Block_Type_Registry::get_instance()->get_all_registered() as $name => $block ) {
+			if ( 0 !== strpos( $name, $this->plugin_slug() . '/' ) ) {
+				continue;
+			}
+
+			foreach ( $fields as $field ) {
+				$handles = array_merge( $handles, (array) $block->$field );
+			}
+		}
+
+		return $handles;
+	}
+
+	/**
+	 * What every built block script declares it depends on, as file => handles.
+	 *
+	 * Read off disk rather than out of wp_scripts(), because whether a block's
+	 * handle is still in that registry when this test runs depends on which
+	 * test last rebuilt the global - several plugins do, in set_up(), for the
+	 * reasons §7.2.1 gives. The manifest is what the build wrote and what the
+	 * release ships, so it answers the same question and answers it the same
+	 * way in every plugin and every run order.
+	 *
+	 * @return array<string, string[]>
+	 */
+	protected function block_script_dependencies() {
+		$found = array();
+
+		foreach ( (array) glob( $this->metadata_root() . '/build/*/*.asset.php' ) as $asset ) {
+			$manifest = include $asset;
+			$relative = 'build/' . basename( dirname( $asset ) ) . '/' . basename( $asset );
+
+			$found[ $relative ] = isset( $manifest['dependencies'] ) ? (array) $manifest['dependencies'] : array();
+		}
+
+		return $found;
+	}
+
+	/**
+	 * The handles WordPress registers for itself, block editor packages included.
+	 *
+	 * A pristine WP_Scripts is core's own registry and nothing else: its
+	 * constructor fires wp_default_scripts, which is where core adds every
+	 * script it ships. Built once and remembered, because building it is not
+	 * free and it cannot change during a run.
+	 *
+	 * @return string[]
+	 */
+	protected function core_script_handles() {
+		static $handles = null;
+
+		if ( null === $handles ) {
+			$core    = new WP_Scripts();
+			$handles = array_keys( $core->registered );
+		}
+
+		return $handles;
+	}
+
+	/**
+	 * Dependencies in $deps that a block script has no business declaring.
+	 *
+	 * §6 exists to keep jQuery out and to stop a plugin pulling in what it does
+	 * not need. A block editor script declaring wp-blocks and wp-block-editor
+	 * is neither of those things - it is what a block *is*, and the handles are
+	 * core's own, produced by the build rather than typed by anybody. So the
+	 * rule for these is that every dependency must be a script WordPress
+	 * itself provides, and none of them may be jQuery: core ships jquery, so
+	 * "core provides it" alone would let jQuery back in through a block.
+	 *
+	 * @param string[] $deps Dependency handles.
+	 * @return string[]
+	 */
+	protected function forbidden_block_dependencies( array $deps ) {
+		$core = $this->core_script_handles();
+
+		return array_values(
+			array_filter(
+				$deps,
+				static function ( $handle ) use ( $core ) {
+					return ! in_array( $handle, $core, true ) || 0 === strpos( $handle, 'jquery' );
+				}
+			)
+		);
+	}
+
+	/**
+	 * Fire `init` again, the way a second request would.
+	 *
+	 * `init` has already fired once before any test runs - the bootstrap loads
+	 * the plugin and then finishes booting WordPress. A test that fires it
+	 * again, to watch what a plain front end request does, also re-runs the
+	 * once-per-process work hooked there, and block registration is exactly
+	 * that: registering a block type twice is a _doing_it_wrong() notice, which
+	 * this suite turns into a failure. A real second request starts with an
+	 * empty block registry, so empty it of this plugin's blocks first and the
+	 * second init then does the same work the first one did.
+	 *
+	 * @return void
+	 */
+	protected function fire_init() {
+		if ( class_exists( 'WP_Block_Type_Registry' ) ) {
+			$registry = WP_Block_Type_Registry::get_instance();
+
+			foreach ( array_keys( $registry->get_all_registered() ) as $name ) {
+				if ( 0 === strpos( $name, $this->plugin_slug() . '/' ) ) {
+					$registry->unregister( $name );
+				}
+			}
+		}
+
+		do_action( 'init' );
+	}
+
+	/**
 	 * Whether the plugin is one of the seven sharing the WP-Stats surface.
 	 *
 	 * The seven make one promise between them in their Upgrade Notices, and it
@@ -793,6 +927,11 @@ abstract class Plugin_Metadata_TestCase extends Plugin_TestCase {
 	 * Keep the opening bracket on wp_enqueue_script(. Without it the needle is
 	 * also a substring of the ACTION name wp_enqueue_scripts, which a plugin
 	 * legitimately hooks to enqueue a stylesheet.
+	 *
+	 * A block's scripts take the third form: their handles and their
+	 * dependencies come from core and the build rather than from the plugin,
+	 * so they are held to forbidden_block_dependencies() instead, and read off
+	 * disk so the answer does not depend on run order.
 	 */
 	public function test_no_jquery_is_enqueued() {
 		$source = $this->metadata_source();
@@ -815,6 +954,7 @@ abstract class Plugin_Metadata_TestCase extends Plugin_TestCase {
 		$this->register_plugin_assets();
 
 		$allowed = $this->allowed_script_dependencies();
+		$blocks  = $this->block_script_handles();
 		$checked = 0;
 
 		foreach ( wp_scripts()->registered as $handle => $script ) {
@@ -825,10 +965,25 @@ abstract class Plugin_Metadata_TestCase extends Plugin_TestCase {
 			++$checked;
 
 			$this->assertNotContains( 'jquery', (array) $script->deps, $handle . ' depends on jQuery.' );
+
+			if ( in_array( $handle, $blocks, true ) ) {
+				continue;
+			}
+
 			$this->assertSame(
 				array(),
 				array_diff( (array) $script->deps, $allowed ),
 				$handle . ' declares a dependency §6 does not allow.'
+			);
+		}
+
+		foreach ( $this->block_script_dependencies() as $manifest => $deps ) {
+			++$checked;
+
+			$this->assertSame(
+				array(),
+				$this->forbidden_block_dependencies( $deps ),
+				$manifest . ' declares a dependency §6 does not allow.'
 			);
 		}
 
@@ -1096,7 +1251,7 @@ abstract class Plugin_Metadata_TestCase extends Plugin_TestCase {
 
 		if ( ! $this->has_version_row() ) {
 			do_action( 'plugins_loaded' );
-			do_action( 'init' );
+			$this->fire_init();
 
 			$this->assertFalse(
 				get_option( $row_name, false ),
@@ -1135,7 +1290,7 @@ abstract class Plugin_Metadata_TestCase extends Plugin_TestCase {
 	public function test_settings_sanitizer_never_stores_version_markers() {
 		if ( ! $this->has_settings_row() ) {
 			do_action( 'plugins_loaded' );
-			do_action( 'init' );
+			$this->fire_init();
 
 			$this->assertFalse(
 				get_option( $this->option_prefix() . 'options', false ),
