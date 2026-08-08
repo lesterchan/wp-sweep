@@ -306,13 +306,58 @@ class WP_Sweep_Sweep_Test extends WP_Sweep_TestCase {
 		$this->baseline( 'oembed_postmeta' );
 
 		$post_id = $this->make_oembed_meta( 2 );
+
+		/*
+		 * `not_an_oembed` survived the unescaped pattern by accident: it ends in
+		 * "oembed", and `%_oembed_%` needs a character on *both* sides, so there
+		 * was nothing after it to match the trailing wildcard. The test passed
+		 * and the bug was wide open. These three are the shapes that actually
+		 * exercise it -- a character either side of the word, which is what an
+		 * ordinary third-party key looks like.
+		 */
 		add_post_meta( $post_id, 'not_an_oembed', 'keep' );
+		add_post_meta( $post_id, 'plugin_oembed_settings', 'keep' );
+		add_post_meta( $post_id, '_yoast_oembed_cache', 'keep' );
+		add_post_meta( $post_id, 'xoembedy', 'keep' );
 
 		$message = $this->sweep()->sweep( 'oembed_postmeta' );
 
 		$this->assertSweepDelta( 0, 'oembed_postmeta' );
 		$this->assertStringContainsString( 'oEmbed Caches In Post Meta Processed', $message, 'The message names what was swept.' );
 		$this->assertSame( 'keep', get_post_meta( $post_id, 'not_an_oembed', true ), 'And meta that is not an oEmbed cache is left alone.' );
+		$this->assertSame( 'keep', get_post_meta( $post_id, 'plugin_oembed_settings', true ), 'A setting belonging to another plugin is not a cache.' );
+		$this->assertSame( 'keep', get_post_meta( $post_id, '_yoast_oembed_cache', true ), 'Nor is another plugin&#8217;s own cache row.' );
+		$this->assertSame( 'keep', get_post_meta( $post_id, 'xoembedy', true ), 'Nor anything else that merely contains the word.' );
+	}
+
+	/**
+	 * This was the one meta sweep that never consulted drop_protected_meta(),
+	 * so a key a site had explicitly protected was deleted anyway -- the
+	 * whitelist was even read for it, since the name matches the postmeta test,
+	 * and then never used.
+	 */
+	public function test_a_protected_oembed_key_is_not_swept() {
+		$this->baseline( 'oembed_postmeta' );
+
+		$post_id = self::factory()->post->create();
+		add_post_meta( $post_id, '_oembed_' . md5( 'protected' ), '<iframe></iframe>' );
+		add_post_meta( $post_id, '_oembed_' . md5( 'ordinary' ), '<iframe></iframe>' );
+
+		$protected = '_oembed_' . md5( 'protected' );
+
+		add_filter(
+			'wp_sweep_postmeta_whitelist',
+			static function ( $keys ) use ( $protected ) {
+				$keys[] = $protected;
+
+				return $keys;
+			}
+		);
+
+		$this->sweep()->sweep( 'oembed_postmeta' );
+
+		$this->assertSame( '<iframe></iframe>', get_post_meta( $post_id, $protected, true ), 'A protected key survives the sweep.' );
+		$this->assertSame( '', get_post_meta( $post_id, '_oembed_' . md5( 'ordinary' ), true ), 'While an unprotected one does not.' );
 	}
 
 	/**
@@ -322,6 +367,35 @@ class WP_Sweep_Sweep_Test extends WP_Sweep_TestCase {
 	 * created and verified inside the same test rather than relying on the
 	 * transaction rollback that isolates the others.
 	 */
+	/**
+	 * A bare SHOW TABLES is every table in the *schema*, and sharing one
+	 * database between several installs is an ordinary hosting arrangement. So
+	 * the details route published every co-tenant's table names, and the sweep
+	 * issued OPTIMIZE TABLE against installs this administrator does not
+	 * administer.
+	 */
+	public function test_optimize_only_reaches_this_installs_own_tables() {
+		global $wpdb;
+
+		$foreign = 'zz_other_install_posts';
+
+		// %i binds an identifier, so the fixture needs no suppression either.
+		$wpdb->query( $wpdb->prepare( 'CREATE TABLE IF NOT EXISTS %i ( id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY )', $foreign ) );
+
+		try {
+			$details = $this->sweep()->details( 'optimize_database' );
+
+			$this->assertNotEmpty( $details, 'This install has tables of its own, or the assertion below is vacuous.' );
+			$this->assertNotContains( $foreign, $details, 'A table outside this prefix is not listed, so its existence is not disclosed.' );
+
+			foreach ( $details as $table ) {
+				$this->assertStringStartsWith( $wpdb->prefix, $table, $table . ' is outside this install and must not be touched.' );
+			}
+		} finally {
+			$wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $foreign ) );
+		}
+	}
+
 	public function test_optimize_database_reports_tables_and_keeps_data() {
 		$post_id = self::factory()->post->create( array( 'post_title' => 'sweep-survives-optimize' ) );
 

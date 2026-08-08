@@ -329,6 +329,7 @@ class WP_Sweep_Filters_Test extends WP_Sweep_TestCase {
 			'wp_sweep_excluded_taxonomies',
 			'wp_sweep_excluded_termids',
 			'wp_sweep_limit_details',
+			'wp_sweep_optimize_tables',
 			'wp_sweep_postmeta_whitelist',
 			'wp_sweep_sweep',
 			'wp_sweep_termmeta_whitelist',

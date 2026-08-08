@@ -41,6 +41,30 @@ class WP_Sweep {
 	const DEFAULT_LIMIT_DETAILS = 500;
 
 	/**
+	 * The LIKE pattern matching WordPress's oEmbed response caches.
+	 *
+	 * Two things were wrong with the `%_oembed_%` it replaces, and escaping the
+	 * underscores only fixes one of them.
+	 *
+	 * In a LIKE pattern `_` matches any single character, and
+	 * `$wpdb->prepare()` escapes quotes and backslashes but has no opinion about
+	 * wildcards -- so the pattern really meant "contains oembed with at least
+	 * one character either side", and `xoembedy` matched. The transient sweep
+	 * next door had this right (`%\_transient\_%`), which is what makes it an
+	 * oversight rather than a decision.
+	 *
+	 * Escaping alone still leaves it a *contains* match, though, and
+	 * `plugin_oembed_settings` contains `_oembed_` quite literally. Core writes
+	 * these caches as `_oembed_{hash}` and `_oembed_time_{hash}` -- always that
+	 * prefix -- so the pattern is anchored at the start. A key belonging to
+	 * somebody else that merely mentions the word is no longer this sweep's
+	 * business, which it never should have been.
+	 *
+	 * @var string
+	 */
+	const OEMBED_LIKE = '\_oembed\_%';
+
+	/**
 	 * Static instance.
 	 *
 	 * @var WP_Sweep|null
@@ -533,7 +557,7 @@ class WP_Sweep {
 				$count = count( $this->tables() );
 				break;
 			case 'oembed_postmeta':
-				$count = $this->db( 'get_var', $wpdb->prepare( "SELECT COUNT(meta_id) FROM $wpdb->postmeta WHERE meta_key LIKE %s", '%_oembed_%' ) );
+				$count = $this->count_protected_meta( $this->oembed_meta_counts(), $name );
 				break;
 		}
 
@@ -616,7 +640,7 @@ class WP_Sweep {
 				$details = $this->tables();
 				break;
 			case 'oembed_postmeta':
-				$details = $this->db( 'get_col', $wpdb->prepare( "SELECT meta_key FROM $wpdb->postmeta WHERE meta_key LIKE %s LIMIT %d", '%_oembed_%', $limit ) );
+				$details = array_slice( wp_list_pluck( $this->drop_protected_meta( $this->oembed_meta_counts(), $name ), 'meta_key' ), 0, $limit );
 				break;
 		}
 
@@ -835,7 +859,10 @@ class WP_Sweep {
 				}
 				break;
 			case 'oembed_postmeta':
-				$query = $this->db( 'get_results', $wpdb->prepare( "SELECT post_id AS object_id, meta_key FROM $wpdb->postmeta WHERE meta_key LIKE %s", '%_oembed_%' ) );
+				$query = $this->drop_protected_meta(
+					$this->db( 'get_results', $wpdb->prepare( "SELECT post_id AS object_id, meta_key FROM $wpdb->postmeta WHERE meta_key LIKE %s", self::OEMBED_LIKE ) ),
+					$name
+				);
 				if ( $query ) {
 					foreach ( $query as $meta ) {
 						$this->delete_meta( 'post', (int) $meta->object_id, $meta->meta_key );
@@ -877,7 +904,40 @@ class WP_Sweep {
 	 * @return array Table names.
 	 */
 	private function tables() {
-		return (array) $this->db( 'get_col', 'SHOW TABLES' );
+		global $wpdb;
+
+		/*
+		 * Scoped to this install's prefix. A bare SHOW TABLES is every table in
+		 * the *schema*, and sharing one database between several WordPress
+		 * installs -- or between WordPress and something else entirely -- is an
+		 * ordinary hosting arrangement rather than an exotic one. So the details
+		 * route published every co-tenant's table names and prefixes to anyone
+		 * who could reach it, and running the sweep issued OPTIMIZE TABLE
+		 * against installs the administrator here does not administer: a full
+		 * rebuild on InnoDB, a write lock on MyISAM.
+		 *
+		 * esc_like() because a prefix may legitimately contain an underscore --
+		 * the default one does -- and an unescaped underscore is a single
+		 * character wildcard, which is how this would have gone on matching a
+		 * neighbour's tables.
+		 */
+		$like = $wpdb->esc_like( $wpdb->prefix ) . '%';
+
+		$tables = (array) $this->db( 'get_col', $wpdb->prepare( 'SHOW TABLES LIKE %s', $like ) );
+
+		/**
+		 * Filters the tables the optimize sweep operates on.
+		 *
+		 * The default is this install's own tables. A site with tables outside
+		 * its prefix that it does want optimised adds them here -- and takes
+		 * responsibility for their being its own.
+		 *
+		 * @since 1.2.0
+		 *
+		 * @param array  $tables Table names.
+		 * @param string $prefix This install's table prefix.
+		 */
+		return (array) apply_filters( 'wp_sweep_optimize_tables', $tables, $wpdb->prefix );
 	}
 
 	/**
@@ -922,6 +982,31 @@ class WP_Sweep {
 				$this->db( 'query', $wpdb->prepare( "DELETE FROM $wpdb->termmeta WHERE term_id = %d AND meta_key = %s", $object_id, $meta_key ) );
 				break;
 		}
+	}
+
+	/**
+	 * The oEmbed cache keys, with how many rows each accounts for.
+	 *
+	 * Shaped like orphan_meta_counts() so the same protection helpers work on
+	 * it. This sweep was the one meta sweep that never consulted
+	 * drop_protected_meta(), so a key a site had put on
+	 * wp_sweep_postmeta_whitelist was deleted anyway -- the whitelist was read
+	 * for it, since the name matches the postmeta test, and then never used.
+	 *
+	 * @since 1.2.0
+	 *
+	 * @return array Rows carrying a meta_key and a num.
+	 */
+	private function oembed_meta_counts() {
+		global $wpdb;
+
+		return (array) $this->db(
+			'get_results',
+			$wpdb->prepare(
+				"SELECT meta_key, COUNT(meta_id) AS num FROM $wpdb->postmeta WHERE meta_key LIKE %s GROUP BY meta_key",
+				self::OEMBED_LIKE
+			)
+		);
 	}
 
 	/**
