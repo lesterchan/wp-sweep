@@ -179,15 +179,29 @@ class WP_Sweep_Admin {
 		<div class="wrap">
 			<h1><?php echo esc_html_x( 'Sweep', 'Page title', 'wp-sweep' ); ?></h1>
 
+			<?php
+			/*
+			 * Core's common.js gathers every notice on the screen and re-inserts
+			 * the lot of them directly after this marker, falling back to the
+			 * first heading it can find when a screen has not printed one. So the
+			 * marker, not the source order, is what decides where the reload
+			 * path's message ends up -- and printing no marker was how the
+			 * permanent warning below came to sit between the heading and the
+			 * region, above a message the script had written underneath it.
+			 */
+			?>
+			<hr class="wp-header-end">
+
 			<?php settings_errors( 'wp_sweep' ); ?>
 
 			<?php
 			/*
-			 * One region per screen, directly under the heading, because that is
-			 * where settings_errors() has just printed the reload path's message.
-			 * A bulk sweep posts and reloads; a row's Sweep button does not, and
-			 * the script writes here instead -- so if the two are not in the same
-			 * place, one screen answers the same question in two positions. This
+			 * One region per screen, immediately after the marker, so the two
+			 * ways a sweep reports are neighbours: a bulk sweep posts and
+			 * reloads, and settings_errors() above has just printed into the
+			 * space the marker anchors; a row's Sweep button does not reload and
+			 * the script writes in here. Nothing may be printed between the two,
+			 * or one screen answers the same question in two places. This region
 			 * sat below the warning, the description and the totals table, which
 			 * is where it was when the screen was a page of separate forms.
 			 *
@@ -197,7 +211,17 @@ class WP_Sweep_Admin {
 			?>
 			<div class="sweep-message" id="<?php echo esc_attr( self::MESSAGE_ID ); ?>" role="status"></div>
 
-			<div class="notice notice-warning">
+			<?php
+			/*
+			 * `inline` is core's opt-out from that gathering, and this warning is
+			 * the one notice on the screen that has to take it. It reports
+			 * nothing and never changes, so hoisting it to the marker only puts
+			 * it between the reload path's message and the region -- which is
+			 * exactly where it was, and why the two paths still did not agree
+			 * once the region had been moved up here.
+			 */
+			?>
+			<div class="notice notice-warning inline">
 				<p>
 					<?php
 					echo wp_kses_post(

@@ -823,13 +823,14 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 		$this->assertNotFalse( $form, 'The screen rendered no form, so there is nothing for the bulk sweep to post.' );
 
 		/*
-		 * And directly under the heading, where settings_errors() has just
+		 * And directly under the marker, where settings_errors() has just
 		 * printed the reload path's message. A bulk sweep posts and reloads; a
 		 * row's Sweep button does not and the script writes here instead, so the
 		 * two paths must report in the same place. This region sat below the
 		 * warning, the description and the totals table -- one screen answering
 		 * the same question in two positions, which Lester spotted on the live
-		 * site.
+		 * site. test_both_report_paths_land_together() is where the anchoring
+		 * that keeps them there is asserted.
 		 */
 		$this->assertLessThan(
 			strpos( $html, 'notice notice-warning' ),
@@ -852,6 +853,57 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 			'aria-controls="' . WP_Sweep_Admin::MESSAGE_ID . '"',
 			$html,
 			'A Sweep row action does not name the region it reports into, which is the only way the script finds it.'
+		);
+	}
+
+	/**
+	 * The reload path's message and the region the script writes into come out
+	 * of the screen as neighbours, with the permanent warning below both.
+	 *
+	 * Where the first one appears is not decided by this file: core's
+	 * common.js collects every notice on the screen and re-inserts the lot
+	 * directly after hr.wp-header-end, falling back to the first heading when
+	 * a screen prints no marker. That fallback is what used to hoist the
+	 * permanent warning above the region while the script wrote below it, so
+	 * the two paths reported either side of the same warning. There is no
+	 * browser here to run that relocation -- the Playwright suite measures the
+	 * result of it -- so this pins the three things it depends on: the marker,
+	 * the region as the next thing after it, and `inline` on the one notice
+	 * that must be left where it was put.
+	 */
+	public function test_both_report_paths_land_together() {
+		$this->make_revisions( 2 );
+
+		$html = $this->render_admin_page(
+			array(
+				'sweep'    => 'revisions',
+				'_wpnonce' => wp_create_nonce( 'wp_sweep_revisions' ),
+			)
+		);
+
+		$marker  = strpos( $html, '<hr class="wp-header-end">' );
+		$reload  = strpos( $html, 'setting-error-wp_sweep_swept' );
+		$region  = strpos( $html, 'id="' . WP_Sweep_Admin::MESSAGE_ID . '"' );
+		$warning = strpos( $html, 'notice notice-warning' );
+
+		$this->assertNotFalse( $marker, 'The screen prints no hr.wp-header-end, so core moves the reload path message to the first heading instead and whatever follows the heading is pushed below it.' );
+		$this->assertNotFalse( $reload, 'The reload path rendered no message, so there is nothing for the script path to agree with.' );
+		$this->assertGreaterThan( $marker, $reload, 'The reload path message is printed above the marker, so the screen and the browser disagree about where it goes.' );
+		$this->assertGreaterThan( $reload, $region, 'The region is printed above the reload path message, so with the script off the two paths report in the opposite order to each other.' );
+		$this->assertGreaterThan( $region, $warning, 'The permanent warning is printed between the two report paths again.' );
+		$this->assertStringContainsString(
+			'notice notice-warning inline',
+			$html,
+			'The permanent warning is not marked inline, so core hoists it to the marker and it lands between the reload path message and the region.'
+		);
+
+		// Neighbours, not merely in order: anything printed between the two is
+		// something the reader has to look past to see that they are one
+		// answer.
+		$this->assertMatchesRegularExpression(
+			'#setting-error-wp_sweep_swept.*?</div>\s*<div class="sweep-message"#s',
+			$html,
+			'Something is printed between the reload path message and the region the script writes into.'
 		);
 	}
 

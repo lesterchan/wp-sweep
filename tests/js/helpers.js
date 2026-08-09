@@ -143,10 +143,17 @@ export const MESSAGE_ID = 'wp-sweep-message';
  *
  *   .wrap
  *     h1
- *     div.sweep-message             <- the region, OUTSIDE the form, and directly
- *                                      under the heading where settings_errors()
- *                                      prints the reload path's message
- *     div.notice.notice-warning     <- the permanent "back up first" warning
+ *     hr.wp-header-end              <- where core's common.js re-inserts every
+ *                                      notice on the screen, so it is what puts
+ *                                      the reload path's message where it goes
+ *     div.sweep-message             <- the region, OUTSIDE the form, and the next
+ *                                      thing after the marker, so the script's
+ *                                      message and settings_errors() are
+ *                                      neighbours rather than either side of the
+ *                                      warning below
+ *     div.notice.notice-warning     <- the permanent "back up first" warning, and
+ *       .inline                        `inline` is why common.js leaves it here
+ *                                      instead of hoisting it to the marker
  *     table.sweep-totals            <- render_totals(), the running totals
  *     ul.subsubsub                  <- $table->views()
  *     form
@@ -154,6 +161,12 @@ export const MESSAGE_ID = 'wp-sweep-message';
  *       div.tablenav.top
  *       table.table-sweep           <- the rows, INSIDE the form
  *       div.tablenav.bottom
+ *
+ * That is both what PHP prints and what the browser is left holding, which is
+ * only true because of the two lines above: the warning stays put and there is
+ * no message from the reload path on a screen nobody has posted to. jsdom runs
+ * no core script, so a fixture where the two differed would be a fixture of a
+ * screen that does not exist.
  *
  * Trimmed only in ways the script cannot see: one row rather than eighteen, one
  * group filter rather than seven, one totals row rather than six. A bare <tr> in
@@ -175,8 +188,9 @@ export function sweepSection( {
 	return `
 		<div class="wrap">
 			<h1>Sweep</h1>
+			<hr class="wp-header-end">
 			<div class="sweep-message" id="${ MESSAGE_ID }" role="status"></div>
-			<div class="notice notice-warning"><p>Before you do any sweep, please <a href="https://wordpress.org/plugins/wp-dbmanager/">backup your database</a> first, because any sweep done is irreversible.</p></div>
+			<div class="notice notice-warning inline"><p>Before you do any sweep, please <a href="https://wordpress.org/plugins/wp-dbmanager/">backup your database</a> first, because any sweep done is irreversible.</p></div>
 			<p class="description">Details lists a sample of up to 500 items. Filter wp_sweep_limit_details to change it.</p>
 			<table class="widefat striped sweep-totals">
 				<thead><tr><th scope="col">Group</th><th scope="col">Currently in your database</th></tr></thead>

@@ -327,7 +327,7 @@ test.describe( 'The filters', () => {
 		// The message comes back through the AJAX response and is written into
 		// the notice as a text node, so a filter returning markup cannot become
 		// markup -- which is why the screen escapes it on the PHP side too.
-		await expect( page.locator( '.sweep-message .updated' ) ).toContainText(
+		await expect( page.locator( '.sweep-message .notice-success' ) ).toContainText(
 			'a filtered message',
 		);
 	} );

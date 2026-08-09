@@ -568,7 +568,7 @@ async function sweepRow( page, name ) {
 		target.locator( 'a.btn-sweep' ).click(),
 	] );
 
-	await expect( page.locator( '.sweep-message .updated' ) ).toBeVisible();
+	await expect( page.locator( '.sweep-message .notice-success' ) ).toBeVisible();
 }
 
 /**

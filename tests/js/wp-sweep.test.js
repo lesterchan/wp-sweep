@@ -236,9 +236,11 @@ describe( 'the result of a sweep', () => {
 		).toBe( '2 Revisions Processed' );
 		expect( message.querySelector( '.updated' ) ).toBeNull();
 
-		// And in the same place: directly after the h1, which is where
-		// settings_errors() has printed on the reload path.
-		expect( message.previousElementSibling.tagName ).toBe( 'H1' );
+		// And in the same place: directly after hr.wp-header-end, which is
+		// where core moves settings_errors()' notice to on the reload path, so
+		// the two land next to each other with nothing in between.
+		expect( message.previousElementSibling.className ).toBe( 'wp-header-end' );
+		expect( message.nextElementSibling.className ).toContain( 'notice-warning' );
 	} );
 
 	it( 'renders the message as text too', async () => {

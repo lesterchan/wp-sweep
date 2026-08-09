@@ -172,13 +172,37 @@ script intercepts them so the screen updates in place. Do not add a control that
 only works with the script running.
 
 **A finished sweep reports into one region, found by id and nothing else.**
-It is printed **directly under the `<h1>`, where `settings_errors()` has just
-printed the reload path's message**, and the script builds
-`notice notice-success` rather than the pre-4.1 `updated`. A bulk sweep posts and
-reloads; a row's Sweep button does not. If the two are not in the same place and
-the same classes, one screen answers the same question two different ways — which
-it did, with this region sitting below the warning, the description and the
-totals table. Moving it means moving it in `tests/js/helpers.js` too.
+It is printed **immediately after the `<hr class="wp-header-end">` that follows
+the `<h1>`, where `settings_errors()` has just printed the reload path's
+message**, and the script builds `notice notice-success` rather than the pre-4.1
+`updated`. A bulk sweep posts and reloads; a row's Sweep button does not. If the
+two are not in the same place and the same classes, one screen answers the same
+question two different ways — which it did, with this region sitting below the
+warning, the description and the totals table. Moving it means moving it in
+`tests/js/helpers.js` too.
+
+**Where the reload path's message lands is core's decision, not this file's.**
+`wp-admin/js/common.js` collects every `.notice` on the screen and re-inserts
+the lot of them directly after `hr.wp-header-end`, and after the first heading
+it can find when a screen prints no marker. So two lines of markup are what keep
+the two paths together, and neither is decoration:
+
+* the `<hr class="wp-header-end">` between the `<h1>` and the region — it is
+  what `settings_errors()`' notice is moved to, so the region has to be the next
+  thing after it;
+* `inline` on the permanent backup warning — core's opt-out from that
+  gathering. Without it the warning is hoisted to the marker too, lands between
+  the reload path's message and the region, and the two paths report on opposite
+  sides of it. That is what the screen did after the region was first moved up
+  under the heading: measurably closer together, still not in the same place.
+
+Nothing may be printed between `settings_errors()` and the region, and nothing
+above the marker. `WP_Sweep_Admin_Test::test_both_report_paths_land_together()`
+asserts the markup and `tests/e2e/admin.spec.js` measures the DOM the browser is
+actually left holding — which is the only place the question can be settled,
+since jsdom runs none of core's scripts. The order the fixture transcribes is
+both what PHP prints and what the browser ends up with, and it is only both
+because of those two lines.
 
 `WP_Sweep_Admin::MESSAGE_ID` is printed once, on a `role="status"` div above the
 form, and every Sweep row action carries the same id in `aria-controls`; the

@@ -113,6 +113,40 @@ describe( 'where the PHP puts the region', () => {
 	} );
 } );
 
+describe( 'what anchors the two ways a sweep reports', () => {
+	it( 'prints the marker between the heading and the region', () => {
+		// Core's common.js re-inserts every notice directly after
+		// hr.wp-header-end, so the marker is what settings_errors() ends up
+		// underneath and the region has to be the next thing along.
+		const heading = admin.indexOf( '<h1>' );
+		const marker = admin.indexOf( '<hr class="wp-header-end">' );
+		const errors = admin.indexOf( "settings_errors( 'wp_sweep' )" );
+		const region = admin.indexOf( 'class="sweep-message"' );
+
+		expect( marker ).toBeGreaterThan( heading );
+		expect( errors ).toBeGreaterThan( marker );
+		expect( region ).toBeGreaterThan( errors );
+	} );
+
+	it( 'keeps the permanent warning out of that gathering', () => {
+		// Without `inline` the warning is hoisted to the marker like any other
+		// notice, which lands it between the reload path's message and the
+		// region -- the exact split moving the region up here was meant to end.
+		expect( admin ).toContain( '<div class="notice notice-warning inline">' );
+
+		const warning = admin.indexOf( 'notice notice-warning' );
+
+		expect( warning ).toBeGreaterThan( admin.indexOf( 'class="sweep-message"' ) );
+	} );
+
+	it( 'is transcribed that way round in the fixture', () => {
+		const region = screen().querySelector( '.sweep-message' );
+
+		expect( region.previousElementSibling.className ).toBe( 'wp-header-end' );
+		expect( region.nextElementSibling.className ).toContain( 'inline' );
+	} );
+} );
+
 describe( 'the rest of the screen the script reaches for', () => {
 	it( 'carries the running totals as spans inside the totals table', () => {
 		const parsed = screen();

@@ -273,6 +273,64 @@ test.describe( 'The Sweep screen', () => {
 		expect( survivors( ids ) ).toEqual( INTACT );
 	} );
 
+	test( 'both ways of reporting a sweep land in the same place', async ( { page } ) => {
+		createJunk( 'spam_comments' );
+		createJunk( 'auto_drafts' );
+
+		await openSweepScreen( page );
+
+		// Measured in the browser rather than read off the markup, because the
+		// markup is not what anybody sees: core's common.js collects every
+		// notice on the screen and re-inserts the lot of them directly after
+		// hr.wp-header-end. That is the whole reason this test exists in
+		// Playwright -- the plugin cannot answer where its own messages end up.
+		const positions = () =>
+			page.evaluate( () => {
+				const wrap = document.querySelector( '.wrap' );
+				const at = ( selector ) =>
+					Array.prototype.indexOf.call(
+						wrap.children,
+						wrap.querySelector( selector ),
+					);
+
+				return {
+					marker: at( 'hr.wp-header-end' ),
+					reload: at( '#setting-error-wp_sweep_swept' ),
+					region: at( '.sweep-message' ),
+					warning: at( '.notice-warning' ),
+				};
+			} );
+
+		// The script's path first, on a screen nobody has posted to.
+		await row( page, 'auto_drafts' ).locator( 'a.btn-sweep' ).click();
+		await expect( page.locator( '.sweep-message .notice-success' ) ).toBeVisible();
+
+		const written = await positions();
+
+		expect( written.marker ).toBeGreaterThan( -1 );
+		expect( written.region ).toBeGreaterThan( written.marker );
+		// Below the region, not above it. The warning is `inline` so that core
+		// leaves it here; without that it is hoisted to the marker like any
+		// other notice and the reload path's message arrives on the far side of
+		// it from this one.
+		expect( written.warning ).toBeGreaterThan( written.region );
+
+		// And the reload path, which is settings_errors() rather than the
+		// script. Core moves it to the marker, and the region is what follows
+		// the marker, so the two messages come out as neighbours.
+		await page.locator( '#sweep_spam_comments' ).check();
+		await page.locator( '#bulk-action-selector-top' ).selectOption( 'sweep' );
+		await page.locator( '#doaction' ).click();
+
+		await expect( page.locator( '#setting-error-wp_sweep_swept' ) ).toBeVisible();
+
+		const reloaded = await positions();
+
+		expect( reloaded.reload ).toBeGreaterThan( reloaded.marker );
+		expect( reloaded.region ).toBe( reloaded.reload + 1 );
+		expect( reloaded.warning ).toBeGreaterThan( reloaded.region );
+	} );
+
 	test( 'a bulk sweep with nothing ticked says so and deletes nothing', async ( { page } ) => {
 		createJunk( 'spam_comments' );
 		const before = sweepCount( 'spam_comments' );
@@ -404,7 +462,7 @@ test.describe( 'The Sweep screen', () => {
 		await expect( page.locator( 'body' ) ).toHaveClass( /sweep-active/ );
 		expect( await guardArmed() ).toBe( true );
 
-		await expect( page.locator( '.sweep-message .updated' ) ).toBeVisible( {
+		await expect( page.locator( '.sweep-message .notice-success' ) ).toBeVisible( {
 			timeout: 30_000,
 		} );
 		await page.unroute( '**/admin-ajax.php**' );

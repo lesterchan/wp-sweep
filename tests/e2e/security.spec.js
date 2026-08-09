@@ -254,7 +254,7 @@ test.describe( 'Hostile values in a details list', () => {
 		// The AJAX path builds its own notice, and it builds it out of a text
 		// node -- which is a different piece of code from the PHP escape above
 		// and has to reach the same answer.
-		await expect( page.locator( '.sweep-message .updated' ) ).toContainText( 'window.__pwned' );
+		await expect( page.locator( '.sweep-message .notice-success' ) ).toContainText( 'window.__pwned' );
 		await expect( page.locator( '.sweep-message script' ) ).toHaveCount( 0 );
 		expect( await pwned( page ) ).toBe( false );
 	} );
