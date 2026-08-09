@@ -1097,6 +1097,51 @@ abstract class Plugin_Metadata_TestCase extends Plugin_TestCase {
 	}
 
 	/**
+	 * No translatable string is padded with whitespace.
+	 *
+	 * A translator sees the msgid in a list, where a leading or trailing space
+	 * is invisible and a run of them is indistinguishable from one. They cannot
+	 * reproduce what they cannot see, so the padding is lost in every language
+	 * but English -- and where the padding was doing a job, such as separating
+	 * a label from the value concatenated after it, the translated string comes
+	 * out run together.
+	 *
+	 * Whitespace is layout. It belongs in the markup or the CSS, on the outside
+	 * of the call, where it is the same in every language.
+	 */
+	public function test_no_translatable_string_carries_edge_whitespace() {
+		$padded = array();
+
+		foreach ( $this->metadata_source_files() as $file ) {
+			$source = (string) file_get_contents( $file );
+
+			// Single-quoted only: a double-quoted msgid would be interpolating,
+			// which the coding standard already refuses, and matching both here
+			// means matching escapes this does not need to understand.
+			preg_match_all(
+				"/(?:esc_html|esc_attr)?_{1,2}[enx]{0,2}\\(\\s*'((?:\\\\.|[^'\\\\])*)'/",
+				$source,
+				$matches,
+				PREG_SET_ORDER
+			);
+
+			foreach ( $matches as $match ) {
+				if ( trim( $match[1] ) === $match[1] ) {
+					continue;
+				}
+
+				$padded[] = basename( $file ) . ": '" . $match[1] . "'";
+			}
+		}
+
+		$this->assertSame(
+			array(),
+			$padded,
+			"A translatable string is padded with whitespace, which no translator can reproduce:\n" . implode( "\n", $padded )
+		);
+	}
+
+	/**
 	 * No build, editor or translation artefacts ship.
 	 *
 	 * The catalogue is built by translate.wordpress.org, and Travis has been

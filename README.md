@@ -219,6 +219,7 @@ Nothing. WP-Sweep stores no option rows, creates no database tables, registers n
 * FIXED: Sweeping without JavaScript deleted data and displayed nothing; the result is now shown.
 * FIXED: The multisite uninstall loop stopped at 100 sites, hydrated whole site objects to read one column, and left the switch stack unwound by one.
 * FIXED: Request parameters are sanitized and validated against the plugin's own list of sweeps.
+* FIXED: The two "Sweep Complete" messages `wp sweep` prints were the only strings in the plugin that were never passed through the translation functions
 
 ## Upgrade Notice
 

@@ -65,7 +65,7 @@ class WP_Sweep_Command extends WP_CLI_Command {
 		if ( ! empty( $assoc_args['all'] ) ) {
 			$this->run_sweep( $sweeps );
 
-			WP_CLI::success( 'Sweep Complete' );
+			WP_CLI::success( __( 'Sweep Complete', 'wp-sweep' ) );
 
 			return;
 		}
@@ -75,7 +75,7 @@ class WP_Sweep_Command extends WP_CLI_Command {
 		// sweeps that hunt for the meta that deleting them just orphaned.
 		$this->run_sweep( array_values( array_intersect( $sweeps, (array) $args ) ) );
 
-		WP_CLI::success( 'Sweep Complete!' );
+		WP_CLI::success( __( 'Sweep Complete!', 'wp-sweep' ) );
 	}
 
 	/**
