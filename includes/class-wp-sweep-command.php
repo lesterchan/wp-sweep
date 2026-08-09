@@ -70,10 +70,45 @@ class WP_Sweep_Command extends WP_CLI_Command {
 			return;
 		}
 
+		$requested = array_values( array_unique( (array) $args ) );
+
+		/*
+		 * Nothing named and no --all swept nothing and reported success, which is
+		 * the same answer a real sweep gives.
+		 */
+		if ( empty( $requested ) ) {
+			WP_CLI::error( __( 'Name at least one item to sweep, or pass --all to sweep every one.', 'wp-sweep' ) );
+		}
+
+		/*
+		 * A name that is not a sweep is a typo, and it used to be discarded in
+		 * silence: `wp sweep revisons` filtered down to nothing, swept nothing
+		 * and printed "Sweep Complete!", so the only report of the mistake was
+		 * that the revisions were still there. On a command whose whole job is
+		 * deleting data, "I did what you asked" is the one thing it must not say
+		 * when it did not.
+		 *
+		 * The screen's bulk handler drops unknown names on purpose and says
+		 * nothing, because there the names come from checkboxes it rendered
+		 * itself -- an unexpected one is tampering, not a typo, and it has no
+		 * user to correct.
+		 */
+		$unknown = array_diff( $requested, $sweeps );
+
+		if ( ! empty( $unknown ) ) {
+			WP_CLI::error(
+				sprintf(
+					/* translators: %s is a comma-separated list of item names that were not recognised. */
+					__( 'Not something this plugin sweeps: %s. Run `wp help sweep` for the list.', 'wp-sweep' ),
+					implode( ', ', $unknown )
+				)
+			);
+		}
+
 		// Filtered from the canonical list rather than taken as given, so the
 		// items run in the order they have to: posts are deleted before the
 		// sweeps that hunt for the meta that deleting them just orphaned.
-		$this->run_sweep( array_values( array_intersect( $sweeps, (array) $args ) ) );
+		$this->run_sweep( array_values( array_intersect( $sweeps, $requested ) ) );
 
 		WP_CLI::success( __( 'Sweep Complete!', 'wp-sweep' ) );
 	}

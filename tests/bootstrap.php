@@ -34,6 +34,7 @@ require_once __DIR__ . '/helper-creates-admins.php';
 require_once __DIR__ . '/helper-ajax-testcase.php';
 require_once __DIR__ . '/helper-testcase.php';
 require_once __DIR__ . '/helper-wp-cli-command.php';
+require_once __DIR__ . '/helper-wp-cli-halt.php';
 require_once __DIR__ . '/helper-wp-cli.php';
 
 // The shared metadata contract, a byte-identical copy of

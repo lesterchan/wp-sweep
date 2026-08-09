@@ -20,6 +20,28 @@ class WP_Sweep_CLI_Test extends WP_Sweep_TestCase {
 
 		WP_CLI::$successes = array();
 		WP_CLI::$commands  = array();
+		WP_CLI::$errors    = array();
+	}
+
+	/**
+	 * Runs the command expecting it to refuse, and reports what it said.
+	 *
+	 * The stand-in throws where the real facade exits, so the throw is the
+	 * assertion that the command stopped rather than carrying on.
+	 *
+	 * @param array $args Positional arguments.
+	 * @return array The error messages it reported.
+	 */
+	protected function run_command_expecting_refusal( $args = array() ) {
+		$command = new WP_Sweep_Command();
+
+		try {
+			$command( $args, array() );
+		} catch ( WP_Sweep_CLI_Halt $halt ) {
+			return WP_CLI::$errors;
+		}
+
+		$this->fail( 'The command was expected to refuse and stop, and it returned instead.' );
 	}
 
 	/**
@@ -112,28 +134,52 @@ class WP_Sweep_CLI_Test extends WP_Sweep_TestCase {
 	}
 
 	/**
-	 * A name the plugin does not implement sweeps nothing.
+	 * A name the plugin does not implement is a typo, and is said out loud.
+	 *
+	 * It used to sweep nothing and report "Sweep Complete!", so `wp sweep
+	 * revisons` looked exactly like a sweep that had run -- and the only report
+	 * of the mistake was that the revisions were still there. This test asserted
+	 * that success message, which is to say the suite pinned the defect.
 	 */
-	public function test_unknown_name_sweeps_nothing() {
+	public function test_unknown_name_is_refused_by_name() {
 		$revisions = $this->make_revisions( 2 );
 
-		$messages = $this->run_command( array( 'no_such_sweep' ) );
+		$errors = $this->run_command_expecting_refusal( array( 'revisons' ) );
 
-		$this->assertInstanceOf( WP_Post::class, get_post( $revisions[0] ), 'An unknown name sweeps nothing rather than everything.' );
-		$this->assertSame( array( 'Sweep Complete!' ), $messages, 'An unknown name reports completion and nothing else.' );
+		$this->assertInstanceOf( WP_Post::class, get_post( $revisions[0] ), 'An unknown name sweeps nothing.' );
+		$this->assertCount( 1, $errors, 'And says so once.' );
+		$this->assertStringContainsString( 'revisons', $errors[0], 'Naming the word it did not recognise, so a typo is obvious.' );
+		$this->assertSame( array(), WP_CLI::$successes, 'It reports no success at all, which is what made the typo invisible.' );
 	}
 
 	/**
-	 * With no arguments at all, nothing is swept. `wp sweep` on its own must
-	 * not be a synonym for `wp sweep --all`.
+	 * A real name alongside a typo refuses the lot rather than sweeping half.
+	 *
+	 * Sweeping the names it understood and ignoring the rest would delete data
+	 * on the strength of a command the caller has already got wrong once.
 	 */
-	public function test_no_arguments_sweeps_nothing() {
+	public function test_a_typo_beside_a_real_name_refuses_everything() {
 		$revisions = $this->make_revisions( 2 );
 
-		$messages = $this->run_command();
+		$errors = $this->run_command_expecting_refusal( array( 'revisions', 'auto_draffts' ) );
+
+		$this->assertInstanceOf( WP_Post::class, get_post( $revisions[0] ), 'The name it did understand is not swept either.' );
+		$this->assertStringContainsString( 'auto_draffts', $errors[0], 'And the typo is the one named.' );
+		$this->assertStringNotContainsString( 'revisions', $errors[0], 'The name it understood is not reported as a problem.' );
+	}
+
+	/**
+	 * With no arguments at all, nothing is swept and the command says what to
+	 * pass. `wp sweep` on its own must not be a synonym for `wp sweep --all`.
+	 */
+	public function test_no_arguments_is_refused() {
+		$revisions = $this->make_revisions( 2 );
+
+		$errors = $this->run_command_expecting_refusal();
 
 		$this->assertInstanceOf( WP_Post::class, get_post( $revisions[0] ), 'No arguments sweeps nothing rather than everything.' );
-		$this->assertSame( array( 'Sweep Complete!' ), $messages, 'No arguments does the same rather than sweeping everything.' );
+		$this->assertStringContainsString( '--all', $errors[0], 'And says how to ask for everything, since that is the likely intent.' );
+		$this->assertSame( array(), WP_CLI::$successes, 'Rather than reporting a sweep that did not happen.' );
 	}
 
 	/**

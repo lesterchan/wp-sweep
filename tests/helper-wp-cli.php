@@ -31,6 +31,32 @@ if ( ! class_exists( 'WP_CLI' ) ) {
 		public static $commands = array();
 
 		/**
+		 * Messages passed to WP_CLI::error().
+		 *
+		 * @var array
+		 */
+		public static $errors = array();
+
+		/**
+		 * Records an error message and stops, as the real facade does.
+		 *
+		 * The real WP_CLI::error() exits the process. A stand-in that recorded
+		 * the message and returned would let the command carry straight on and
+		 * sweep after refusing to -- so a test could assert the refusal and pass
+		 * while the data went anyway, which is the shape of defect this one
+		 * exists to catch.
+		 *
+		 * @param string $message Message.
+		 * @return void
+		 * @throws WP_Sweep_CLI_Halt Always, in place of exiting.
+		 */
+		public static function error( $message ) {
+			self::$errors[] = $message;
+
+			throw new WP_Sweep_CLI_Halt( $message );
+		}
+
+		/**
 		 * Records a success message.
 		 *
 		 * @param string $message Message.
