@@ -220,16 +220,25 @@ describe( 'the result of a sweep', () => {
 		).toBe( '3' );
 	} );
 
-	it( 'shows the message above the table it belongs to', async () => {
+	it( 'shows the message under the heading, in the classes settings_errors() uses', async () => {
 		document.body.innerHTML = sweepSection();
 		stubFetch( sweepResponse( { sweep: '2 Revisions Processed' } ) );
 
 		await clickAndSettle( document.querySelector( '.btn-sweep' ) );
 
 		const message = document.querySelector( '.sweep-message' );
-		expect( message.querySelector( '.updated p' ).textContent ).toBe(
-			'2 Revisions Processed',
-		);
+
+		// notice notice-success, not the pre-4.1 `updated`: a bulk sweep posts
+		// and settings_errors() prints those classes, and this path must not
+		// produce a message that looks like a different kind of message.
+		expect(
+			message.querySelector( '.notice.notice-success p' ).textContent,
+		).toBe( '2 Revisions Processed' );
+		expect( message.querySelector( '.updated' ) ).toBeNull();
+
+		// And in the same place: directly after the h1, which is where
+		// settings_errors() has printed on the reload path.
+		expect( message.previousElementSibling.tagName ).toBe( 'H1' );
 	} );
 
 	it( 'renders the message as text too', async () => {

@@ -821,6 +821,26 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 		$this->assertNotFalse( $region, 'The screen rendered no region for a finished sweep to report into.' );
 		$this->assertSame( 1, substr_count( $html, $id ), 'The screen rendered the region more than once, and a repeated id decides for itself which one is written into.' );
 		$this->assertNotFalse( $form, 'The screen rendered no form, so there is nothing for the bulk sweep to post.' );
+
+		/*
+		 * And directly under the heading, where settings_errors() has just
+		 * printed the reload path's message. A bulk sweep posts and reloads; a
+		 * row's Sweep button does not and the script writes here instead, so the
+		 * two paths must report in the same place. This region sat below the
+		 * warning, the description and the totals table -- one screen answering
+		 * the same question in two positions, which Lester spotted on the live
+		 * site.
+		 */
+		$this->assertLessThan(
+			strpos( $html, 'notice notice-warning' ),
+			$region,
+			'The message region has drifted below the permanent warning, so a sweep reports somewhere other than where a bulk sweep does.'
+		);
+		$this->assertLessThan(
+			strpos( $html, 'sweep-totals' ),
+			$region,
+			'And below the totals table.'
+		);
 		$this->assertLessThan( $form, $region, 'The message region has moved inside the form. tests/js/helpers.js transcribes it as outside; correct the fixture with it.' );
 		$this->assertGreaterThan( $form, $table, 'The list table is no longer inside the form. tests/js/helpers.js transcribes it as inside; correct the fixture with it.' );
 		$this->assertStringContainsString(

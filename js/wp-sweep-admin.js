@@ -150,8 +150,14 @@
 			return;
 		}
 
+		// The same classes settings_errors() emits for the reload path, so the
+		// two messages are one message in two code paths rather than two
+		// different-looking ones. `updated` is the pre-4.1 vocabulary and the
+		// standard names notice-success instead; hand-rolling it here was also
+		// the one place the "no hand-rolled div.updated" rule was being broken,
+		// because it is JavaScript and the checker only reads PHP.
 		const notice = document.createElement( 'div' );
-		notice.className = 'updated';
+		notice.className = 'notice notice-success';
 
 		const paragraph = document.createElement( 'p' );
 		paragraph.textContent = text;

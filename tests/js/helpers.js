@@ -142,8 +142,12 @@ export const MESSAGE_ID = 'wp-sweep-message';
  * So the shape below is fixed by the PHP and may not be tidied:
  *
  *   .wrap
+ *     h1
+ *     div.sweep-message             <- the region, OUTSIDE the form, and directly
+ *                                      under the heading where settings_errors()
+ *                                      prints the reload path's message
+ *     div.notice.notice-warning     <- the permanent "back up first" warning
  *     table.sweep-totals            <- render_totals(), the running totals
- *     div.sweep-message             <- the region, OUTSIDE the form
  *     ul.subsubsub                  <- $table->views()
  *     form
  *       input[name=_wpnonce]        <- display_tablenav( 'top' ) prints it
@@ -171,6 +175,7 @@ export function sweepSection( {
 	return `
 		<div class="wrap">
 			<h1>Sweep</h1>
+			<div class="sweep-message" id="${ MESSAGE_ID }" role="status"></div>
 			<div class="notice notice-warning"><p>Before you do any sweep, please <a href="https://wordpress.org/plugins/wp-dbmanager/">backup your database</a> first, because any sweep done is irreversible.</p></div>
 			<p class="description">Details lists a sample of up to 500 items. Filter wp_sweep_limit_details to change it.</p>
 			<table class="widefat striped sweep-totals">
@@ -182,7 +187,6 @@ export function sweepSection( {
 					</tr>
 				</tbody>
 			</table>
-			<div class="sweep-message" id="${ MESSAGE_ID }" role="status"></div>
 			<ul class="subsubsub">
 				<li class="all"><a href="tools.php?page=wp-sweep&group=all" class="current" aria-current="page">All <span class="count">(18)</span></a></li>
 			</ul>

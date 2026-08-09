@@ -172,6 +172,14 @@ script intercepts them so the screen updates in place. Do not add a control that
 only works with the script running.
 
 **A finished sweep reports into one region, found by id and nothing else.**
+It is printed **directly under the `<h1>`, where `settings_errors()` has just
+printed the reload path's message**, and the script builds
+`notice notice-success` rather than the pre-4.1 `updated`. A bulk sweep posts and
+reloads; a row's Sweep button does not. If the two are not in the same place and
+the same classes, one screen answers the same question two different ways — which
+it did, with this region sitting below the warning, the description and the
+totals table. Moving it means moving it in `tests/js/helpers.js` too.
+
 `WP_Sweep_Admin::MESSAGE_ID` is printed once, on a `role="status"` div above the
 form, and every Sweep row action carries the same id in `aria-controls`; the
 script resolves the region through that attribute. It used to find it by walking

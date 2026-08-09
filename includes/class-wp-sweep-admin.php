@@ -181,6 +181,22 @@ class WP_Sweep_Admin {
 
 			<?php settings_errors( 'wp_sweep' ); ?>
 
+			<?php
+			/*
+			 * One region per screen, directly under the heading, because that is
+			 * where settings_errors() has just printed the reload path's message.
+			 * A bulk sweep posts and reloads; a row's Sweep button does not, and
+			 * the script writes here instead -- so if the two are not in the same
+			 * place, one screen answers the same question in two positions. This
+			 * sat below the warning, the description and the totals table, which
+			 * is where it was when the screen was a page of separate forms.
+			 *
+			 * role="status" is what tells a screen reader anything happened at
+			 * all, since nothing reloads on the script's path.
+			 */
+			?>
+			<div class="sweep-message" id="<?php echo esc_attr( self::MESSAGE_ID ); ?>" role="status"></div>
+
 			<div class="notice notice-warning">
 				<p>
 					<?php
@@ -208,16 +224,6 @@ class WP_Sweep_Admin {
 			</p>
 
 			<?php self::render_totals(); ?>
-
-			<?php
-			/*
-			 * One region per screen, and it is a live region: the script writes
-			 * the result of a sweep into it without the page reloading, so
-			 * role="status" is what tells a screen reader that anything
-			 * happened at all.
-			 */
-			?>
-			<div class="sweep-message" id="<?php echo esc_attr( self::MESSAGE_ID ); ?>" role="status"></div>
 
 			<?php $table->views(); ?>
 
