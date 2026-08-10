@@ -50,8 +50,7 @@ GET    /wp-json/sweep/v1/details/<name>
 DELETE /wp-json/sweep/v1/sweep/<name>
 ```
 
-wp-env runs on ports 8924 (dev) and 8925 (tests); every other plugin in the
-collection has its own pair.
+wp-env runs on ports 8924 (dev) and 8925 (tests).
 
 ## Architecture
 
@@ -314,8 +313,8 @@ Notes that will save time:
   `SHOW TABLES`, `OPTIMIZE TABLE`, `GROUP_CONCAT`, `HAVING` and correlated
   `NOT IN` subqueries.
 
-## Known gap
+## Assertion messages
 
-Roughly 290 of the suite's 1,100-odd assertions still carry no failure message.
-Every assertion should carry one — not only the ones PHPUnit would report
-opaquely — and new or rewritten tests here do. The older ones are the backlog.
+Every assertion in the suite carries a failure message — not only the ones
+PHPUnit would report opaquely. The backlog that once existed here is cleared;
+keep new tests at the same standard.
