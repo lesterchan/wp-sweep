@@ -586,6 +586,18 @@ abstract class Plugin_Metadata_TestCase extends Plugin_TestCase {
 	}
 
 	/**
+	 * The changelog bullets under one version heading.
+	 *
+	 * @param string $version Version heading to read.
+	 * @return string
+	 */
+	protected function changelog_entry( $version ) {
+		preg_match( '/^### ' . preg_quote( $version, '/' ) . '\n(.*?)(?=^### |^## |\z)/ms', $this->readme(), $matches );
+
+		return isset( $matches[1] ) ? $matches[1] : '';
+	}
+
+	/**
 	 * The readme from the Upgrade Notice heading to the end.
 	 *
 	 * @return string
@@ -1385,11 +1397,15 @@ abstract class Plugin_Metadata_TestCase extends Plugin_TestCase {
 
 		$this->assertNotEmpty( $subjects, 'Every plugin names the breaks its Upgrade Notice has to cover.' );
 
-		$this->assertStringContainsString(
-			'### ' . $this->expected_version(),
-			$notice,
-			'The Upgrade Notice needs a section for the version being shipped.'
-		);
+		// The notice answers "what breaks for me"; a version whose changelog
+		// entry breaks nothing needs no section of its own (§3.3).
+		if ( str_contains( $this->changelog_entry( $this->expected_version() ), 'BREAKING:' ) ) {
+			$this->assertStringContainsString(
+				'### ' . $this->expected_version(),
+				$notice,
+				'A version with a BREAKING change needs an Upgrade Notice section of its own.'
+			);
+		}
 
 		foreach ( $subjects as $subject ) {
 			$this->assertStringContainsString(
