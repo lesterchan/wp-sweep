@@ -407,14 +407,14 @@ abstract class WP_Sweep_TestCase extends WP_UnitTestCase {
 
 			foreach ( $site_ids as $site_id ) {
 				switch_to_blog( (int) $site_id );
-				wp_sweep_delete_options();
+				wp_sweep_uninstall_site();
 				restore_current_blog();
 			}
 
 			return;
 		}
 
-		wp_sweep_delete_options();
+		wp_sweep_uninstall_site();
 	}
 
 	/**

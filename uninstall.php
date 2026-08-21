@@ -36,7 +36,7 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
  *
  * @return void
  */
-function wp_sweep_delete_options() {
+function wp_sweep_uninstall_site() {
 	delete_option( 'wp_sweep_options' );
 	delete_option( 'wp_sweep_version' );
 }
@@ -51,9 +51,9 @@ if ( is_multisite() ) {
 
 	foreach ( $wp_sweep_site_ids as $wp_sweep_site_id ) {
 		switch_to_blog( (int) $wp_sweep_site_id );
-		wp_sweep_delete_options();
+		wp_sweep_uninstall_site();
 		restore_current_blog();
 	}
 } else {
-	wp_sweep_delete_options();
+	wp_sweep_uninstall_site();
 }
