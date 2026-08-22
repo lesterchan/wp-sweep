@@ -24,9 +24,7 @@
  */
 
 // Exit if WordPress did not initiate this uninstall.
-if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
-	exit;
-}
+defined( 'WP_UNINSTALL_PLUGIN' ) || exit;
 
 /**
  * Delete the plugin's option rows on the current site.
