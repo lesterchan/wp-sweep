@@ -266,7 +266,7 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 		$html = $this->render_admin_page();
 
 		$this->assertStringContainsString( 'sweep-count-pending', $html, 'The rows do not defer their counts.' );
-		$this->assertStringContainsString( 'data-action="sweep_count"', $html, 'A pending cell does not say which request fills it.' );
+		$this->assertStringContainsString( 'data-action="wp_sweep_count"', $html, 'A pending cell does not say which request fills it.' );
 		$this->assertStringContainsString( 'sweep-total-pending', $html, 'The running totals were computed with the page anyway.' );
 		$this->assertStringContainsString( 'sweep-totals" data-nonce="', $html, 'The totals table carries no nonce for the one request that fills it.' );
 		$this->assertStringNotContainsString( '<strong class="sweep-count">', $html, 'A count was computed on the view that promises not to.' );

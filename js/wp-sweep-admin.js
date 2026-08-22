@@ -349,7 +349,7 @@
 
 		const params = new URLSearchParams();
 
-		params.set( 'action', 'sweep_totals' );
+		params.set( 'action', 'wp_sweep_totals' );
 		params.set( '_wpnonce', table.dataset.nonce );
 
 		const fail = function() {

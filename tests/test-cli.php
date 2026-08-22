@@ -229,7 +229,7 @@ class WP_Sweep_CLI_Test extends WP_Sweep_TestCase {
 	/**
 	 * The plugin registers the command under the name the readme documents.
 	 *
-	 * WP_Sweep::init() gates on the WP_CLI constant, which cannot be defined
+	 * WP_Sweep::register_command() gates on the WP_CLI constant, which cannot be defined
 	 * here without changing what every other test sees, so the registration
 	 * is asserted against the source.
 	 */

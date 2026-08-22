@@ -672,7 +672,7 @@ class WP_Sweep_List_Table extends WP_List_Table {
 		// number is the counts=now link the screen prints in a <noscript>.
 		if ( null === $item['count'] ) {
 			return sprintf(
-				'<span class="sweep-count sweep-count-pending" data-action="sweep_count" data-sweep-name="%1$s" data-sweep-type="%2$s" data-nonce="%3$s">&hellip;</span>',
+				'<span class="sweep-count sweep-count-pending" data-action="wp_sweep_count" data-sweep-name="%1$s" data-sweep-type="%2$s" data-nonce="%3$s">&hellip;</span>',
 				esc_attr( $item['name'] ),
 				esc_attr( $item['type'] ),
 				esc_attr( wp_create_nonce( 'wp_sweep_count_' . $item['name'] ) )

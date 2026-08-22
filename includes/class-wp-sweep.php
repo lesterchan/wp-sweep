@@ -72,13 +72,13 @@ class WP_Sweep {
 	private static $instance;
 
 	/**
-	 * Wire the plugin up.
+	 * Register hooks.
 	 *
 	 * There is no load_plugin_textdomain() call. Since WordPress 6.7, loading a
 	 * text domain this early triggers _doing_it_wrong; core loads translations
 	 * for plugins hosted on WordPress.org by itself, at the right moment.
 	 */
-	public function __construct() {
+	private function __construct() {
 		require_once WP_SWEEP_DIR . 'includes/class-wp-sweep-api.php';
 
 		new WP_Sweep_API();
@@ -107,7 +107,7 @@ class WP_Sweep {
 	 * @return void
 	 */
 	public function add_hooks() {
-		add_action( 'init', array( $this, 'init' ) );
+		self::register_command();
 
 		/*
 		 * Not gated on is_admin(). The admin-ajax.php endpoint is an admin
@@ -125,14 +125,21 @@ class WP_Sweep {
 	/**
 	 * Register the WP-CLI command.
 	 *
+	 * The class file is required here rather than at plugin load because it
+	 * extends WP_CLI_Command, which only exists when WP-CLI is the one running
+	 * WordPress. Requiring it unconditionally is a fatal error on every web
+	 * request.
+	 *
 	 * @return void
 	 */
-	public function init() {
-		if ( defined( 'WP_CLI' ) && WP_CLI ) {
-			require_once WP_SWEEP_DIR . 'includes/class-wp-sweep-command.php';
-
-			WP_CLI::add_command( 'sweep', 'WP_Sweep_Command' );
+	public static function register_command() {
+		if ( ! defined( 'WP_CLI' ) || ! WP_CLI ) {
+			return;
 		}
+
+		require_once WP_SWEEP_DIR . 'includes/class-wp-sweep-command.php';
+
+		WP_CLI::add_command( 'sweep', 'WP_Sweep_Command' );
 	}
 
 	/**

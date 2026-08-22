@@ -92,7 +92,7 @@ abstract class WP_Sweep_TestCase extends WP_UnitTestCase {
 		$GLOBALS['menu']    = array();
 		$GLOBALS['submenu'] = array();
 
-		WP_Sweep_Admin::admin_menu();
+		WP_Sweep_Admin::add_page();
 
 		$this->admin_hook_suffix = WP_Sweep_Admin::get_hook_suffix();
 

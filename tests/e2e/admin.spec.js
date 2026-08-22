@@ -85,7 +85,7 @@ test.describe( 'The Sweep screen', () => {
 		// pending until this resolves -- which is what makes the deferred
 		// state observable instead of a race the fill usually wins.
 		await page.route( '**/admin-ajax.php**', async ( route ) => {
-			if ( route.request().url().includes( 'action=sweep_totals' ) ) {
+			if ( route.request().url().includes( 'action=wp_sweep_totals' ) ) {
 				await new Promise( ( resolve ) => setTimeout( resolve, 2000 ) );
 			}
 			await route.continue();

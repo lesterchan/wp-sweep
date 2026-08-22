@@ -535,7 +535,7 @@ class WP_Sweep_List_Table_Test extends WP_Sweep_TestCase {
 		$cell = $this->table()->column_count( $item );
 
 		$this->assertStringContainsString( 'sweep-count-pending', $cell, 'A deferred cell is not marked pending.' );
-		$this->assertStringContainsString( 'data-action="sweep_count"', $cell, 'It does not name the request that fills it.' );
+		$this->assertStringContainsString( 'data-action="wp_sweep_count"', $cell, 'It does not name the request that fills it.' );
 		$this->assertStringContainsString( 'data-sweep-name="revisions"', $cell, 'It does not name its sweep.' );
 		$this->assertStringContainsString( 'data-sweep-type="posts"', $cell, 'It does not name its table.' );
 		$this->assertStringContainsString(

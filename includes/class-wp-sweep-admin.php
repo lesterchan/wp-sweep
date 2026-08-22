@@ -72,12 +72,12 @@ class WP_Sweep_Admin {
 	 * @return void
 	 */
 	public static function init() {
-		add_action( 'admin_menu', array( __CLASS__, 'admin_menu' ) );
+		add_action( 'admin_menu', array( __CLASS__, 'add_page' ) );
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'admin_enqueue_scripts' ) );
 		add_action( 'wp_ajax_sweep', array( __CLASS__, 'ajax_sweep' ) );
 		add_action( 'wp_ajax_sweep_details', array( __CLASS__, 'ajax_sweep_details' ) );
-		add_action( 'wp_ajax_sweep_count', array( __CLASS__, 'ajax_sweep_count' ) );
-		add_action( 'wp_ajax_sweep_totals', array( __CLASS__, 'ajax_sweep_totals' ) );
+		add_action( 'wp_ajax_wp_sweep_count', array( __CLASS__, 'ajax_sweep_count' ) );
+		add_action( 'wp_ajax_wp_sweep_totals', array( __CLASS__, 'ajax_sweep_totals' ) );
 	}
 
 	/**
@@ -96,7 +96,7 @@ class WP_Sweep_Admin {
 	 *
 	 * @return void
 	 */
-	public static function admin_menu() {
+	public static function add_page() {
 		// Tools, where this screen lived for its whole released life. Sweeping is
 		// maintenance against the installation, which is what core keeps under
 		// Tools beside Site Health, Export and Erase Personal Data.

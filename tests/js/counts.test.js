@@ -74,7 +74,7 @@ beforeAll( async () => {
 describe( 'the requests the fill sends', () => {
 	it( 'asks for the totals first, with the nonce the table carries', () => {
 		expect( sent[ 0 ] ).toEqual( {
-			action: 'sweep_totals',
+			action: 'wp_sweep_totals',
 			_wpnonce: 'TNONCE',
 		} );
 	} );
@@ -83,7 +83,7 @@ describe( 'the requests the fill sends', () => {
 		expect( sent ).toHaveLength( 4 );
 
 		expect( sent[ 1 ] ).toEqual( {
-			action: 'sweep_count',
+			action: 'wp_sweep_count',
 			sweep_name: 'revisions',
 			sweep_type: 'posts',
 			_wpnonce: 'C-revisions',

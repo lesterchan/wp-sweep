@@ -234,7 +234,7 @@ export const MESSAGE_ID = 'wp-sweep-message';
  */
 function countCell( { name, type, count, deferred } ) {
 	if ( deferred ) {
-		return `<span class="sweep-count sweep-count-pending" data-action="sweep_count" data-sweep-name="${ name }" data-sweep-type="${ type }" data-nonce="C-${ name }">&hellip;</span>`;
+		return `<span class="sweep-count sweep-count-pending" data-action="wp_sweep_count" data-sweep-name="${ name }" data-sweep-type="${ type }" data-nonce="C-${ name }">&hellip;</span>`;
 	}
 
 	if ( count > 0 ) {

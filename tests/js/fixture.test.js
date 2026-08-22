@@ -163,7 +163,7 @@ describe( 'the rest of the screen the script reaches for', () => {
 		// it fetches the number: the same action/name/type/nonce vocabulary
 		// the row actions carry, on the cell itself.
 		expect( listTable ).toContain( 'sweep-count sweep-count-pending' );
-		expect( listTable ).toContain( 'data-action="sweep_count"' );
+		expect( listTable ).toContain( 'data-action="wp_sweep_count"' );
 		expect( listTable ).toContain(
 			"wp_create_nonce( 'wp_sweep_count_' . $item['name'] )",
 		);
@@ -174,7 +174,7 @@ describe( 'the rest of the screen the script reaches for', () => {
 		const cell = parsed.querySelector( '.sweep-count-pending' );
 
 		expect( cell ).not.toBeNull();
-		expect( cell.dataset.action ).toBe( 'sweep_count' );
+		expect( cell.dataset.action ).toBe( 'wp_sweep_count' );
 		expect( cell.dataset.sweepName ).toBe( 'revisions' );
 		expect( cell.dataset.sweepType ).toBe( 'posts' );
 		expect( cell.dataset.nonce ).toBeTruthy();
@@ -194,8 +194,8 @@ describe( 'the rest of the screen the script reaches for', () => {
 	} );
 
 	it( 'registers the AJAX actions the fill calls', () => {
-		expect( admin ).toContain( "add_action( 'wp_ajax_sweep_count'" );
-		expect( admin ).toContain( "add_action( 'wp_ajax_sweep_totals'" );
+		expect( admin ).toContain( "add_action( 'wp_ajax_wp_sweep_count'" );
+		expect( admin ).toContain( "add_action( 'wp_ajax_wp_sweep_totals'" );
 	} );
 
 	it( 'gives each row a details container that is a div, not a p', () => {
