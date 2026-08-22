@@ -67,7 +67,7 @@ class WP_Sweep_Admin {
 	private static $details = array();
 
 	/**
-	 * Hook the screen into WordPress.
+	 * Hook registration.
 	 *
 	 * @return void
 	 */

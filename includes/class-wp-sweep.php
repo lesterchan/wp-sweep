@@ -89,9 +89,9 @@ class WP_Sweep {
 	}
 
 	/**
-	 * Initialise the plugin object and return its instance.
+	 * Get the instance, creating it on first call.
 	 *
-	 * @return WP_Sweep The plugin object instance.
+	 * @return WP_Sweep
 	 */
 	public static function get_instance() {
 		if ( ! isset( self::$instance ) ) {
@@ -150,14 +150,17 @@ class WP_Sweep {
 	 */
 	public static function capability( $context = 'sweep' ) {
 		/**
-		 * Filters the capability required to count, inspect or run a sweep.
+		 * Filters the capability required to reach a WP-Sweep screen.
+		 *
+		 * The same filter gates the AJAX and REST surfaces, through their own
+		 * contexts.
 		 *
 		 * @since 2.0.0
 		 *
 		 * @param string $capability The required capability.
 		 * @param string $context    What the capability is being checked for.
 		 */
-		return apply_filters( 'wp_sweep_capability', self::CAPABILITY, $context );
+		return (string) apply_filters( 'wp_sweep_capability', self::CAPABILITY, $context );
 	}
 
 	/**
