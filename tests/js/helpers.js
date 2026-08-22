@@ -18,6 +18,7 @@ export const l10n = {
 	textSweep: 'Sweep',
 	textSweeping: 'Sweeping...',
 	textNa: 'N/A',
+	textNothingToSweep: 'Nothing to sweep',
 };
 
 /**
@@ -91,6 +92,34 @@ export function sweepResponse( overrides = {} ) {
  */
 export function detailsResponse( items ) {
 	return { success: true, data: items };
+}
+
+/**
+ * A successful deferred-count response, as ajax_sweep_count() shapes it.
+ *
+ * @param {Object} overrides Fields to override.
+ * @return {Object} The payload.
+ */
+export function countResponse( overrides = {} ) {
+	return {
+		success: true,
+		data: {
+			count: 2,
+			total: 10,
+			percentage: '20%',
+			...overrides,
+		},
+	};
+}
+
+/**
+ * A successful totals response, as ajax_sweep_totals() shapes it.
+ *
+ * @param {Object} stats Row counts keyed by table type.
+ * @return {Object} The payload.
+ */
+export function totalsResponse( stats ) {
+	return { success: true, data: { stats } };
 }
 
 /**
@@ -172,18 +201,102 @@ export const MESSAGE_ID = 'wp-sweep-message';
  * group filter rather than seven, one totals row rather than six. A bare <tr> in
  * innerHTML is discarded by the parser, so rows are always built inside a table.
  *
- * @param {Object} options            Options.
- * @param {string} options.name       Sweep name.
- * @param {string} options.type       Sweep type.
- * @param {number} options.count      Count shown in the row.
- * @param {string} options.percentage Percentage shown in the row.
+ * @param {Object}  options            Options.
+ * @param {string}  options.name       Sweep name.
+ * @param {string}  options.type       Sweep type.
+ * @param {number}  options.count      Count shown in the row.
+ * @param {string}  options.percentage Percentage shown in the row.
+ * @param {boolean} options.deferred   Whether the screen rendered without its
+ *                                     counts, as the default view now does:
+ *                                     pending cells carrying the fetch
+ *                                     vocabulary, ellipses for totals, and the
+ *                                     totals nonce on the totals table.
+ * @param {Array}   options.rows       Extra rows, each { name, type }, after
+ *                                     the first. Only rendered deferred, which
+ *                                     is the mode that needs more than one row
+ *                                     to test.
  * @return {string} HTML.
  */
+/**
+ * The count cell, as column_count() renders it.
+ *
+ * The emphasis is the element itself: a <strong> while there is something to
+ * sweep, a <span> once there is not. Deferred, the cell is the pending span
+ * carrying the same action/name/type/nonce vocabulary the row actions carry,
+ * which is how the script fetches the number.
+ *
+ * @param {Object}  options          Options.
+ * @param {string}  options.name     Sweep name.
+ * @param {string}  options.type     Sweep type.
+ * @param {number}  options.count    Count shown in the cell.
+ * @param {boolean} options.deferred Whether the count was deferred.
+ * @return {string} HTML.
+ */
+function countCell( { name, type, count, deferred } ) {
+	if ( deferred ) {
+		return `<span class="sweep-count sweep-count-pending" data-action="sweep_count" data-sweep-name="${ name }" data-sweep-type="${ type }" data-nonce="C-${ name }">&hellip;</span>`;
+	}
+
+	if ( count > 0 ) {
+		return `<strong class="sweep-count">${ count }</strong>`;
+	}
+
+	return `<span class="sweep-count">${ count }</span>`;
+}
+
+/**
+ * One row, as WP_Sweep_List_Table renders it.
+ *
+ * @param {Object}  options            Options.
+ * @param {string}  options.name       Sweep name.
+ * @param {string}  options.type       Sweep type.
+ * @param {number}  options.count      Count shown in the row.
+ * @param {string}  options.percentage Percentage shown in the row.
+ * @param {boolean} options.deferred   Whether the count was deferred.
+ * @param {string}  options.label      Row label.
+ * @return {string} HTML.
+ */
+function sweepRow( {
+	name = 'revisions',
+	type = 'posts',
+	count = 2,
+	percentage = '20%',
+	deferred = false,
+	label = 'Revisions',
+} = {} ) {
+	return `
+						<tr>
+							<th scope="row" class="check-column">
+								<label class="screen-reader-text" for="sweep_${ name }">Select ${ label }</label>
+								<input type="checkbox" id="sweep_${ name }" name="sweep[]" value="${ name }" />
+							</th>
+							<td class="name column-name has-row-actions column-primary" data-colname="Sweep">
+								<strong>${ label }</strong>
+								<p class="description">Older copies of posts and pages, kept every time one is saved.</p>
+								<div class="sweep-details" hidden></div>
+								<button type="button" class="toggle-row"><span class="screen-reader-text">Show more details</span></button>
+							</td>
+							<td class="group column-group" data-colname="Group">Post Sweep</td>
+							<td class="count column-count" data-colname="Count">${ countCell(
+		{ name, type, count, deferred },
+	) }</td>
+							<td class="percentage column-percentage" data-colname="%"><span class="sweep-percentage">${
+	deferred ? '' : percentage
+}</span></td>
+							<td class="actions column-actions" data-colname="Actions">
+								<a href="tools.php?page=wp-sweep&sweep=${ name }&_wpnonce=abc123" class="btn-sweep button button-primary" data-action="sweep" data-sweep-name="${ name }" data-sweep-type="${ type }" data-nonce="NONCE" aria-controls="${ MESSAGE_ID }">Sweep</a>
+								<a href="tools.php?page=wp-sweep&sweep_details=${ name }&_wpnonce=def456" class="btn-sweep-details button" data-action="sweep_details" data-sweep-name="${ name }" data-sweep-type="${ type }" data-nonce="DNONCE" aria-expanded="false">Details</a>
+							</td>
+						</tr>`;
+}
+
 export function sweepSection( {
 	name = 'revisions',
 	type = 'posts',
 	count = 2,
 	percentage = '20%',
+	deferred = false,
+	rows = [],
 } = {} ) {
 	return `
 		<div class="wrap">
@@ -192,12 +305,20 @@ export function sweepSection( {
 			<div class="sweep-message" id="${ MESSAGE_ID }" role="status"></div>
 			<div class="notice notice-warning inline"><p>Before you do any sweep, please <a href="https://wordpress.org/plugins/wp-dbmanager/">backup your database</a> first, because any sweep done is irreversible.</p></div>
 			<p class="description">Details lists a sample of up to 500 items. Filter wp_sweep_limit_details to change it.</p>
-			<table class="widefat striped sweep-totals">
+			<table class="widefat striped sweep-totals"${
+	// Deferred, the totals table carries the nonce for the one request
+	// that fills every total, exactly as render_totals() prints it.
+	deferred ? ' data-nonce="TNONCE"' : ''
+}>
 				<thead><tr><th scope="col">Group</th><th scope="col">Currently in your database</th></tr></thead>
 				<tbody>
 					<tr>
 						<th scope="row">Posts</th>
-						<td><strong class="sweep-count-type-posts">10</strong> Posts, <strong class="sweep-count-type-postmeta">2</strong> Post Meta</td>
+						<td>${
+	deferred
+		? '<strong class="sweep-count-type-posts sweep-total-pending">&hellip;</strong> Posts, <strong class="sweep-count-type-postmeta sweep-total-pending">&hellip;</strong> Post Meta'
+		: '<strong class="sweep-count-type-posts">10</strong> Posts, <strong class="sweep-count-type-postmeta">2</strong> Post Meta'
+}</td>
 					</tr>
 				</tbody>
 			</table>
@@ -229,32 +350,9 @@ export function sweepSection( {
 						</tr>
 					</thead>
 					<tbody id="the-list" data-wp-lists="list:sweep">
-						<tr>
-							<th scope="row" class="check-column">
-								<label class="screen-reader-text" for="sweep_${ name }">Select Revisions</label>
-								<input type="checkbox" id="sweep_${ name }" name="sweep[]" value="${ name }" />
-							</th>
-							<td class="name column-name has-row-actions column-primary" data-colname="Sweep">
-								<strong>Revisions</strong>
-								<p class="description">Older copies of posts and pages, kept every time one is saved.</p>
-								<div class="sweep-details" hidden></div>
-								<button type="button" class="toggle-row"><span class="screen-reader-text">Show more details</span></button>
-							</td>
-							<td class="group column-group" data-colname="Group">Post Sweep</td>
-							<td class="count column-count" data-colname="Count">${
-	// The emphasis is the element itself, matching column_count():
-	// a <strong> while there is something to sweep, a <span>
-	// once there is not.
-	count > 0
-		? `<strong class="sweep-count">${ count }</strong>`
-		: `<span class="sweep-count">${ count }</span>`
-}</td>
-							<td class="percentage column-percentage" data-colname="%"><span class="sweep-percentage">${ percentage }</span></td>
-							<td class="actions column-actions" data-colname="Actions">
-								<a href="tools.php?page=wp-sweep&sweep=${ name }&_wpnonce=abc123" class="btn-sweep button button-primary" data-action="sweep" data-sweep-name="${ name }" data-sweep-type="${ type }" data-nonce="NONCE" aria-controls="${ MESSAGE_ID }">Sweep</a>
-								<a href="tools.php?page=wp-sweep&sweep_details=${ name }&_wpnonce=def456" class="btn-sweep-details button" data-action="sweep_details" data-sweep-name="${ name }" data-sweep-type="${ type }" data-nonce="DNONCE" aria-expanded="false">Details</a>
-							</td>
-						</tr>
+						${ sweepRow( { name, type, count, percentage, deferred } ) }${ rows
+	.map( ( row ) => sweepRow( { deferred, ...row } ) )
+	.join( '' ) }
 					</tbody>
 					<tfoot>
 						<tr>

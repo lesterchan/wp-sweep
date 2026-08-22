@@ -228,7 +228,10 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 	 * A sweep with nothing to clean offers no row action at all.
 	 */
 	public function test_empty_row_offers_no_row_action() {
-		$html = $this->render_admin_page();
+		// On the deferred (default) view every row keeps its buttons, because
+		// nothing knows yet which rows are empty. The view that computes the
+		// counts with the page is the one that can withhold an action.
+		$html = $this->render_admin_page( array( 'counts' => 'now' ) );
 
 		$this->assertStringNotContainsString( 'data-sweep-name="revisions"', $html, 'A row with nothing to sweep offers no action at all.' );
 	}
@@ -238,7 +241,7 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 	 */
 	public function test_counts_are_localised_in_the_markup() {
 		$this->make_revisions( 3 );
-		$html = $this->render_admin_page();
+		$html = $this->render_admin_page( array( 'counts' => 'now' ) );
 
 		// A <strong> carrying the class rather than a <span> wrapping one: a
 		// non-zero count is emphasised, and the emphasis has to be the element
@@ -251,6 +254,86 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 	}
 
 	/**
+	 * The default view renders no count -- that is the point of it.
+	 *
+	 * 2.0.0 computed every count before printing a byte, and on databases
+	 * whose meta tables have grown into the millions of rows that is a white
+	 * screen and a timeout. The default view now renders pending cells the
+	 * script fills afterwards, one request at a time.
+	 */
+	public function test_the_default_view_defers_its_counts() {
+		$this->make_revisions( 2 );
+		$html = $this->render_admin_page();
+
+		$this->assertStringContainsString( 'sweep-count-pending', $html, 'The rows do not defer their counts.' );
+		$this->assertStringContainsString( 'data-action="sweep_count"', $html, 'A pending cell does not say which request fills it.' );
+		$this->assertStringContainsString( 'sweep-total-pending', $html, 'The running totals were computed with the page anyway.' );
+		$this->assertStringContainsString( 'sweep-totals" data-nonce="', $html, 'The totals table carries no nonce for the one request that fills it.' );
+		$this->assertStringNotContainsString( '<strong class="sweep-count">', $html, 'A count was computed on the view that promises not to.' );
+	}
+
+	/**
+	 * The deferred view still has a road to the numbers without JavaScript.
+	 */
+	public function test_the_deferred_view_offers_a_noscript_path_to_the_counts() {
+		$html = $this->render_admin_page();
+
+		$this->assertStringContainsString( '<noscript>', $html, 'There is no noscript fallback, so a reader without JavaScript never gets a count.' );
+		$this->assertStringContainsString( 'counts=now', $html, 'The fallback link does not ask for the counts.' );
+	}
+
+	/**
+	 * The counts=now view computes everything with the page, as every render
+	 * used to.
+	 */
+	public function test_counts_now_renders_the_numbers_in_place() {
+		$this->make_revisions( 2 );
+		$html = $this->render_admin_page( array( 'counts' => 'now' ) );
+
+		$this->assertStringNotContainsString( 'sweep-count-pending', $html, 'The counts=now view still deferred its row counts.' );
+		$this->assertStringNotContainsString( 'sweep-total-pending', $html, 'The counts=now view still deferred its totals.' );
+		$this->assertStringNotContainsString( '<noscript>', $html, 'The counts=now view offers a link to the view it already is.' );
+		$this->assertStringContainsString( '<strong class="sweep-count">', $html, 'The counts=now view rendered no counts.' );
+
+		// The bulk form and the row actions have to keep a scriptless reader
+		// on this view, or the reload lands them back on a page of ellipses.
+		$this->assertMatchesRegularExpression(
+			'/<form method="post" action="[^"]*counts=now/',
+			$html,
+			'The bulk form drops counts=now on the way through.'
+		);
+		$this->assertMatchesRegularExpression(
+			'/class="btn-sweep[^"]*" [^>]*href="[^"]*counts=now|href="[^"]*counts=now[^"]*"[^>]*class="btn-sweep/',
+			$html,
+			'The row actions drop counts=now on the way through.'
+		);
+	}
+
+	/**
+	 * A sort on the Count column computes the counts whatever the default is:
+	 * rows cannot be ordered by numbers the render does not have.
+	 */
+	public function test_sorting_by_count_computes_the_counts() {
+		$this->make_revisions( 2 );
+		$html = $this->render_admin_page( array( 'orderby' => 'count' ) );
+
+		$this->assertStringNotContainsString( 'sweep-count-pending', $html, 'A count-ordered view deferred the numbers it was ordered by.' );
+	}
+
+	/**
+	 * The wp_sweep_defer_counts filter turns the deferral off for a site that
+	 * would rather wait for one render than watch the numbers arrive.
+	 */
+	public function test_the_defer_counts_filter_restores_the_synchronous_render() {
+		add_filter( 'wp_sweep_defer_counts', '__return_false' );
+
+		$html = $this->render_admin_page();
+
+		$this->assertStringNotContainsString( 'sweep-count-pending', $html, 'The filter did not turn the deferral off.' );
+		$this->assertStringNotContainsString( '<noscript>', $html, 'A synchronous render offers a fallback to itself.' );
+	}
+
+	/**
 	 * The stat spans the script updates after a sweep are all present.
 	 *
 	 * @dataProvider data_stat_types
@@ -258,8 +341,10 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 	 * @param string $type Sweep type.
 	 */
 	public function test_markup_carries_the_stat_span_for_each_type( $type ) {
+		// Without the closing quote: on the deferred view the class list also
+		// carries the pending marker the totals request clears.
 		$this->assertStringContainsString(
-			'class="sweep-count-type-' . $type . '"',
+			'class="sweep-count-type-' . $type,
 			$this->render_admin_page(),
 			'The ' . $type . ' stat has no span for the script to update.'
 		);

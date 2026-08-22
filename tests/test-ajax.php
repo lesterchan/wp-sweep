@@ -116,9 +116,16 @@ class WP_Sweep_Ajax_Test extends WP_Sweep_Ajax_TestCase {
 	 * @return void
 	 */
 	protected function set_request( $action, $sweep_name, $sweep_type = 'posts', $nonce = null ) {
-		$nonce_action = 'sweep_details' === $action
-			? 'wp_sweep_details_' . $sweep_name
-			: 'wp_sweep_' . $sweep_name;
+		switch ( $action ) {
+			case 'sweep_details':
+				$nonce_action = 'wp_sweep_details_' . $sweep_name;
+				break;
+			case 'sweep_count':
+				$nonce_action = 'wp_sweep_count_' . $sweep_name;
+				break;
+			default:
+				$nonce_action = 'wp_sweep_' . $sweep_name;
+		}
 
 		$_GET = array(
 			'action'     => $action,
@@ -313,7 +320,109 @@ class WP_Sweep_Ajax_Test extends WP_Sweep_Ajax_TestCase {
 	}
 
 	/**
-	 * Both AJAX actions the admin screen posts to.
+	 * An administrator can fetch one deferred count.
+	 *
+	 * This is the request the screen's script sends for each row once the
+	 * page is up, since the render no longer computes the counts itself.
+	 */
+	public function test_admin_can_fetch_a_count() {
+		wp_set_current_user( self::$admin );
+		$this->make_revisions( 2 );
+
+		$this->set_request( 'sweep_count', 'revisions', 'posts' );
+		$response = $this->run_ajax( 'sweep_count' );
+
+		$this->assertTrue( $response['success'], 'An administrator may fetch a count.' );
+		$this->assertSame( 2, (int) $response['data']['count'], 'The count is the number of revisions just created.' );
+		$this->assertArrayHasKey( 'total', $response['data'], 'The response carries the table total the percentage was measured against.' );
+		$this->assertStringEndsWith( '%', $response['data']['percentage'], 'The percentage is formatted, ready to render.' );
+	}
+
+	/**
+	 * A sweep's own nonce does not unlock its count. Each request the screen
+	 * makes carries the nonce minted for exactly that request.
+	 */
+	public function test_sweep_nonce_does_not_authorise_a_count() {
+		wp_set_current_user( self::$admin );
+		$this->make_revisions( 1 );
+
+		$this->set_request( 'sweep_count', 'revisions', 'posts', wp_create_nonce( 'wp_sweep_revisions' ) );
+		$response = $this->run_ajax( 'sweep_count' );
+
+		$this->assertTrue(
+			null === $response || empty( $response['success'] ),
+			'The sweep nonce authorised a count request.'
+		);
+	}
+
+	/**
+	 * A count request naming a type the plugin does not measure is refused.
+	 */
+	public function test_count_with_an_unknown_type_is_refused() {
+		wp_set_current_user( self::$admin );
+
+		$this->set_request( 'sweep_count', 'revisions', 'no_such_table' );
+		$response = $this->run_ajax( 'sweep_count' );
+
+		$this->assertFalse( $response['success'], 'An unknown sweep type is refused before anything is counted.' );
+	}
+
+	/**
+	 * An administrator can fetch the running totals, all of them at once.
+	 */
+	public function test_admin_can_fetch_the_totals() {
+		wp_set_current_user( self::$admin );
+
+		$_GET     = array(
+			'action'   => 'sweep_totals',
+			'_wpnonce' => wp_create_nonce( 'wp_sweep_totals' ),
+		);
+		$_REQUEST = $_GET;
+
+		$response = $this->run_ajax( 'sweep_totals' );
+
+		$this->assertTrue( $response['success'], 'An administrator may fetch the totals.' );
+
+		foreach ( $this->sweep()->get_sweep_types() as $type ) {
+			$this->assertArrayHasKey( $type, $response['data']['stats'], "The totals response is missing the '{$type}' table." );
+		}
+
+		$this->assertGreaterThan( 0, $response['data']['stats']['users'], 'The users total is positive; a site always has a user.' );
+	}
+
+	/**
+	 * The totals need the capability and their own nonce, like everything else.
+	 */
+	public function test_totals_are_refused_without_the_capability_or_nonce() {
+		wp_set_current_user( self::$subscriber );
+
+		$_GET     = array(
+			'action'   => 'sweep_totals',
+			'_wpnonce' => wp_create_nonce( 'wp_sweep_totals' ),
+		);
+		$_REQUEST = $_GET;
+
+		$response = $this->run_ajax( 'sweep_totals' );
+		$this->assertFalse( $response['success'], 'A subscriber is refused the totals.' );
+
+		wp_set_current_user( self::$admin );
+
+		$_GET     = array(
+			'action'   => 'sweep_totals',
+			'_wpnonce' => 'not-a-real-nonce',
+		);
+		$_REQUEST = $_GET;
+
+		$response = $this->run_ajax( 'sweep_totals' );
+		$this->assertTrue(
+			null === $response || empty( $response['success'] ),
+			'A bad nonce was accepted for the totals.'
+		);
+	}
+
+	/**
+	 * The AJAX actions the admin screen sends, bar the totals, which carry no
+	 * sweep name and are exercised on their own above.
 	 *
 	 * @return array
 	 */
@@ -321,23 +430,28 @@ class WP_Sweep_Ajax_Test extends WP_Sweep_Ajax_TestCase {
 		return array(
 			'sweep'   => array( 'sweep' ),
 			'details' => array( 'sweep_details' ),
+			'count'   => array( 'sweep_count' ),
 		);
 	}
 
 	/**
-	 * Both endpoints are wired up under the actions the script posts to.
+	 * Every endpoint is wired up under the action the script posts to.
 	 */
 	public function test_endpoints_are_registered() {
 		$this->assertNotFalse( has_action( 'wp_ajax_sweep' ), 'The sweep endpoint is registered.' );
 		$this->assertNotFalse( has_action( 'wp_ajax_sweep_details' ), 'The details endpoint is registered.' );
+		$this->assertNotFalse( has_action( 'wp_ajax_sweep_count' ), 'The count endpoint is registered.' );
+		$this->assertNotFalse( has_action( 'wp_ajax_sweep_totals' ), 'The totals endpoint is registered.' );
 	}
 
 	/**
-	 * Neither endpoint is exposed to logged out visitors.
+	 * No endpoint is exposed to logged out visitors.
 	 */
 	public function test_endpoints_are_not_public() {
 		$this->assertFalse( has_action( 'wp_ajax_nopriv_sweep' ), 'The sweep endpoint has no nopriv twin.' );
 		$this->assertFalse( has_action( 'wp_ajax_nopriv_sweep_details' ), 'The details endpoint has no nopriv twin.' );
+		$this->assertFalse( has_action( 'wp_ajax_nopriv_sweep_count' ), 'The count endpoint has no nopriv twin.' );
+		$this->assertFalse( has_action( 'wp_ajax_nopriv_sweep_totals' ), 'The totals endpoint has no nopriv twin.' );
 	}
 
 	/**

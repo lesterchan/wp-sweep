@@ -325,6 +325,7 @@ class WP_Sweep_Filters_Test extends WP_Sweep_TestCase {
 			'wp_sweep_capability',
 			'wp_sweep_commentmeta_whitelist',
 			'wp_sweep_count',
+			'wp_sweep_defer_counts',
 			'wp_sweep_details',
 			'wp_sweep_excluded_taxonomies',
 			'wp_sweep_excluded_termids',

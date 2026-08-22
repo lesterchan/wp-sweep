@@ -147,6 +147,37 @@ class WP_Sweep_Count_Test extends WP_Sweep_TestCase {
 	}
 
 	/**
+	 * The duplicated counts read no row ids.
+	 *
+	 * Counting used to go through the same query the sweep deletes with, whose
+	 * GROUP_CONCAT builds a buffer of ids per duplicated group and ships every
+	 * one of them to PHP. A count needs none of that, and on a site whose
+	 * postmeta holds millions of duplicates the difference is the Sweep screen
+	 * loading rather than timing out. The ids stay where they are needed: in
+	 * sweep(), which is about to delete the rows they name.
+	 */
+	public function test_the_duplicated_count_reads_no_row_ids() {
+		$code = $this->source_without_comments( '/includes/class-wp-sweep.php' );
+
+		$this->assertStringContainsString(
+			'count_protected_meta( $this->duplicated_meta_counts(',
+			$code,
+			'The duplicated counts do not go through the id-free helper.'
+		);
+
+		$start = strpos( $code, 'private function duplicated_meta_counts' );
+		$end   = strpos( $code, 'private function duplicated_meta(', (int) $start );
+
+		$this->assertNotFalse( $start, 'duplicated_meta_counts() is gone.' );
+		$this->assertNotFalse( $end, 'duplicated_meta() is gone.' );
+		$this->assertStringNotContainsString(
+			'GROUP_CONCAT',
+			substr( $code, $start, $end - $start ),
+			'The counting query hauls the row ids into PHP, which is the timeout this helper exists to end.'
+		);
+	}
+
+	/**
 	 * Term relationships pointing at a missing object are counted.
 	 */
 	public function test_counts_orphan_term_relationships() {

@@ -170,6 +170,21 @@ the bulk action is a real form post, both handled in `handle_request()`. The
 script intercepts them so the screen updates in place. Do not add a control that
 only works with the script running.
 
+**The default view renders no counts.** Computing every count before printing a
+byte is what timed the screen out on large databases, so the rows render with
+pending cells and the script fetches the numbers afterwards — totals first,
+then one row at a time, deliberately sequential so a big database never gets
+nineteen concurrent scans. The three renders that do compute counts with the
+page: `counts=now` (the `<noscript>` link — this is the no-JavaScript path, so
+the row actions and the bulk form must carry the parameter through their
+reloads), a sort on the Count column (rows cannot be ordered by numbers the
+render does not have), and a site returning false from `wp_sweep_defer_counts`.
+A pending cell carries the same action/name/type/nonce vocabulary as the row
+actions; a row whose count is deferred (null) keeps its buttons, and the script
+swaps them for the dash when a zero arrives. The count nonce actions are
+`wp_sweep_count_<name>` and `wp_sweep_totals` — more names a sweep must never
+take.
+
 **A finished sweep reports into one region, found by id and nothing else.**
 It is printed **immediately after the `<hr class="wp-header-end">` that follows
 the `<h1>`, where `settings_errors()` has just printed the reload path's
@@ -240,7 +255,7 @@ test pass.
 
 ### Hooks
 
-Eighteen, all prefixed `wp_sweep_`, all carrying a `@since`. Sixteen shipped
+Nineteen, all prefixed `wp_sweep_`, all carrying a `@since`. Sixteen shipped
 before 2.0.0 and are public API — **do not rename them.**
 `WP_Sweep_Filters_Test` pins the exact set.
 

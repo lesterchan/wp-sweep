@@ -77,6 +77,42 @@ test.describe( 'The Sweep screen', () => {
 		}
 	} );
 
+	test( 'the screen renders before its counts arrive, then fills them in', async ( { page } ) => {
+		createJunk( 'revisions' );
+
+		// Hold the totals request at the door for a moment. The fill is
+		// sequential and the totals go first, so every pending cell stays
+		// pending until this resolves -- which is what makes the deferred
+		// state observable instead of a race the fill usually wins.
+		await page.route( '**/admin-ajax.php**', async ( route ) => {
+			if ( route.request().url().includes( 'action=sweep_totals' ) ) {
+				await new Promise( ( resolve ) => setTimeout( resolve, 2000 ) );
+			}
+			await route.continue();
+		} );
+
+		// Not openSweepScreen(): that helper waits for the fill to finish,
+		// and the point here is the screen before it has.
+		await page.goto( `${ SWEEP_URL }&group=all` );
+		await expect( page.getByRole( 'heading', { name: 'Sweep', exact: true } ) ).toBeVisible();
+
+		// The screen is usable while every count is still pending: the rows
+		// are there, and each keeps its buttons, because nothing knows yet
+		// which rows are empty.
+		await expect( page.locator( '.sweep-count-pending' ) ).toHaveCount( SWEEPS.length );
+		await expect( page.locator( '.sweep-total-pending' ) ).not.toHaveCount( 0 );
+		await expect( row( page, 'revisions' ).locator( '.btn-sweep' ) ).toBeVisible();
+
+		// Then the numbers arrive without a reload, and a row that turns out
+		// to be worth acting on is emphasised exactly as a synchronous render
+		// would have drawn it.
+		await expect( page.locator( '.sweep-count-pending' ) ).toHaveCount( 0 );
+		await expect( page.locator( '.sweep-total-pending' ) ).toHaveCount( 0 );
+		await expect( row( page, 'revisions' ).locator( 'strong.sweep-count' ) ).toHaveText(
+			String( sweepCount( 'revisions' ) ),
+		);
+	} );
+
 	test( 'the screen tells a site owner to back up before doing anything', async ( { page } ) => {
 		await openSweepScreen( page );
 

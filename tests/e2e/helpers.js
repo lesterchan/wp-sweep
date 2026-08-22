@@ -509,6 +509,14 @@ async function openSweepScreen( page, group = 'all' ) {
 	await page.goto( `${ SWEEP_URL }&group=${ group }` );
 
 	await expect( page.getByRole( 'heading', { name: 'Sweep', exact: true } ) ).toBeVisible();
+
+	// The screen renders before its counts and the script fetches them
+	// afterwards, one at a time. Every caller of this helper reads or acts on
+	// settled numbers, so wait for the fill to finish here rather than racing
+	// it in each test -- the deferred state itself has a spec of its own,
+	// which holds the requests at the door instead of using this helper.
+	await expect( page.locator( '.sweep-count-pending' ) ).toHaveCount( 0 );
+	await expect( page.locator( '.sweep-total-pending' ) ).toHaveCount( 0 );
 }
 
 /**

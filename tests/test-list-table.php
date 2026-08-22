@@ -326,6 +326,10 @@ class WP_Sweep_List_Table_Test extends WP_Sweep_TestCase {
 	public function test_only_a_count_worth_acting_on_is_bold() {
 		$this->make_revisions( 3 );
 
+		// The default view defers its counts; this is the view that computes
+		// them with the page, which is the one with numbers to assert on.
+		$_GET = array( 'counts' => 'now' );
+
 		$table = $this->table();
 		$rows  = wp_list_pluck( $table->items, 'count', 'name' );
 
@@ -502,6 +506,104 @@ class WP_Sweep_List_Table_Test extends WP_Sweep_TestCase {
 
 		$this->assertStringNotContainsString( '<script>window.pwned', $html, 'A comment author name reached the page as markup.' );
 		$this->assertStringContainsString( '&lt;script&gt;', $html, 'The details list was not rendered at all.' );
+	}
+
+	/**
+	 * The default view defers every count and percentage.
+	 */
+	public function test_counts_are_deferred_by_default() {
+		$this->assertTrue( WP_Sweep_List_Table::defer_counts(), 'A bare request does not defer its counts.' );
+
+		$items = $this->table()->items;
+
+		$this->assertNotEmpty( $items, 'The table has no rows to check.' );
+
+		foreach ( $items as $item ) {
+			$this->assertNull( $item['count'], "The '{$item['name']}' count was computed on the view that promises not to." );
+			$this->assertNull( $item['percentage'], "And so was the '{$item['name']}' percentage." );
+		}
+	}
+
+	/**
+	 * A deferred cell carries everything the script needs to fetch its count:
+	 * the same action/name/type/nonce vocabulary the row actions carry.
+	 */
+	public function test_a_deferred_cell_carries_the_fetch_vocabulary() {
+		$items = wp_list_filter( $this->table()->items, array( 'name' => 'revisions' ) );
+		$item  = reset( $items );
+
+		$cell = $this->table()->column_count( $item );
+
+		$this->assertStringContainsString( 'sweep-count-pending', $cell, 'A deferred cell is not marked pending.' );
+		$this->assertStringContainsString( 'data-action="sweep_count"', $cell, 'It does not name the request that fills it.' );
+		$this->assertStringContainsString( 'data-sweep-name="revisions"', $cell, 'It does not name its sweep.' );
+		$this->assertStringContainsString( 'data-sweep-type="posts"', $cell, 'It does not name its table.' );
+		$this->assertStringContainsString(
+			'data-nonce="' . wp_create_nonce( 'wp_sweep_count_revisions' ) . '"',
+			$cell,
+			'Its nonce is not the one ajax_sweep_count() checks.'
+		);
+
+		$this->assertSame(
+			'<span class="sweep-percentage"></span>',
+			$this->table()->column_percentage( $item ),
+			'A deferred percentage renders something other than the empty span the script writes into.'
+		);
+
+		// The row keeps its buttons: nothing knows yet whether it is empty,
+		// and sweeping an empty sweep reports "nothing left" harmlessly.
+		$this->assertStringContainsString( 'btn-sweep', $this->table()->column_actions( $item ), 'A deferred row lost its actions.' );
+	}
+
+	/**
+	 * The three requests that must compute the counts with the page do.
+	 */
+	public function test_the_synchronous_views_compute_real_counts() {
+		$this->make_revisions( 2 );
+
+		foreach ( array(
+			'counts=now'    => array( 'counts' => 'now' ),
+			'orderby=count' => array( 'orderby' => 'count' ),
+		) as $view => $get ) {
+			$_GET = $get;
+
+			$this->assertFalse( WP_Sweep_List_Table::defer_counts(), "The {$view} view still defers its counts." );
+
+			$rows = wp_list_pluck( $this->table()->items, 'count', 'name' );
+
+			$this->assertIsInt( $rows['revisions'], "The {$view} view carries no computed count." );
+			$this->assertGreaterThanOrEqual( 2, $rows['revisions'], "The {$view} view missed the revisions just created." );
+		}
+
+		$_GET = array();
+		add_filter( 'wp_sweep_defer_counts', '__return_false' );
+
+		$rows = wp_list_pluck( $this->table()->items, 'count', 'name' );
+
+		$this->assertIsInt( $rows['revisions'], 'The filtered-off view carries no computed count.' );
+	}
+
+	/**
+	 * The counts=now view keeps itself in the row action links, so a reader
+	 * without JavaScript is not dropped back onto a page of ellipses by the
+	 * very reload their click causes.
+	 */
+	public function test_counts_now_survives_the_action_links() {
+		$this->make_revisions( 1 );
+
+		$_GET = array( 'counts' => 'now' );
+
+		$items   = wp_list_filter( $this->table()->items, array( 'name' => 'revisions' ) );
+		$actions = $this->table()->column_actions( reset( $items ) );
+
+		$this->assertStringContainsString( 'counts=now', $actions, 'The action links drop counts=now.' );
+
+		$_GET = array();
+
+		$items   = wp_list_filter( $this->table()->items, array( 'name' => 'revisions' ) );
+		$actions = $this->table()->column_actions( reset( $items ) );
+
+		$this->assertStringNotContainsString( 'counts', $actions, 'The deferred view smuggles a counts parameter into its links.' );
 	}
 
 	/**

@@ -138,6 +138,76 @@
 	}
 
 	/**
+	 * Write a count into its cell, emphasised only when it is worth acting on.
+	 *
+	 * The emphasis is the element itself -- a <strong> while there is
+	 * something to sweep, a <span> once there is not -- so the element is
+	 * replaced rather than restyled, exactly as a reload would redraw it.
+	 * Replacing it also sheds the pending marker and the data attributes a
+	 * deferred cell was rendered with, which is what stops a slow count
+	 * response overwriting a row that has since been swept: the fetch checks
+	 * its cell is still connected before writing.
+	 *
+	 * @param {HTMLElement} cell  The current .sweep-count element.
+	 * @param {number}      count The count to show.
+	 */
+	function writeCount( cell, count ) {
+		const replacement = document.createElement( count > 0 ? 'strong' : 'span' );
+
+		replacement.className = 'sweep-count';
+		replacement.textContent = count.toLocaleString();
+
+		cell.replaceWith( replacement );
+	}
+
+	/**
+	 * Write the running totals above the table.
+	 *
+	 * @param {Object} stats Row counts keyed by table type.
+	 */
+	function writeStats( stats ) {
+		Object.keys( stats || {} ).forEach( function( key ) {
+			document
+				.querySelectorAll( '.sweep-count-type-' + key )
+				.forEach( function( node ) {
+					node.classList.remove( 'sweep-total-pending' );
+					node.textContent = parseInt( stats[ key ], 10 ).toLocaleString();
+				} );
+		} );
+	}
+
+	/**
+	 * Swap a row's buttons for the dash a fresh render gives an empty row.
+	 *
+	 * The checkbox stays: every row has one, empty or not, or the column gains
+	 * holes and select-all starts claiming rows it does not select. This
+	 * mirrors what column_actions() renders on a fresh page load, so a swept
+	 * row and a reloaded one agree.
+	 *
+	 * @param {HTMLElement} row The table row.
+	 */
+	function markRowEmpty( row ) {
+		const actions = row.querySelector( '.column-actions' );
+
+		if ( ! actions ) {
+			return;
+		}
+
+		actions.textContent = '';
+
+		const dash = document.createElement( 'span' );
+		dash.className = 'sweep-nothing';
+		dash.setAttribute( 'aria-hidden', 'true' );
+		dash.textContent = '—';
+
+		const label = document.createElement( 'span' );
+		label.className = 'screen-reader-text';
+		label.textContent = l10n.textNothingToSweep;
+
+		actions.append( dash, label );
+	}
+
+	/**
 	 * Show the result of a sweep in the region the trigger names.
 	 *
 	 * @param {HTMLElement} trigger The Sweep row action that was clicked.
@@ -189,23 +259,7 @@
 
 				const countCell = row.querySelector( '.sweep-count' );
 				if ( countCell ) {
-					countCell.textContent = count.toLocaleString();
-
-					// The cell is rendered as a <strong> while there is
-					// something in it and a <span> once there is not, so the
-					// emphasis has to come off here too. Setting textContent
-					// leaves the element itself alone, which is the whole
-					// reason the emphasis is the element rather than a tag
-					// inside it -- but it does mean a swept row would keep a
-					// bold zero until somebody reloaded the page.
-					if ( 0 === count && 'STRONG' === countCell.tagName ) {
-						const plain = document.createElement( 'span' );
-
-						plain.className = countCell.className;
-						plain.textContent = countCell.textContent;
-
-						countCell.replaceWith( plain );
-					}
+					writeCount( countCell, count );
 				}
 
 				const percentageCell = row.querySelector( '.sweep-percentage' );
@@ -214,16 +268,7 @@
 				}
 
 				// Running totals for the whole section.
-				Object.keys( response.data.stats || {} ).forEach( function( key ) {
-					document
-						.querySelectorAll( '.sweep-count-type-' + key )
-						.forEach( function( node ) {
-							node.textContent = parseInt(
-								response.data.stats[ key ],
-								10,
-							).toLocaleString();
-						} );
-				} );
+				writeStats( response.data.stats );
 
 				showMessage( trigger, response.data.sweep );
 				hideDetails( row );
@@ -231,27 +276,8 @@
 				document.body.classList.remove( 'sweep-active' );
 
 				// Nothing left to sweep, so the buttons go and the cell says so.
-				// The checkbox stays: every row has one, empty or not, or the
-				// column gains holes and select-all starts claiming rows it does
-				// not select. This mirrors what column_actions() renders on a
-				// fresh page load, so a swept row and a reloaded one agree.
 				if ( 0 === count ) {
-					const actions = row.querySelector( '.column-actions' );
-
-					if ( actions ) {
-						actions.textContent = '';
-
-						const dash = document.createElement( 'span' );
-						dash.className = 'sweep-nothing';
-						dash.setAttribute( 'aria-hidden', 'true' );
-						dash.textContent = '\u2014';
-
-						const label = document.createElement( 'span' );
-						label.className = 'screen-reader-text';
-						label.textContent = l10n.textNothingToSweep;
-
-						actions.append( dash, label );
-					}
+					markRowEmpty( row );
 
 					return;
 				}
@@ -262,6 +288,113 @@
 				document.body.classList.remove( 'sweep-active' );
 				setBusy( trigger, false, l10n.textSweep );
 			} );
+	}
+
+	/**
+	 * Fetch one deferred count and fold it into its row.
+	 *
+	 * The cell was rendered pending, carrying the same action/name/type/nonce
+	 * vocabulary the row actions carry, so request() reads it the same way.
+	 *
+	 * @param {HTMLElement} cell The pending .sweep-count element.
+	 * @return {Promise} Resolves once the row has been updated.
+	 */
+	function fillCount( cell ) {
+		return request( cell )
+			.then( function( response ) {
+				// Replaced meanwhile -- the row was swept before its count
+				// arrived, and the sweep's answer is the fresher one.
+				if ( ! cell.isConnected ) {
+					return;
+				}
+
+				if ( ! response || ! response.success ) {
+					cell.textContent = l10n.textNa;
+					return;
+				}
+
+				const row = cell.closest( 'tr' );
+				const count = parseInt( response.data.count, 10 );
+
+				writeCount( cell, count );
+
+				const percentageCell = row.querySelector( '.sweep-percentage' );
+				if ( percentageCell ) {
+					percentageCell.textContent = response.data.percentage;
+				}
+
+				if ( 0 === count ) {
+					markRowEmpty( row );
+				}
+			} )
+			.catch( function() {
+				cell.textContent = l10n.textNa;
+			} );
+	}
+
+	/**
+	 * Fetch the running totals, which were also deferred.
+	 *
+	 * One request for the whole table: its nonce rides on the table element,
+	 * since twelve cells share the answer.
+	 *
+	 * @return {Promise} Resolves once the totals have been written.
+	 */
+	function fillTotals() {
+		const table = document.querySelector( '.sweep-totals[data-nonce]' );
+
+		if ( ! table || ! table.querySelector( '.sweep-total-pending' ) ) {
+			return Promise.resolve();
+		}
+
+		const params = new URLSearchParams();
+
+		params.set( 'action', 'sweep_totals' );
+		params.set( '_wpnonce', table.dataset.nonce );
+
+		const fail = function() {
+			table.querySelectorAll( '.sweep-total-pending' ).forEach( function( node ) {
+				node.textContent = l10n.textNa;
+			} );
+		};
+
+		return fetch( window.ajaxurl + '?' + params.toString(), {
+			credentials: 'same-origin',
+		} )
+			.then( function( response ) {
+				return response.json();
+			} )
+			.then( function( response ) {
+				if ( ! response || ! response.success ) {
+					fail();
+					return;
+				}
+
+				writeStats( response.data.stats );
+			} )
+			.catch( fail );
+	}
+
+	/**
+	 * Fill in everything the screen rendered without.
+	 *
+	 * The screen defers its counts so it can render before the queries run --
+	 * they are the expensive half of the page, and computing all of them
+	 * before printing a byte is what used to time the screen out on large
+	 * databases. Totals first, then one row at a time: these queries scan the
+	 * same handful of tables, and nineteen of them at once would hand the
+	 * database the very spike the deferral exists to avoid.
+	 */
+	function fillDeferredCounts() {
+		const cells = Array.prototype.slice.call(
+			document.querySelectorAll( '.sweep-count-pending' ),
+		);
+
+		cells.reduce( function( chain, cell ) {
+			return chain.then( function() {
+				return fillCount( cell );
+			} );
+		}, fillTotals() );
 	}
 
 	document.addEventListener( 'click', function( event ) {
@@ -315,4 +448,8 @@
 
 		return l10n.textCloseWarning;
 	} );
+
+	// The script is enqueued in the footer, so the cells it fills are already
+	// on the page by the time this runs.
+	fillDeferredCounts();
 }() );

@@ -108,6 +108,10 @@ class WP_Sweep_List_Table extends WP_List_Table {
 	 * @return string
 	 */
 	public function column_actions( $item ) {
+		// Strict, so a deferred count (null) keeps its buttons: the row cannot
+		// know yet that there is nothing to sweep, and sweeping an empty sweep
+		// reports "nothing left" rather than doing any harm. The script swaps
+		// the buttons for the dash once a zero arrives.
 		if ( 0 === $item['count'] ) {
 			return '<span class="sweep-nothing" aria-hidden="true">&mdash;</span><span class="screen-reader-text">'
 				. esc_html__( 'Nothing to sweep', 'wp-sweep' ) . '</span>';
@@ -321,7 +325,7 @@ class WP_Sweep_List_Table extends WP_List_Table {
 	}
 
 	/**
-	 * The three navigation parameters this screen reads off the URL.
+	 * The four navigation parameters this screen reads off the URL.
 	 *
 	 * Every read of the query string is here, so there is one place to look.
 	 * None of them is form data: they choose which rows are shown and in what
@@ -330,7 +334,7 @@ class WP_Sweep_List_Table extends WP_List_Table {
 	 * carries no nonce and there is nothing to verify -- which is why phpcs.xml
 	 * excuses the sniff for *-table.php across the whole collection.
 	 *
-	 * @return array The group, orderby and order, each already sanitised.
+	 * @return array The group, orderby, order and counts, each already sanitised.
 	 */
 	private static function request_args() {
 		$query = wp_unslash( $_GET );
@@ -339,7 +343,53 @@ class WP_Sweep_List_Table extends WP_List_Table {
 			'group'   => isset( $query['group'] ) ? sanitize_key( $query['group'] ) : 'all',
 			'orderby' => isset( $query['orderby'] ) ? sanitize_key( $query['orderby'] ) : '',
 			'order'   => isset( $query['order'] ) && 'desc' === strtolower( sanitize_key( $query['order'] ) ) ? 'desc' : 'asc',
+			'counts'  => isset( $query['counts'] ) ? sanitize_key( $query['counts'] ) : '',
 		);
+	}
+
+	/**
+	 * Whether the request asked for the counts to be computed with the page.
+	 *
+	 * This is the no-JavaScript path to the numbers: the counts are normally
+	 * left out of the render and fetched afterwards, and a real link carrying
+	 * counts=now is what a reader without the script clicks instead.
+	 *
+	 * @return bool
+	 */
+	public static function counts_requested_now() {
+		return 'now' === self::request_args()['counts'];
+	}
+
+	/**
+	 * Whether the counts are left out of the render and fetched afterwards.
+	 *
+	 * The counts are the expensive half of this screen: every one is a query
+	 * against a table WordPress cannot answer for from cache, and 2.0.0
+	 * computing all of them before printing a byte is what turned the screen
+	 * into a white page on sites whose meta tables have grown into the
+	 * millions of rows. Deferred, the screen renders at once and the script
+	 * fills the numbers in one sweep at a time.
+	 *
+	 * Two requests still compute them with the page, because the render cannot
+	 * be right without them: counts=now (the no-JavaScript link), and a sort
+	 * on the Count column, which cannot order rows by numbers it does not
+	 * have.
+	 *
+	 * @return bool
+	 */
+	public static function defer_counts() {
+		if ( self::counts_requested_now() || 'count' === self::request_args()['orderby'] ) {
+			return false;
+		}
+
+		/**
+		 * Filters whether the Sweep screen defers its counts to the script.
+		 *
+		 * @since 2.0.1
+		 *
+		 * @param bool $defer Whether to defer. Default true.
+		 */
+		return (bool) apply_filters( 'wp_sweep_defer_counts', true );
 	}
 
 	/**
@@ -361,15 +411,33 @@ class WP_Sweep_List_Table extends WP_List_Table {
 	public function prepare_items() {
 		$sweep = WP_Sweep::get_instance();
 		$group = self::current_group();
+		$defer = self::defer_counts();
 
 		$rows = array();
+
+		// One total per table, not one per row. Three postmeta sweeps share a
+		// denominator, and total_count() is a COUNT(*) that InnoDB answers by
+		// scanning an index -- asking three times was a third of what made
+		// loading this screen time out on large sites.
+		$totals = array();
 
 		foreach ( $sweep->get_sweeps() as $name => $args ) {
 			if ( 'all' !== $group && $args['group'] !== $group ) {
 				continue;
 			}
 
-			$count = (int) $sweep->count( $name );
+			if ( $defer ) {
+				$count      = null;
+				$percentage = null;
+			} else {
+				$count = (int) $sweep->count( $name );
+
+				if ( ! array_key_exists( $args['type'], $totals ) ) {
+					$totals[ $args['type'] ] = $sweep->total_count( $args['type'] );
+				}
+
+				$percentage = $sweep->format_percentage( $count, $totals[ $args['type'] ] );
+			}
 
 			$rows[] = array(
 				'name'        => $name,
@@ -378,7 +446,7 @@ class WP_Sweep_List_Table extends WP_List_Table {
 				'type'        => $args['type'],
 				'group'       => $args['group'],
 				'count'       => $count,
-				'percentage'  => $sweep->format_percentage( $count, $sweep->total_count( $args['type'] ) ),
+				'percentage'  => $percentage,
 			);
 		}
 
@@ -555,17 +623,21 @@ class WP_Sweep_List_Table extends WP_List_Table {
 	private function action_link( $item, $action, $label, $classes = '', $attributes = array() ) {
 		$nonce = 'sweep' === $action ? 'wp_sweep_' . $item['name'] : 'wp_sweep_details_' . $item['name'];
 
-		$url = wp_nonce_url(
-			add_query_arg(
-				array(
-					'page'  => WP_Sweep_Admin::PAGE,
-					'group' => self::current_group(),
-					$action => $item['name'],
-				),
-				admin_url( 'tools.php' )
-			),
-			$nonce
+		$args = array(
+			'page'  => WP_Sweep_Admin::PAGE,
+			'group' => self::current_group(),
+			$action => $item['name'],
 		);
+
+		// A reader on the counts=now view has no script following these links,
+		// so the reload the link causes has to stay on that view -- dropping
+		// the parameter would sweep correctly and then land them back on a
+		// screen of ellipses.
+		if ( self::counts_requested_now() ) {
+			$args['counts'] = 'now';
+		}
+
+		$url = wp_nonce_url( add_query_arg( $args, admin_url( 'tools.php' ) ), $nonce );
 
 		$extra = '';
 
@@ -593,6 +665,20 @@ class WP_Sweep_List_Table extends WP_List_Table {
 	 * @return string
 	 */
 	public function column_count( $item ) {
+		// A count that was deferred rather than computed. The cell carries
+		// everything the script needs to fetch the number -- the same
+		// name/type/nonce vocabulary the row actions use -- and an ellipsis for
+		// anyone reading before it lands. The no-JavaScript path to a real
+		// number is the counts=now link the screen prints in a <noscript>.
+		if ( null === $item['count'] ) {
+			return sprintf(
+				'<span class="sweep-count sweep-count-pending" data-action="sweep_count" data-sweep-name="%1$s" data-sweep-type="%2$s" data-nonce="%3$s">&hellip;</span>',
+				esc_attr( $item['name'] ),
+				esc_attr( $item['type'] ),
+				esc_attr( wp_create_nonce( 'wp_sweep_count_' . $item['name'] ) )
+			);
+		}
+
 		// Bold only a count there is something to do about. A run of bold zeroes
 		// reads as emphasis on nothing, and the whole point of this column is to
 		// show at a glance which rows are worth ticking. <strong> rather than a
@@ -621,7 +707,10 @@ class WP_Sweep_List_Table extends WP_List_Table {
 	 * @return string
 	 */
 	public function column_percentage( $item ) {
-		return '<span class="sweep-percentage">' . esc_html( $item['percentage'] ) . '</span>';
+		// Empty while the count is deferred: the script writes the percentage
+		// in beside the count, and an ellipsis in two columns would say
+		// "loading" twice about one fetch.
+		return '<span class="sweep-percentage">' . ( null === $item['percentage'] ? '' : esc_html( $item['percentage'] ) ) . '</span>';
 	}
 
 	/**

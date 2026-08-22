@@ -158,6 +158,46 @@ describe( 'the rest of the screen the script reaches for', () => {
 		).not.toBeNull();
 	} );
 
+	it( 'renders a deferred count cell the way column_count() writes it', () => {
+		// The pending cell is how the script knows a count is missing and how
+		// it fetches the number: the same action/name/type/nonce vocabulary
+		// the row actions carry, on the cell itself.
+		expect( listTable ).toContain( 'sweep-count sweep-count-pending' );
+		expect( listTable ).toContain( 'data-action="sweep_count"' );
+		expect( listTable ).toContain(
+			"wp_create_nonce( 'wp_sweep_count_' . $item['name'] )",
+		);
+
+		const parsed = document.implementation.createHTMLDocument( 'Sweep' );
+		parsed.body.innerHTML = sweepSection( { deferred: true } );
+
+		const cell = parsed.querySelector( '.sweep-count-pending' );
+
+		expect( cell ).not.toBeNull();
+		expect( cell.dataset.action ).toBe( 'sweep_count' );
+		expect( cell.dataset.sweepName ).toBe( 'revisions' );
+		expect( cell.dataset.sweepType ).toBe( 'posts' );
+		expect( cell.dataset.nonce ).toBeTruthy();
+	} );
+
+	it( 'puts the totals nonce on the totals table, as render_totals() does', () => {
+		expect( admin ).toContain( "wp_create_nonce( 'wp_sweep_totals' )" );
+		expect( admin ).toContain( 'sweep-total-pending' );
+
+		const parsed = document.implementation.createHTMLDocument( 'Sweep' );
+		parsed.body.innerHTML = sweepSection( { deferred: true } );
+
+		const table = parsed.querySelector( '.sweep-totals' );
+
+		expect( table.dataset.nonce ).toBeTruthy();
+		expect( table.querySelector( '.sweep-total-pending' ) ).not.toBeNull();
+	} );
+
+	it( 'registers the AJAX actions the fill calls', () => {
+		expect( admin ).toContain( "add_action( 'wp_ajax_sweep_count'" );
+		expect( admin ).toContain( "add_action( 'wp_ajax_sweep_totals'" );
+	} );
+
 	it( 'gives each row a details container that is a div, not a p', () => {
 		// An <ol> inside a <p> does not survive the parser: it closes the
 		// paragraph and becomes its sibling. column_name() learned that once

@@ -551,7 +551,7 @@ class WP_Sweep {
 			case 'duplicated_commentmeta':
 			case 'duplicated_usermeta':
 			case 'duplicated_termmeta':
-				$count = array_sum( wp_list_pluck( $this->duplicated_meta( $name ), 'num' ) );
+				$count = $this->count_protected_meta( $this->duplicated_meta_counts( $name ), $name );
 				break;
 			case 'optimize_database':
 				$count = count( $this->tables() );
@@ -634,7 +634,7 @@ class WP_Sweep {
 			case 'duplicated_commentmeta':
 			case 'duplicated_usermeta':
 			case 'duplicated_termmeta':
-				$details = array_slice( wp_list_pluck( $this->duplicated_meta( $name ), 'meta_key' ), 0, $limit );
+				$details = array_slice( wp_list_pluck( $this->drop_protected_meta( $this->duplicated_meta_counts( $name ), $name ), 'meta_key' ), 0, $limit );
 				break;
 			case 'optimize_database':
 				$details = $this->tables();
@@ -1097,7 +1097,40 @@ class WP_Sweep {
 	}
 
 	/**
+	 * How many duplicated meta rows there are, broken down by meta key.
+	 *
+	 * The same grouping as duplicated_meta() but none of its baggage: no
+	 * GROUP_CONCAT buffer per group and no row ids shipped back to PHP, because
+	 * a count needs neither. duplicated_meta() pulls every duplicate row's ids
+	 * across the wire, and on a site whose postmeta has millions of duplicates
+	 * that is the difference between the Sweep screen loading and timing out.
+	 *
+	 * @param string $name Sweep name.
+	 * @return array Rows carrying a meta_key and a num.
+	 */
+	private function duplicated_meta_counts( $name ) {
+		global $wpdb;
+
+		switch ( $name ) {
+			case 'duplicated_postmeta':
+				return (array) $this->db( 'get_results', "SELECT meta_key, COUNT(meta_id) AS num FROM $wpdb->postmeta GROUP BY post_id, meta_key, meta_value HAVING num > 1" );
+			case 'duplicated_commentmeta':
+				return (array) $this->db( 'get_results', "SELECT meta_key, COUNT(meta_id) AS num FROM $wpdb->commentmeta GROUP BY comment_id, meta_key, meta_value HAVING num > 1" );
+			case 'duplicated_usermeta':
+				return (array) $this->db( 'get_results', "SELECT meta_key, COUNT(umeta_id) AS num FROM $wpdb->usermeta GROUP BY user_id, meta_key, meta_value HAVING num > 1" );
+			case 'duplicated_termmeta':
+				return (array) $this->db( 'get_results', "SELECT meta_key, COUNT(meta_id) AS num FROM $wpdb->termmeta GROUP BY term_id, meta_key, meta_value HAVING num > 1" );
+		}
+
+		return array();
+	}
+
+	/**
 	 * Meta rows that appear more than once with the same key and value.
+	 *
+	 * Only sweep() reads this: the ids are what the delete needs, and hauling
+	 * them into PHP is only worth it when they are about to be deleted. A count
+	 * or a sample comes from duplicated_meta_counts() instead.
 	 *
 	 * @param string $name Sweep name.
 	 * @return array Rows carrying ids, object_id, meta_key and num.
