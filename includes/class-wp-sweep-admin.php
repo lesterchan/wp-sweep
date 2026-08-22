@@ -78,6 +78,29 @@ class WP_Sweep_Admin {
 		add_action( 'wp_ajax_sweep_details', array( __CLASS__, 'ajax_sweep_details' ) );
 		add_action( 'wp_ajax_wp_sweep_count', array( __CLASS__, 'ajax_sweep_count' ) );
 		add_action( 'wp_ajax_wp_sweep_totals', array( __CLASS__, 'ajax_sweep_totals' ) );
+		add_filter(
+			'plugin_action_links_' . plugin_basename( WP_SWEEP_MAIN_FILE ),
+			array( __CLASS__, 'action_links' )
+		);
+	}
+
+	/**
+	 * Add a Sweep link on the Plugins screen row.
+	 *
+	 * @param string[] $links Existing action links.
+	 * @return string[]
+	 */
+	public static function action_links( $links ) {
+		array_unshift(
+			$links,
+			sprintf(
+				'<a href="%s">%s</a>',
+				esc_url( add_query_arg( 'page', self::PAGE, admin_url( 'tools.php' ) ) ),
+				esc_html__( 'Sweep', 'wp-sweep' )
+			)
+		);
+
+		return $links;
 	}
 
 	/**

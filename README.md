@@ -189,6 +189,7 @@ Nothing. WP-Sweep stores no option rows, creates no database tables, registers n
 
 ## Changelog
 ### 2.0.1
+* NEW: A Sweep link on the plugin's row of the Plugins screen, opening Tools -> Sweep.
 * FIXED: The Sweep screen timed out on large databases. 2.0.0 computed every count before printing a byte — and asked for each table's total row count once per row instead of once, so `SELECT COUNT(*)` ran against the postmeta table four times per load. The screen now renders at once and fetches the counts afterwards, one request at a time, so no single request outlives PHP's time limit. Without JavaScript, a link computes them with the page the way 2.0.0 always did, and the new `wp_sweep_defer_counts` filter restores that behaviour outright.
 * FIXED: Counting the duplicated meta sweeps fetched every duplicate row's ids into PHP through `GROUP_CONCAT`, just to add them up. On a postmeta table with millions of duplicates that alone could exhaust the request. The count now reads per-key totals only; the ids are read where they are needed, by the sweep that deletes them.
 
