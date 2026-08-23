@@ -73,7 +73,7 @@ class WP_Sweep_Admin {
 	 */
 	public static function init() {
 		add_action( 'admin_menu', array( __CLASS__, 'add_page' ) );
-		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'admin_enqueue_scripts' ) );
+		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueue' ) );
 		add_action( 'wp_ajax_sweep', array( __CLASS__, 'ajax_sweep' ) );
 		add_action( 'wp_ajax_sweep_details', array( __CLASS__, 'ajax_sweep_details' ) );
 		add_action( 'wp_ajax_wp_sweep_count', array( __CLASS__, 'ajax_sweep_count' ) );
@@ -153,7 +153,7 @@ class WP_Sweep_Admin {
 	 * @param string $hook Hook suffix of the screen being rendered.
 	 * @return void
 	 */
-	public static function admin_enqueue_scripts( $hook ) {
+	public static function enqueue( $hook ) {
 		if ( '' === self::$hook_suffix || self::$hook_suffix !== $hook ) {
 			return;
 		}

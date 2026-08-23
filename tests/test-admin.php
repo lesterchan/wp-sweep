@@ -439,7 +439,7 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 	 * The admin script loads on the plugin's own screen.
 	 */
 	public function test_script_is_enqueued_on_the_sweep_screen() {
-		WP_Sweep_Admin::admin_enqueue_scripts( $this->register_admin_menu() );
+		WP_Sweep_Admin::enqueue( $this->register_admin_menu() );
 
 		$this->assertTrue( wp_script_is( 'wp-sweep-admin', 'enqueued' ), 'The admin script is enqueued on the sweep screen.' );
 	}
@@ -452,7 +452,7 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 	 * @param string $hook Hook suffix of some other screen.
 	 */
 	public function test_script_is_not_enqueued_elsewhere( $hook ) {
-		WP_Sweep_Admin::admin_enqueue_scripts( $hook );
+		WP_Sweep_Admin::enqueue( $hook );
 
 		$this->assertFalse( wp_script_is( 'wp-sweep-admin', 'enqueued' ), 'The admin script is not enqueued on other screens.' );
 	}
@@ -477,7 +477,7 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 	 * 2.0.0, and jQuery was the only reason this screen loaded it at all.
 	 */
 	public function test_script_has_no_dependencies() {
-		WP_Sweep_Admin::admin_enqueue_scripts( $this->register_admin_menu() );
+		WP_Sweep_Admin::enqueue( $this->register_admin_menu() );
 
 		$script = wp_scripts()->registered['wp-sweep-admin'];
 
@@ -490,7 +490,7 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 	 * drifts out of sync with it.
 	 */
 	public function test_script_is_the_unminified_source() {
-		WP_Sweep_Admin::admin_enqueue_scripts( $this->register_admin_menu() );
+		WP_Sweep_Admin::enqueue( $this->register_admin_menu() );
 
 		$script = wp_scripts()->registered['wp-sweep-admin'];
 
@@ -525,7 +525,7 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 	 * Every string the script shows the user is localised.
 	 */
 	public function test_script_is_localised() {
-		WP_Sweep_Admin::admin_enqueue_scripts( $this->register_admin_menu() );
+		WP_Sweep_Admin::enqueue( $this->register_admin_menu() );
 
 		$data = wp_scripts()->registered['wp-sweep-admin']->extra['data'];
 
@@ -665,7 +665,7 @@ class WP_Sweep_Admin_Test extends WP_Sweep_TestCase {
 	 * wherever it is installed.
 	 */
 	public function test_script_url_is_derived_from_the_main_file() {
-		WP_Sweep_Admin::admin_enqueue_scripts( $this->register_admin_menu() );
+		WP_Sweep_Admin::enqueue( $this->register_admin_menu() );
 
 		$this->assertSame(
 			plugins_url( 'js/wp-sweep-admin.js', WP_SWEEP_MAIN_FILE ),
