@@ -1,16 +1,9 @@
 /**
  * WP-Sweep admin screen.
  *
- * Drives the Sweep and Details row actions against admin-ajax.php, keeps the
- * running totals above the table up to date, and warns before the page is
- * closed mid-sweep.
- *
- * The row actions are real, nonced links: with the script turned off they
- * still sweep, they just reload the screen each time. Everything here is an
- * enhancement over that, never a replacement for it.
- *
- * Listeners are delegated from `document`, so a row added by one of the
- * wp_sweep_admin_*_sweep actions works without re-binding anything.
+ * The row actions are real, nonced links that work without this script; it is
+ * an enhancement over them, never a replacement. Listeners are delegated from
+ * `document` so a row added later needs no re-binding.
  */
 ( function() {
 	'use strict';
@@ -43,9 +36,8 @@
 	/**
 	 * Mark a row action as running, or let it go again.
 	 *
-	 * The triggers are anchors, so they have no disabled property to set --
-	 * they are real, nonced links that work with the script turned off. A
-	 * click on one that is already running is ignored instead.
+	 * Anchors have no disabled property, so a click while busy is ignored
+	 * instead.
 	 *
 	 * @param {HTMLElement} trigger The row action.
 	 * @param {boolean}     busy    Whether it is running.
@@ -59,25 +51,9 @@
 	/**
 	 * Find the region a row action reports its result into.
 	 *
-	 * The screen prints one, above the form, and every Sweep link names it in
-	 * aria-controls -- so the id is written once, in PHP
-	 * (WP_Sweep_Admin::MESSAGE_ID), and this follows the association instead of
-	 * guessing at the markup between the two.
-	 *
-	 * That guess is what this used to be, and it had never once worked: it took
-	 * the row's .table-sweep and walked backwards through its previous siblings
-	 * looking for .sweep-message. Since the screen became one list table the
-	 * table is inside the <form> and the region is outside it, so the walk ran
-	 * out of siblings inside the form and returned null, showMessage() took its
-	 * early return, and no sweep told anyone what it had done. The sweeps
-	 * themselves ran correctly throughout, which is why nothing looked wrong
-	 * beyond a count quietly changing.
-	 *
-	 * It reached nobody only because 2.0.0 has not shipped. Nothing in the
-	 * plugin's own tests would have stopped it: the vitest fixture had been
-	 * written to suit the walk -- region and table as adjacent siblings, no
-	 * form -- so the assertion and the code agreed with each other and with
-	 * nothing else. It took a browser to find it.
+	 * Follows aria-controls rather than walking the markup: the id is written
+	 * once in PHP, and the region sits outside the form the table is inside, so
+	 * any sibling walk misses it.
 	 *
 	 * @param {HTMLElement} trigger The row action that was clicked.
 	 * @return {HTMLElement|null} The region, if the page has one.
@@ -140,13 +116,9 @@
 	/**
 	 * Write a count into its cell, emphasised only when it is worth acting on.
 	 *
-	 * The emphasis is the element itself -- a <strong> while there is
-	 * something to sweep, a <span> once there is not -- so the element is
-	 * replaced rather than restyled, exactly as a reload would redraw it.
-	 * Replacing it also sheds the pending marker and the data attributes a
-	 * deferred cell was rendered with, which is what stops a slow count
-	 * response overwriting a row that has since been swept: the fetch checks
-	 * its cell is still connected before writing.
+	 * Replaced rather than restyled, so it also sheds the pending marker and
+	 * data attributes -- which is what stops a slow count response writing over
+	 * a row that has since been swept.
 	 *
 	 * @param {HTMLElement} cell  The current .sweep-count element.
 	 * @param {number}      count The count to show.
@@ -179,10 +151,8 @@
 	/**
 	 * Swap a row's buttons for the dash a fresh render gives an empty row.
 	 *
-	 * The checkbox stays: every row has one, empty or not, or the column gains
-	 * holes and select-all starts claiming rows it does not select. This
-	 * mirrors what column_actions() renders on a fresh page load, so a swept
-	 * row and a reloaded one agree.
+	 * The checkbox stays -- every row has one, or select-all starts claiming
+	 * rows it does not select.
 	 *
 	 * @param {HTMLElement} row The table row.
 	 */
@@ -335,8 +305,7 @@
 	/**
 	 * Fetch the running totals, which were also deferred.
 	 *
-	 * One request for the whole table: its nonce rides on the table element,
-	 * since twelve cells share the answer.
+	 * One request for the whole table; its nonce rides on the table element.
 	 *
 	 * @return {Promise} Resolves once the totals have been written.
 	 */
@@ -376,14 +345,10 @@
 	}
 
 	/**
-	 * Fill in everything the screen rendered without.
+	 * Fill in the counts the screen deferred so it could render first.
 	 *
-	 * The screen defers its counts so it can render before the queries run --
-	 * they are the expensive half of the page, and computing all of them
-	 * before printing a byte is what used to time the screen out on large
-	 * databases. Totals first, then one row at a time: these queries scan the
-	 * same handful of tables, and nineteen of them at once would hand the
-	 * database the very spike the deferral exists to avoid.
+	 * Totals, then one row at a time: firing all nineteen at once would hand
+	 * the database the spike the deferral exists to avoid.
 	 */
 	function fillDeferredCounts() {
 		const cells = Array.prototype.slice.call(
@@ -417,8 +382,7 @@
 			const row = trigger.closest( 'tr' );
 			const shown = row.querySelector( '.sweep-details' );
 
-			// A toggle, not a one-way door. The list can be long, and the only
-			// way to put it away used to be reloading the screen.
+			// A toggle: the list can be long.
 			if ( shown && ! shown.hidden ) {
 				hideDetails( row );
 				trigger.setAttribute( 'aria-expanded', 'false' );
@@ -449,7 +413,6 @@
 		return l10n.textCloseWarning;
 	} );
 
-	// The script is enqueued in the footer, so the cells it fills are already
-	// on the page by the time this runs.
+	// Enqueued in the footer, so the cells are already on the page.
 	fillDeferredCounts();
 }() );
