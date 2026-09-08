@@ -94,7 +94,7 @@ jobs:
       # uploading one for seven days is a habit rather than a decision.
       - name: Upload artifacts on failure
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-artifacts
           path: artifacts/test-results/

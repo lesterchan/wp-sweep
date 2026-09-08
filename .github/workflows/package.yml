@@ -1,0 +1,26 @@
+name: Package
+
+# Builds the zip a release would have built: bin/build if this plugin has
+# blocks, the deploy's own exclusion list, the readme transform, then an
+# artifact named for the version and the commit.
+#
+# Run it from the Actions tab. It exists for the times somebody on the forum
+# needs a fix before it is on wordpress.org -- the GitHub source zip cannot
+# serve, because build/ is generated and absent from git, and because the zip
+# unpacks under a name WordPress installs beside the copy they already have
+# rather than over it. Downloading the artifact needs a GitHub account.
+#
+# The job itself lives in lesterchan/wordpress-plugins. The exclusion list it
+# applies is already a copy of the one in the release procedure, and a copy of a
+# copy in nineteen repositories is how one skip list ends up with five
+# spellings.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    uses: lesterchan/wordpress-plugins/.github/workflows/package.yml@main
