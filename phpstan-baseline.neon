@@ -1,0 +1,313 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Method WP_Sweep_Admin\:\:related_totals\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep-admin.php
+
+		-
+			message: '#^Method WP_Sweep_Admin\:\:requested_details\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep-admin.php
+
+		-
+			message: '#^Method WP_Sweep_Admin\:\:totals\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep-admin.php
+
+		-
+			message: '#^Property WP_Sweep_Admin\:\:\$details type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep-admin.php
+
+		-
+			message: '#^Static property WP_Sweep_Admin\:\:\$hook_suffix \(string\) does not accept string\|false\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: includes/class-wp-sweep-admin.php
+
+		-
+			message: '#^Method WP_Sweep_Command\:\:__invoke\(\) has parameter \$args with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep-command.php
+
+		-
+			message: '#^Method WP_Sweep_Command\:\:__invoke\(\) has parameter \$assoc_args with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep-command.php
+
+		-
+			message: '#^Method WP_Sweep_Command\:\:run_sweep\(\) has parameter \$items with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep-command.php
+
+		-
+			message: '#^Method WP_Sweep_List_Table\:\:action_link\(\) has parameter \$attributes with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep-list-table.php
+
+		-
+			message: '#^Method WP_Sweep_List_Table\:\:action_link\(\) has parameter \$item with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep-list-table.php
+
+		-
+			message: '#^Method WP_Sweep_List_Table\:\:column_actions\(\) has parameter \$item with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep-list-table.php
+
+		-
+			message: '#^Method WP_Sweep_List_Table\:\:column_cb\(\) has parameter \$item with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep-list-table.php
+
+		-
+			message: '#^Method WP_Sweep_List_Table\:\:column_count\(\) has parameter \$item with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep-list-table.php
+
+		-
+			message: '#^Method WP_Sweep_List_Table\:\:column_default\(\) has parameter \$item with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep-list-table.php
+
+		-
+			message: '#^Method WP_Sweep_List_Table\:\:column_name\(\) has parameter \$item with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep-list-table.php
+
+		-
+			message: '#^Method WP_Sweep_List_Table\:\:column_percentage\(\) has parameter \$item with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep-list-table.php
+
+		-
+			message: '#^Method WP_Sweep_List_Table\:\:get_bulk_actions\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep-list-table.php
+
+		-
+			message: '#^Method WP_Sweep_List_Table\:\:get_columns\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep-list-table.php
+
+		-
+			message: '#^Method WP_Sweep_List_Table\:\:get_sortable_columns\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep-list-table.php
+
+		-
+			message: '#^Method WP_Sweep_List_Table\:\:get_table_classes\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep-list-table.php
+
+		-
+			message: '#^Method WP_Sweep_List_Table\:\:get_views\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep-list-table.php
+
+		-
+			message: '#^Method WP_Sweep_List_Table\:\:order_by_group\(\) has parameter \$rows with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep-list-table.php
+
+		-
+			message: '#^Method WP_Sweep_List_Table\:\:order_by_group\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep-list-table.php
+
+		-
+			message: '#^Method WP_Sweep_List_Table\:\:request_args\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep-list-table.php
+
+		-
+			message: '#^Method WP_Sweep_List_Table\:\:sort\(\) has parameter \$rows with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep-list-table.php
+
+		-
+			message: '#^Method WP_Sweep_List_Table\:\:sort\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep-list-table.php
+
+		-
+			message: '#^Parameter \#1 \$text of function esc_attr expects string, int\<0, max\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: includes/class-wp-sweep-list-table.php
+
+		-
+			message: '#^Access to an undefined property object\:\:\$meta_key\.$#'
+			identifier: property.notFound
+			count: 1
+			path: includes/class-wp-sweep.php
+
+		-
+			message: '#^Method WP_Sweep\:\:count_protected_meta\(\) has parameter \$rows with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep.php
+
+		-
+			message: '#^Method WP_Sweep\:\:details\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep.php
+
+		-
+			message: '#^Method WP_Sweep\:\:drop_protected_meta\(\) has parameter \$items with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep.php
+
+		-
+			message: '#^Method WP_Sweep\:\:drop_protected_meta\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep.php
+
+		-
+			message: '#^Method WP_Sweep\:\:duplicated_meta\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep.php
+
+		-
+			message: '#^Method WP_Sweep\:\:duplicated_meta_counts\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep.php
+
+		-
+			message: '#^Method WP_Sweep\:\:excluded_taxonomies_for_sql\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep.php
+
+		-
+			message: '#^Method WP_Sweep\:\:get_default_taxonomy_termids\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep.php
+
+		-
+			message: '#^Method WP_Sweep\:\:get_excluded_taxonomies\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep.php
+
+		-
+			message: '#^Method WP_Sweep\:\:get_excluded_termids\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep.php
+
+		-
+			message: '#^Method WP_Sweep\:\:get_parent_termids\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep.php
+
+		-
+			message: '#^Method WP_Sweep\:\:get_protected_meta_keys\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep.php
+
+		-
+			message: '#^Method WP_Sweep\:\:get_sweep_groups\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep.php
+
+		-
+			message: '#^Method WP_Sweep\:\:get_sweep_names\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep.php
+
+		-
+			message: '#^Method WP_Sweep\:\:get_sweep_types\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep.php
+
+		-
+			message: '#^Method WP_Sweep\:\:get_sweeps\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep.php
+
+		-
+			message: '#^Method WP_Sweep\:\:is_meta_key_protected\(\) has parameter \$patterns with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep.php
+
+		-
+			message: '#^Method WP_Sweep\:\:non_post_taxonomies\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep.php
+
+		-
+			message: '#^Method WP_Sweep\:\:oembed_meta_counts\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep.php
+
+		-
+			message: '#^Method WP_Sweep\:\:orphan_meta_counts\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep.php
+
+		-
+			message: '#^Method WP_Sweep\:\:orphan_meta_keys\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep.php
+
+		-
+			message: '#^Method WP_Sweep\:\:orphan_meta_rows\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep.php
+
+		-
+			message: '#^Method WP_Sweep\:\:tables\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep.php
+
+		-
+			message: '#^Method WP_Sweep\:\:unused_terms\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-sweep.php

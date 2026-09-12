@@ -36,6 +36,31 @@ jobs:
       - name: Run PHPCS
         run: $(composer global config bin-dir --absolute)/phpcs -q --report=checkstyle . | cs2pr
 
+  phpstan:
+    name: Static analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+
+      # The analysis needs the WordPress and WP-CLI stubs, which are require-dev
+      # here rather than global: a stub set has to match the WordPress the plugin
+      # is written against, and composer.lock is where that is pinned.
+      - name: Install dev dependencies
+        run: composer install --no-interaction --no-progress
+
+      # --memory-limit lives in the composer script because the default 128M is
+      # not enough to hold the WordPress stubs, and PHPStan's parallel workers
+      # crash rather than degrade: the run reports a crashed worker, not the
+      # errors it found.
+      - name: Run PHPStan
+        run: composer analyse
+
   eslint:
     name: JS coding standards and tests
     runs-on: ubuntu-latest

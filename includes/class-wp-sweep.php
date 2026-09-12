@@ -1171,8 +1171,8 @@ class WP_Sweep {
 	/**
 	 * Delete every copy of a duplicated meta row but the oldest.
 	 *
-	 * @param string $name Sweep name.
-	 * @param object $meta One row from duplicated_meta().
+	 * @param string   $name Sweep name.
+	 * @param stdClass $meta One row from duplicated_meta().
 	 * @return void
 	 */
 	private function delete_duplicate_meta( $name, $meta ) {

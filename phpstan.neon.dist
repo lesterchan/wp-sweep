@@ -1,0 +1,24 @@
+includes:
+	- vendor/szepeviktor/phpstan-wordpress/extension.neon
+	# Every error that existed when static analysis was switched on. The point of
+	# the file is that the count only ever goes down: a new one fails the build,
+	# a fixed one is deleted from here. Regenerating it wholesale to make a run
+	# green defeats it -- the run is green because nothing was analysed.
+	- phpstan-baseline.neon
+
+parameters:
+	level: 8
+	paths:
+		- wp-sweep.php
+		- uninstall.php
+		- includes
+	scanFiles:
+		- vendor/php-stubs/wp-cli-stubs/wp-cli-stubs.php
+		# Not a .php file and not at the root, both deliberately: a stub is not
+		# plugin code, and anything ending .php beside the main file reads as
+		# something WordPress might load.
+		- phpstan-stubs/constants.stub
+	# WordPress hands back mixed from most of its API and documents the shape in
+	# prose. Trusting a @param that says array against an inferred mixed turns
+	# every such call into an error about a type nobody can prove either way.
+	treatPhpDocTypesAsCertain: false

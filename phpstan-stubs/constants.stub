@@ -1,0 +1,18 @@
+<?php
+/**
+ * Constants PHPStan cannot work out for itself. Never loaded at runtime.
+ *
+ * The plugin's own literal constants need nothing here: PHPStan reads a
+ * define() whose value is a literal straight out of the file being analysed.
+ * Only the ones computed by calling a function are invisible to it, because it
+ * will not call one to find out. Restating a literal here would put a second
+ * copy of the version string in the repository, and that is the copy that gets
+ * forgotten at release.
+ *
+ * Anything below the blank line is WordPress's own, defined at runtime in
+ * wp-includes rather than declared anywhere the stubs can see. The values are
+ * placeholders; only the types are read.
+ */
+
+define( 'WP_SWEEP_DIR', '' );
+define( 'WP_SWEEP_URL', '' );
